@@ -1,33 +1,25 @@
 {
   "name": "bookmarks2",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "",
+  "main": "index.js",
   "scripts": {
-    "gulp": "gulp",
-    "build": "webpack --colors --config ./webpack.config.js",
-    "build:prod": "webpack --config ./webpack.config.prod.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "webpack --mode=development"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "react-redux": "^7.1.3",
-    "redux": "^4.0.5"
-  },
   "devDependencies": {
-    "@types/react": "^16.9.17",
-    "@types/react-dom": "^16.9.4",
-    "@types/react-redux": "^7.1.5",
-    "del": "^5.1.0",
-    "gulp": "^4.0.2",
-    "gulp-typescript": "^6.0.0-alpha.1",
-    "gulp-webpack": "^1.5.0",
-    "ts-loader": "^6.2.1",
-    "typescript": "^3.7.4",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10",
-    "webpack-stream": "^5.2.1"
+    "css-loader": "^4.2.2",
+    "style-loader": "^1.2.1",
+    "ts-loader": "^8.0.3",
+    "typescript": "^4.0.2",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.4.0",
+    "redux": "^4.0.5"
   }
 }

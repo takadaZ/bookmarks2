@@ -1,28 +1,39 @@
-'use strict';
-
 const path = require('path');
 
+const MODE = "development";
+
+const enabledSourceMap = MODE === "development";
+
 module.exports = {
-  mode: 'production',
-  resolve: {
-    // Add '.ts' and '.tsx' as resolvable extensions.
-    extensions: [".ts", ".tsx", '.js']
+  mode: MODE,
+  entry: {
+    popup: './src/index.ts',
+    bkg: './src/background.ts',
   },
   output: {
-    path: path.resolve(__dirname, 'dist/js'),
-    filename: 'bundle.js'
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist')
   },
   module: {
     rules: [
       {
-        test: /\.ts(x?)$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: "ts-loader"
-          }
-        ]
+        test: /\.ts$/,
+        use: 'ts-loader',
       },
-    ]
-  }
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              // オプションでCSS内のurl()メソッドの取り込みを禁止する
+              url: false,
+              sourceMap: enabledSourceMap
+            },
+          },
+        ],
+      },
+    ],
+  },
 };
