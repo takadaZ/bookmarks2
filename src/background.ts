@@ -1,5 +1,5 @@
-import { createStore } from 'redux';
-import { createReducer, createSlice } from '@reduxjs/toolkit';
+import { createStore, combineReducers } from 'redux';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 function $<T extends HTMLElement>(selector: string, parent: HTMLElement | Document = document) {
   return parent.querySelector(selector) as T;
@@ -9,69 +9,111 @@ function $$<T extends HTMLElement[]>(selector: string, parent: HTMLElement | Doc
   return [...parent.querySelectorAll(selector)] as T;
 }
 
-interface IRequestInfo {
-  [tabId: number]: {
-    formData: {
-      [key: string]: string[],
-    }
-  }
-}
+(async () => {
 
-interface IState {
-  requestInfo: IRequestInfo,
-  options: {
-    postPage: boolean;
-  }
-}
-
-const initialState = {
-  requestInfo: {},
-  options: {
-    postPage: true,
-  },
-}
-
-const slice = createSlice({
-  initialState,
-  name: 'all',
-  reducers: {
-    postRequest: (state: IState, { payload }: { payload: chrome.webRequest.WebRequestBodyDetails }) => {
-      if (payload.frameId === 0 && payload.type === 'main_frame' && payload.method === 'POST' && payload.requestBody) {
-        return { ...state, requestInfo: { ...state.requestInfo, [payload.tabId]: { formData: payload.requestBody.formData } } };
+  interface IRequestInfo {
+    [tabId: number]: {
+      formData?: {
+        [key: string]: string[],
       }
-    },
-    removePostData: (state: IState, { payload }: { payload: number }) => {
-      return { ...state, requestInfo: { ...state.requestInfo, [payload]: null } };
-    },
-    removePostDataAll: (state: IState) => {
-      return { ...state, requestInfo: {} };
+    } | null
+  }
+
+  interface IOptions {
+    postPage: boolean,
+  }
+
+  const webRequest = createSlice({
+    initialState: {} as IRequestInfo,
+    name: 'webRequest',
+    reducers: {
+      request: (state: IRequestInfo, { payload }: PayloadAction<chrome.webRequest.WebRequestBodyDetails>) => {
+        if (payload.frameId === 0 && payload.type === 'main_frame' && payload.method === 'POST' && payload.requestBody) {
+          return { ...state, [payload.tabId]: { formData: payload.requestBody.formData } };
+        }
+      },
+      removePostData: (state: IRequestInfo, { payload }: PayloadAction<number>) => {
+        return { ...state, [payload]: null };
+      },
+      removePostDataAll: () => ({})
     }
-  },
-});
+  });
 
-const store = createStore(slice.reducer);
+  async function getSavedOptions(initialState: IOptions) {
+    return new Promise<IOptions>((resolve) => {
+      chrome.storage.local.get((items) => resolve({ ...initialState, ...items }));
+    });
+  }
 
-function onBeforeRequestHandler(resp: chrome.webRequest.WebRequestBodyDetails) {
-  store.dispatch(slice.actions.postRequest(resp));
-}
+  const initialStateOptions = await getSavedOptions({
+    postPage: true,
+  });
 
-function onRemovedTabsHandler(tabId: number) {
-  store.dispatch(slice.actions.removePostData(tabId));
-}
+  const sliceOptions = createSlice({
+    initialState: initialStateOptions,
+    name: 'options',
+    reducers: {
+      save: (state: IOptions, { payload }: PayloadAction<IOptions>) => {
+        return { ...state, ...payload };
+      }
+    }
+  });
 
-if (initialState.options.postPage) {
-  if (!chrome.webRequest.onBeforeRequest.hasListeners()) {
-    chrome.webRequest.onBeforeRequest.addListener(onBeforeRequestHandler, { urls: ["*://*/*"] }, ["requestBody"]);
+  const reducer = combineReducers({
+    webRequest: webRequest.reducer,
+    options: sliceOptions.reducer,
+  });
+
+  const store = createStore(reducer);
+
+  type State = ReturnType<typeof store.getState>;
+  type StateHandler = (state: State, element?: HTMLElement) => void;
+
+  function connect(handler: StateHandler, immediate: boolean = false, element?: HTMLElement) {
+    store.subscribe(() => {
+      const state = store.getState();
+      handler(state, element);
+    });
+    if (immediate) {
+      handler(store.getState(), element);
+    }
   }
-  if (!chrome.tabs.onRemoved.hasListeners()) {
-    chrome.tabs.onRemoved.addListener(onRemovedTabsHandler);
+
+  function onBeforeRequestHandler(resp: chrome.webRequest.WebRequestBodyDetails) {
+    store.dispatch(webRequest.actions.request(resp));
   }
-} else {
-  if (chrome.webRequest.onBeforeRequest.hasListeners()) {
-    chrome.webRequest.onBeforeRequest.removeListener(onBeforeRequestHandler);
+
+  function onRemovedTabsHandler(tabId: number) {
+    store.dispatch(webRequest.actions.removePostData(tabId));
   }
-  if (chrome.tabs.onRemoved.hasListeners()) {
-    chrome.tabs.onRemoved.removeListener(onRemovedTabsHandler);
-    store.dispatch(slice.actions.removePostDataAll());
+
+  function webRequestListener({ options: { postPage } }: State) {
+    if (postPage) {
+      if (!chrome.webRequest.onBeforeRequest.hasListeners()) {
+        chrome.webRequest.onBeforeRequest.addListener(onBeforeRequestHandler, { urls: ["*://*/*"] }, ["requestBody"]);
+      }
+      if (!chrome.tabs.onRemoved.hasListeners()) {
+        chrome.tabs.onRemoved.addListener(onRemovedTabsHandler);
+      }
+    } else {
+      if (chrome.webRequest.onBeforeRequest.hasListeners()) {
+        chrome.webRequest.onBeforeRequest.removeListener(onBeforeRequestHandler);
+      }
+      if (chrome.tabs.onRemoved.hasListeners()) {
+        chrome.tabs.onRemoved.removeListener(onRemovedTabsHandler);
+        store.dispatch(webRequest.actions.removePostDataAll());
+      }
+    }
   }
-}
+
+  function saveOptions(options: IOptions) {
+    const promise = new Promise((resolve) => {
+      chrome.storage.local.set(options, resolve);
+    });
+    store.dispatch(sliceOptions.actions.save(options));
+    return promise;
+  }
+
+  connect(webRequestListener, true);
+
+})();

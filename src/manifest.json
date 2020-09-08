@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_appName__",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
+  "version": "0.1.0",
+  "options_page": "options.html",
+  "background": {
+    "scripts": ["bkg.bundle.js"]
+  },
+  "browser_action": {
+    "default_title": "Next Bookmarks",
+    "default_popup": "index.html"
+  },
+  "commands": {
+    "_execute_browser_action": {
+       "suggested_key": {
+          "mac": "Command+Shift+B",
+          "default": "Alt+B"
+       }
+    }
+  },
+  "icons": {
+    "128": "images/db1.png",
+     "48": "images/db1.png"
+  },
+  "web_accessible_resources": ["new.html"],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'",
+  "permissions": [
+    "*://*/*",
+    "tabs",
+    "chrome://favicon/*",
+    "bookmarks",
+    "storage",
+    "webRequest"
+  ]
+}
