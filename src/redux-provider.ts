@@ -1,6 +1,32 @@
 import { configureStore, Slice, SliceCaseReducers, Reducer, CombinedState, AnyAction } from '@reduxjs/toolkit';
+import { slices, connects } from './redux-configure';
 
-import { slices, connect } from './background';
+type Connect = (subscriber: StateSubscriber, listener: StateListener, dispatch: Dispatch) => void;
+type SlicesMapObject<S = any, C = SliceCaseReducers<any>, A extends string = string> = {
+  [K in keyof S]: Slice<S[K], SliceCaseReducers<S[K]>, A>
+}
+type ActionFromReducer<R> = R extends Reducer<any, infer A> ? A : never;
+type ReducerFromSlice<M, K extends keyof M> = M[K];
+type SliceFromSlicesMapObject<M> = M extends {
+  [P in keyof M]: infer R
+}
+  ? R extends Slice<any, any>
+    ? R
+    : never
+  : never;
+type ActionFromSlicessMapObject<M> = M extends SlicesMapObject<
+  any,
+  any
+>
+  ? ActionFromReducer<ReducerFromSlice<SliceFromSlicesMapObject<M>, 'reducer'>>
+  : never;
+type StateFromSlicesMapObject<M> = M extends SlicesMapObject<
+  any,
+  any
+>
+  ? { [P in keyof M]: M[P] extends Slice<infer S, any> ? S : never }
+  : never;
+type KeyValue<T> = { [x: string]: T };
 
 function actionType(state = '', action: AnyAction) {
   return action.type;
@@ -31,48 +57,6 @@ function listener(handler: ListenerHandler) {
   return (arg1: any, arg2?: any, arg3?: any) => handler(store.getState(), store.dispatch, arg1, arg2, arg3);
 }
 
-type Connect = (subscriber: StateSubscriber, listener: StateListener, dispatch: Dispatch) => void;
-
-function assignConnect(...connects: Connect[]) {
-  connects.map(connect => connect(subscriber, listener, store.dispatch));
-}
-
-assignConnect(
-  connect,
-);
-
-type SlicesMapObject<S = any, C = SliceCaseReducers<any>, A extends string = string> = {
-  [K in keyof S]: Slice<S[K], SliceCaseReducers<S[K]>, A>
-}
-
-type ActionFromReducer<R> = R extends Reducer<any, infer A> ? A : never;
-
-type ReducerFromSlice<M, K extends keyof M> = M[K];
-
-type SliceFromSlicesMapObject<M> = M extends {
-  [P in keyof M]: infer R
-}
-  ? R extends Slice<any, any>
-    ? R
-    : never
-  : never;
-
-type ActionFromSlicessMapObject<M> = M extends SlicesMapObject<
-  any,
-  any
->
-  ? ActionFromReducer<ReducerFromSlice<SliceFromSlicesMapObject<M>, 'reducer'>>
-  : never;
-
-type StateFromSlicesMapObject<M> = M extends SlicesMapObject<
-  any,
-  any
->
-  ? { [P in keyof M]: M[P] extends Slice<infer S, any> ? S : never }
-  : never;
-
-type KeyValue<T> = { [x: string]: T };
-
 export function combineReducers<M extends SlicesMapObject<any, any>>(
   reducers: M
 ): Reducer<
@@ -80,13 +64,12 @@ export function combineReducers<M extends SlicesMapObject<any, any>>(
   ActionFromSlicessMapObject<M>
 >;
 
-export function combineReducers<M>(slices: M) {
+export function combineReducers<M extends SlicesMapObject<any, any>>(slices: M) {
   const reducers = Object.entries(slices).reduce<KeyValue<Reducer>>((acc, [, slice]) => {
     return { ...acc, [slice.name]: slice.reducer };
   }, {});
   const finalReducers = { actionType, ...reducers };
   const finalReducerKeys = Object.keys(finalReducers);
-
   return function combination(state: KeyValue<any> = {}, action: AnyAction) {
     let hasChanged = false;
     const nextState: KeyValue<any> = {};
@@ -100,20 +83,23 @@ export function combineReducers<M>(slices: M) {
       nextState[key] = nextStateForKey;
       hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
     });
-    hasChanged =
-      hasChanged || finalReducerKeys.length !== Object.keys(state).length;
+    hasChanged = hasChanged || finalReducerKeys.length !== Object.keys(state).length;
     return hasChanged ? nextState : state;
   }
 }
 
 function getUndefinedStateErrorMessage(key: string, action: AnyAction) {
   const actionType = action && action.type
-  const actionDescription =
-    (actionType && `action "${String(actionType)}"`) || 'an action'
-
+  const actionDescription = (actionType && `action "${String(actionType)}"`) || 'an action'
   return (
     `Given ${actionDescription}, reducer "${key}" returned undefined. ` +
     `To ignore an action, you must explicitly return the previous state. ` +
     `If you want this reducer to hold no value, you can return null instead of undefined.`
   )
 }
+
+function assignConnect(connects: Connect[]) {
+  connects.map(connect => connect(subscriber, listener, store.dispatch));
+}
+
+assignConnect(connects);

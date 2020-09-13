@@ -1,14 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { State, Dispatch, StateSubscriber, StateListener } from './redux-provider';
 
-function $<T extends HTMLElement>(selector: string, parent: HTMLElement | Document = document) {
-  return parent.querySelector(selector) as T;
-}
-
-function $$<T extends HTMLElement[]>(selector: string, parent: HTMLElement | Document = document) {
-  return [...parent.querySelectorAll(selector)] as T;
-}
-
 interface IRequestInfo {
   [tabId: number]: {
     formData?: {
@@ -59,8 +51,6 @@ function onBeforeRequestHandler(state: State, dispatch: Dispatch, details: chrom
 function onRemovedTabsHandler(state: State, dispatch: Dispatch, tabId: number) {
   dispatch(webRequest.actions.removePostData(tabId));
 }
-
-type A = typeof onRemovedTabsHandler;
 
 function webRequestListener(listener: StateListener) {
   return ({ options: { postPage } }: State, dispatch: Dispatch) => {
