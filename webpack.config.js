@@ -9,7 +9,7 @@ module.exports = {
   mode: MODE,
   entry: {
     popup: './src/index.ts',
-    bkg: './src/background.ts',
+    bkg: './src/redux-provider.ts',
   },
   output: {
     filename: '[name].bundle.js',
@@ -36,6 +36,9 @@ module.exports = {
         ],
       },
     ],
+  },
+  resolve: {
+    extensions: ['.ts'],
   },
   plugins: [
     new CopyPlugin({
