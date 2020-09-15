@@ -9,10 +9,6 @@ interface IRequestInfo {
   } | null
 }
 
-interface IOptions {
-  postPage: boolean,
-}
-
 const webRequest = createSlice({
   initialState: {} as IRequestInfo,
   name: 'webRequest',
@@ -27,11 +23,25 @@ const webRequest = createSlice({
   }
 });
 
+interface IOptions {
+  postPage: boolean,
+}
+
 const sliceOptions = createSlice({
   initialState: {} as IOptions,
   name: 'options',
   reducers: {
-    save: (state: IOptions, { payload }: PayloadAction<IOptions>) => {
+    update: (state: IOptions, { payload }: PayloadAction<IOptions>) => {
+      return { ...state, ...payload };
+    }
+  }
+});
+
+const bookmarks = createSlice({
+  initialState: {} as IBookmarks[],
+  name: 'bookmarks',
+  reducers: {
+    update: (state: IBookmarks[], { payload }: PayloadAction<IBookmarks[]>) => {
       return { ...state, ...payload };
     }
   }
@@ -40,6 +50,7 @@ const sliceOptions = createSlice({
 export const slices = {
   webRequest,
   options: sliceOptions,
+  bookmarks,
 };
 
 function onBeforeRequestHandler(state: State, dispatch: Dispatch, details: chrome.webRequest.WebRequestBodyDetails) {
@@ -73,25 +84,76 @@ function webRequestListener(listener: StateListener) {
   }
 }
 
-// function saveOptions(options: IOptions) {
-//   const promise = new Promise((resolve) => {
-//     chrome.storage.local.set(options, resolve);
-//   });
-//   dispatch(sliceOptions.actions.save(options));
-//   return promise;
-// }
-
-function getSavedOptions(dispatch: Dispatch, initialOptions: IOptions) {
-  chrome.storage.local.get((items) => {
-    dispatch(sliceOptions.actions.save({ ...initialOptions, ...items }));
-  });
-}
-
 const initialOptions = {
   postPage: true,
 }
 
-export function connect(subscribe: StateSubscriber, listener: StateListener, dispatch: Dispatch) {
+function saveOptions(state: State, dispatch: Dispatch, options: IOptions) {
+  const promise = new Promise((resolve) => {
+    chrome.storage.local.set(options, resolve);
+  });
+  dispatch(sliceOptions.actions.update(options));
+  return promise;
+}
+
+function getSavedOptions(dispatch: Dispatch, initialOptions: IOptions) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get((items) => {
+      dispatch(sliceOptions.actions.update({ ...initialOptions, ...items }));
+      resolve();
+    });
+  });
+}
+
+type Bookmarks = {
+  id: string;
+  title: string;
+  url?: string;
+  parentId?: string;
+  children: Bookmarks[] | null;
+}
+
+function digBookmarks({ id, title, url, parentId, children }: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
+  return {
+    id,
+    title,
+    url,
+    parentId,
+    children: children ? children.map((child) => digBookmarks(child)) : null,
+  }
+}
+
+function getBookmarksTree(dispatch: Dispatch) {
+  return new Promise((resolve) => {
+    chrome.bookmarks.getTree((treeNode) => {
+      const bookmarksTree = treeNode.map((node) => digBookmarks(node));
+      const bookmarksFlat = flattenBookmarksTree(bookmarksTree);
+      dispatch(bookmarks.actions.update(bookmarksFlat));
+      resolve();
+    });
+  });
+}
+
+type IBookmarks = {
+  id: string;
+  title: string;
+  url?: string;
+  parentId?: string;
+  children: string[];
+}
+
+function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
+  return bookmarksTree.reduce((acc, bookmark) => {
+    const childrenIds = bookmark.children?.map(({ id }) => id) || [];
+    const children = bookmark.children ? flattenBookmarksTree(bookmark.children) : [];
+    return [...acc, { ...bookmark, children: childrenIds }, ...children];
+  }, [] as IBookmarks[]);
+}
+
+export async function connect(subscribe: StateSubscriber, listener: StateListener, dispatch: Dispatch) {
   subscribe(webRequestListener(listener), ['options']);
-  getSavedOptions(dispatch, initialOptions);
+  await getSavedOptions(dispatch, initialOptions);
+  // listener(saveOptions);
+  await getBookmarksTree(dispatch);
+  // subscribe(flattenBookmarks, ['bookmarks']);
 }

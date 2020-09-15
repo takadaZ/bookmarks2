@@ -1,4 +1,4 @@
-import { configureStore, Slice, SliceCaseReducers, Reducer, CombinedState, AnyAction, createReducer, combineReducers } from '@reduxjs/toolkit';
+import { configureStore, Slice, SliceCaseReducers, Reducer, CombinedState, AnyAction, createSlice, createReducer, combineReducers } from '@reduxjs/toolkit';
 import { slices, connects } from './redux-configure';
 
 type Connect = (subscriber: StateSubscriber, listener: StateListener, dispatch: Dispatch) => void;
@@ -32,7 +32,9 @@ type NameFromSlice<M> = M extends Slice<any, any, infer S> ? S : never;
 type KeyValue<T> = { [x: string]: T };
 
 const actionType = createReducer('', (builder) => {
-  builder.addDefaultCase((state = '', action: AnyAction) => action.type);
+  builder.addDefaultCase((state = '', action: AnyAction) => {
+    return action.type;
+  });
 });
 
 const reducer = combineSlices(slices);
