@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { State, Dispatch, StateSubscriber, StateListener } from './redux-provider';
 
+// SliceReducers
+
 interface IRequestInfo {
   [tabId: number]: {
     formData?: {
@@ -19,7 +21,7 @@ const webRequest = createSlice({
     removePostData: (state: IRequestInfo, { payload }: PayloadAction<number>) => {
       return { ...state, [payload]: null };
     },
-    removePostDataAll: () => ({})
+    removePostDataAll: () => ({}),
   }
 });
 
@@ -33,7 +35,7 @@ const sliceOptions = createSlice({
   reducers: {
     update: (state: IOptions, { payload }: PayloadAction<IOptions>) => {
       return { ...state, ...payload };
-    }
+    },
   }
 });
 
@@ -43,15 +45,19 @@ const bookmarks = createSlice({
   reducers: {
     update: (state: IBookmarks[], { payload }: PayloadAction<IBookmarks[]>) => {
       return { ...state, ...payload };
-    }
+    },
   }
 });
+
+// Exports Slices
 
 export const slices = {
   webRequest,
   options: sliceOptions,
   bookmarks,
 };
+
+// Functions
 
 function onBeforeRequestHandler(state: State, dispatch: Dispatch, details: chrome.webRequest.WebRequestBodyDetails) {
   if (details && details.frameId === 0 && details.type === 'main_frame' && details.method === 'POST' && details.requestBody) {
@@ -134,7 +140,7 @@ function getBookmarksTree(dispatch: Dispatch) {
   });
 }
 
-type IBookmarks = {
+interface IBookmarks {
   id: string;
   title: string;
   url?: string;
@@ -149,6 +155,8 @@ function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
     return [...acc, { ...bookmark, children: childrenIds }, ...children];
   }, [] as IBookmarks[]);
 }
+
+// Connect
 
 export async function connect(subscribe: StateSubscriber, listener: StateListener, dispatch: Dispatch) {
   subscribe(webRequestListener(listener), ['options']);
