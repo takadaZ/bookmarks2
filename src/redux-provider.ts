@@ -39,26 +39,13 @@ const reducer = combineSlices(slices);
 const store = configureStore({ reducer });
 
 export type Actions = NameObjectFromSlicessMapObject<typeof slices>;
+// export type States = keyof typeof slices;
 export type State = ReturnType<typeof store.getState>;
 export type Dispatch = typeof store.dispatch;
 export type SubscribeHandler = (state: State, dispatch: Dispatch) => void;
 export type StateSubscriber = (handler: SubscribeHandler, actionTypes: Actions[]) => void;
 export type ListenerHandler<T = State, U = Dispatch, V = any, W = any, X = any> = (state: T, dispatch: U, arg1: V, arg2: W, arg3: X) => void;
 export type StateListener = <T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>) => (arg1?: T, arg2?: U, arg3?: V) => ReturnType<ListenerHandler<State, Dispatch, T, U, V>>;
-
-function subscriber(handler: SubscribeHandler, actionTypes: Actions[] = []) {
-  store.subscribe(() => {
-    const state = store.getState();
-    console.log((state as any).actionType);
-    if (actionTypes.find(actionType => (state as any).actionType.startsWith(actionType + '/'))) {
-      handler(state, store.dispatch);
-    }
-  });
-}
-
-function listener(handler: ListenerHandler) {
-  return (arg1: any, arg2?: any, arg3?: any) => handler(store.getState(), store.dispatch, arg1, arg2, arg3);
-}
 
 export function combineSlices<M extends SlicesMapObject<any, any>>(
   reducers: M
@@ -74,8 +61,60 @@ export function combineSlices<M extends SlicesMapObject<any, any>>(slices: M) {
   return combineReducers(reducers);
 }
 
+function subscriber(handler: SubscribeHandler, actionTypes: Actions[] = []) {
+  store.subscribe(() => {
+    const state = store.getState();
+    console.log((state as any).actionType);
+    if (actionTypes.find(actionType => (state as any).actionType.startsWith(actionType + '/'))) {
+      handler(state, store.dispatch);
+    }
+  });
+}
+
+function listener(handler: ListenerHandler) {
+  return (arg1: any, arg2?: any, arg3?: any) => handler(store.getState(), store.dispatch, arg1, arg2, arg3);
+}
+
 function assignConnect(connects: Connect[]) {
   connects.map(connect => connect(subscriber, listener, store.dispatch));
 }
 
 assignConnect(connects);
+
+const getClassName = Object.prototype.toString.call.bind(Object.prototype.toString);
+const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
+
+function shallowEqual(a: any, b: any) {
+  const classNameA = getClassName(a);
+  if (classNameA !== getClassName(b)) {
+    return false;
+  }
+  if (classNameA === '[object Array]') {
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (classNameA === '[object Object]') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) {
+      return false;
+    }
+    for (let i = 0; i < keysA.length; i++) {
+      if (
+        !hasOwnProperty(b, keysA[i]) ||
+        !Object.is(a[keysA[i]], b[keysA[i]])
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return Object.is(a, b);
+}
