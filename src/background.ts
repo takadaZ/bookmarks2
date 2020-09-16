@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { State, Dispatch, StateSubscriber, StateListener } from './redux-provider';
+import { State, Dispatch, AnyDispatch, StateSubscriber, StateListener } from './redux-provider';
+import { pipe } from './libUtils';
 
 // SliceReducers
 
@@ -129,14 +130,17 @@ function digBookmarks({ id, title, url, parentId, children }: chrome.bookmarks.B
   }
 }
 
-function getBookmarksTree(dispatch: Dispatch) {
+function getBookmarksTree(dispatch: AnyDispatch) {
   return new Promise((resolve) => {
-    chrome.bookmarks.getTree((treeNode) => {
-      const bookmarksTree = treeNode.map((node) => digBookmarks(node));
-      const bookmarksFlat = flattenBookmarksTree(bookmarksTree);
-      dispatch(bookmarks.actions.update(bookmarksFlat));
-      resolve();
-    });
+    chrome.bookmarks.getTree(
+      pipe(
+        (treeNode) => treeNode.map((node) => digBookmarks(node)),
+        flattenBookmarksTree,
+        bookmarks.actions.update,
+        dispatch,
+        resolve,
+      )
+    );
   });
 }
 
@@ -163,5 +167,4 @@ export async function connect(subscribe: StateSubscriber, listener: StateListene
   await getSavedOptions(dispatch, initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch);
-  // subscribe(flattenBookmarks, ['bookmarks']);
 }

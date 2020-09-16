@@ -1,4 +1,4 @@
-import { configureStore, Slice, SliceCaseReducers, Reducer, CombinedState, AnyAction, createSlice, createReducer, combineReducers } from '@reduxjs/toolkit';
+import { configureStore, Slice, SliceCaseReducers, Reducer, CombinedState, AnyAction, createReducer, combineReducers, Dispatch as DispatchA } from '@reduxjs/toolkit';
 import { slices, connects } from './redux-configure';
 
 type Connect = (subscriber: StateSubscriber, listener: StateListener, dispatch: Dispatch) => void;
@@ -44,6 +44,7 @@ export type Actions = NameObjectFromSlicessMapObject<typeof slices>;
 // export type States = keyof typeof slices;
 export type State = ReturnType<typeof store.getState>;
 export type Dispatch = typeof store.dispatch;
+export type AnyDispatch = DispatchA;
 export type SubscribeHandler = (state: State, dispatch: Dispatch) => void;
 export type StateSubscriber = (handler: SubscribeHandler, actionTypes: Actions[]) => void;
 export type ListenerHandler<T = State, U = Dispatch, V = any, W = any, X = any> = (state: T, dispatch: U, arg1: V, arg2: W, arg3: X) => void;
@@ -82,41 +83,3 @@ function assignConnect(connects: Connect[]) {
 }
 
 assignConnect(connects);
-
-const getClassName = Object.prototype.toString.call.bind(Object.prototype.toString);
-const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
-
-function shallowEqual(a: any, b: any) {
-  const classNameA = getClassName(a);
-  if (classNameA !== getClassName(b)) {
-    return false;
-  }
-  if (classNameA === '[object Array]') {
-    if (a.length !== b.length) {
-      return false;
-    }
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  if (classNameA === '[object Object]') {
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) {
-      return false;
-    }
-    for (let i = 0; i < keysA.length; i++) {
-      if (
-        !hasOwnProperty(b, keysA[i]) ||
-        !Object.is(a[keysA[i]], b[keysA[i]])
-      ) {
-        return false;
-      }
-    }
-    return true;
-  }
-  return Object.is(a, b);
-}
