@@ -45,8 +45,7 @@ const actionType = createReducer('', (builder) => {
 export function combineSlices<M extends SlicesMapObject<any, any>>(slices: M): Reducer<
   CombinedState<StateFromSlicesMapObject<M>>,
   ActionFromSlicessMapObject<M>
->;
-
+>
 // eslint-disable-next-line no-redeclare
 export function combineSlices<M extends SlicesMapObject<any, any>>(slices: M) {
   const reducers = Object.entries(slices).reduce<KeyValue<Reducer>>(
