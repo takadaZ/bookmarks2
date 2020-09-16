@@ -1,5 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { State, Dispatch, AnyDispatch, StateSubscriber, StateListener } from './redux-provider';
+import {
+  State,
+  Dispatch,
+  AnyDispatch,
+  StateSubscriber,
+  StateListener,
+} from './redux-provider';
 import { pipe } from './libUtils';
 
 // SliceReducers
@@ -16,14 +22,15 @@ const webRequest = createSlice({
   initialState: {} as IRequestInfo,
   name: 'webRequest',
   reducers: {
-    request: (state: IRequestInfo, { payload }: PayloadAction<chrome.webRequest.WebRequestBodyDetails>) => {
-      return { ...state, [payload.tabId]: { formData: payload.requestBody.formData } };
-    },
-    removePostData: (state: IRequestInfo, { payload }: PayloadAction<number>) => {
-      return { ...state, [payload]: null };
-    },
+    request: (
+      state: IRequestInfo,
+      { payload }: PayloadAction<chrome.webRequest.WebRequestBodyDetails>,
+    ) => ({ ...state, [payload.tabId]: { formData: payload.requestBody.formData } }),
+    removePostData: (state: IRequestInfo, { payload }: PayloadAction<number>) => (
+      { ...state, [payload]: null }
+    ),
     removePostDataAll: () => ({}),
-  }
+  },
 });
 
 interface IOptions {
@@ -34,20 +41,28 @@ const sliceOptions = createSlice({
   initialState: {} as IOptions,
   name: 'options',
   reducers: {
-    update: (state: IOptions, { payload }: PayloadAction<IOptions>) => {
-      return { ...state, ...payload };
-    },
-  }
+    update: (state: IOptions, { payload }: PayloadAction<IOptions>) => (
+      { ...state, ...payload }
+    ),
+  },
 });
+
+interface IBookmarks {
+  id: string;
+  title: string;
+  url?: string;
+  parentId?: string;
+  children: string[];
+}
 
 const bookmarks = createSlice({
   initialState: {} as IBookmarks[],
   name: 'bookmarks',
   reducers: {
-    update: (state: IBookmarks[], { payload }: PayloadAction<IBookmarks[]>) => {
-      return { ...state, ...payload };
-    },
-  }
+    update: (state: IBookmarks[], { payload }: PayloadAction<IBookmarks[]>) => (
+      { ...state, ...payload }
+    ),
+  },
 });
 
 // Exports Slices
@@ -60,13 +75,23 @@ export const slices = {
 
 // Functions
 
-function onBeforeRequestHandler(state: State, dispatch: Dispatch, details: chrome.webRequest.WebRequestBodyDetails) {
-  if (details && details.frameId === 0 && details.type === 'main_frame' && details.method === 'POST' && details.requestBody) {
+function onBeforeRequestHandler(
+  _: State,
+  dispatch: Dispatch,
+  details: chrome.webRequest.WebRequestBodyDetails,
+) {
+  if (
+    details
+    && details.frameId === 0
+    && details.type === 'main_frame'
+    && details.method === 'POST'
+    && details.requestBody
+  ) {
     dispatch(webRequest.actions.request(details));
   }
 }
 
-function onRemovedTabsHandler(state: State, dispatch: Dispatch, tabId: number) {
+function onRemovedTabsHandler(_: State, dispatch: Dispatch, tabId: number) {
   dispatch(webRequest.actions.removePostData(tabId));
 }
 
@@ -74,7 +99,7 @@ function webRequestListener(listener: StateListener) {
   return ({ options: { postPage } }: State, dispatch: Dispatch) => {
     if (postPage) {
       if (!chrome.webRequest.onBeforeRequest.hasListeners()) {
-        chrome.webRequest.onBeforeRequest.addListener(listener(onBeforeRequestHandler), { urls: ["*://*/*"] }, ["requestBody"]);
+        chrome.webRequest.onBeforeRequest.addListener(listener(onBeforeRequestHandler), { urls: ['*://*/*'] }, ['requestBody']);
       }
       if (!chrome.tabs.onRemoved.hasListeners()) {
         chrome.tabs.onRemoved.addListener(listener(onRemovedTabsHandler));
@@ -88,25 +113,25 @@ function webRequestListener(listener: StateListener) {
         dispatch(webRequest.actions.removePostDataAll());
       }
     }
-  }
+  };
 }
 
 const initialOptions = {
   postPage: true,
-}
+};
 
-function saveOptions(state: State, dispatch: Dispatch, options: IOptions) {
-  const promise = new Promise((resolve) => {
-    chrome.storage.local.set(options, resolve);
-  });
-  dispatch(sliceOptions.actions.update(options));
-  return promise;
-}
+// function saveOptions(state: State, dispatch: Dispatch, options: IOptions) {
+//   const promise = new Promise((resolve) => {
+//     chrome.storage.local.set(options, resolve);
+//   });
+//   dispatch(sliceOptions.actions.update(options));
+//   return promise;
+// }
 
-function getSavedOptions(dispatch: Dispatch, initialOptions: IOptions) {
+function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
   return new Promise((resolve) => {
     chrome.storage.local.get((items) => {
-      dispatch(sliceOptions.actions.update({ ...initialOptions, ...items }));
+      dispatch(sliceOptions.actions.update({ ...initOptions, ...items }));
       resolve();
     });
   });
@@ -120,14 +145,25 @@ type Bookmarks = {
   children: Bookmarks[] | null;
 }
 
-function digBookmarks({ id, title, url, parentId, children }: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
+function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
+  return bookmarksTree.reduce((acc, bookmark) => {
+    const childrenIds = bookmark.children?.map(({ id }) => id) || [];
+    const children = bookmark.children ? flattenBookmarksTree(bookmark.children) : [];
+    return [...acc, { ...bookmark, children: childrenIds }, ...children];
+  }, [] as IBookmarks[]);
+}
+
+function digBookmarks(bookmark: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
+  const {
+    id, title, url, parentId, children,
+  } = bookmark;
   return {
     id,
     title,
     url,
     parentId,
     children: children ? children.map((child) => digBookmarks(child)) : null,
-  }
+  };
 }
 
 function getBookmarksTree(dispatch: AnyDispatch) {
@@ -139,30 +175,18 @@ function getBookmarksTree(dispatch: AnyDispatch) {
         bookmarks.actions.update,
         dispatch,
         resolve,
-      )
+      ),
     );
   });
 }
 
-interface IBookmarks {
-  id: string;
-  title: string;
-  url?: string;
-  parentId?: string;
-  children: string[];
-}
-
-function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
-  return bookmarksTree.reduce((acc, bookmark) => {
-    const childrenIds = bookmark.children?.map(({ id }) => id) || [];
-    const children = bookmark.children ? flattenBookmarksTree(bookmark.children) : [];
-    return [...acc, { ...bookmark, children: childrenIds }, ...children];
-  }, [] as IBookmarks[]);
-}
-
 // Connect
 
-export async function connect(subscribe: StateSubscriber, listener: StateListener, dispatch: Dispatch) {
+export async function connect(
+  subscribe: StateSubscriber,
+  listener: StateListener,
+  dispatch: Dispatch,
+) {
   subscribe(webRequestListener(listener), ['options']);
   await getSavedOptions(dispatch, initialOptions);
   // listener(saveOptions);

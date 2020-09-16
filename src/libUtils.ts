@@ -1,3 +1,5 @@
+/* eslint-disable no-redeclare */
+/* eslint-disable no-unused-vars */
 const getClassName = Object.prototype.toString.call.bind(Object.prototype.toString);
 const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
@@ -14,13 +16,13 @@ export function objectEqaul(a: any, b: any, deep = false) {
       return false;
     }
     if (deep) {
-      for (let i = 0; i < a.length; i++) {
+      for (let i = 0; i < a.length; i += 1) {
         if (!objectEqaul(a[i], b[i], true)) {
           return false;
         }
       }
     } else {
-      for (let i = 0; i < a.length; i++) {
+      for (let i = 0; i < a.length; i += 1) {
         if (Object.is(a[i], b[i])) {
           return false;
         }
@@ -35,19 +37,19 @@ export function objectEqaul(a: any, b: any, deep = false) {
       return false;
     }
     if (deep) {
-      for (let i = 0; i < keysA.length; i++) {
+      for (let i = 0; i < keysA.length; i += 1) {
         if (
-          !hasOwnProperty(b, keysA[i]) ||
-          !objectEqaul(a[keysA[i]], b[keysA[i]], true)
+          !hasOwnProperty(b, keysA[i])
+          || !objectEqaul(a[keysA[i]], b[keysA[i]], true)
         ) {
           return false;
         }
       }
     } else {
-      for (let i = 0; i < keysA.length; i++) {
+      for (let i = 0; i < keysA.length; i += 1) {
         if (
-          !hasOwnProperty(b, keysA[i]) ||
-          !Object.is(a[keysA[i]], b[keysA[i]])
+          !hasOwnProperty(b, keysA[i])
+          || !Object.is(a[keysA[i]], b[keysA[i]])
         ) {
           return false;
         }
@@ -59,7 +61,10 @@ export function objectEqaul(a: any, b: any, deep = false) {
 }
 
 export function pipe<T1 extends any[], R1>(fn1: (...a: T1) => R1): (...a: T1) => R1;
-export function pipe<T1 extends any[], R1, R2>(fn1: (...a: T1) => R1, fn2: (a: R1) => R2): (...a: T1) => R2;
+export function pipe<T1 extends any[], R1, R2>(
+  fn1: (...a: T1) => R1,
+  fn2: (a: R1) => R2
+): (...a: T1) => R2;
 export function pipe<T1 extends any[], R1, R2, R3>(
   fn1: (...a: T1) => R1,
   fn2: (a: R1) => R2,

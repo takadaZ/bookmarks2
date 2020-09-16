@@ -1,9 +1,9 @@
 import * as background from './background';
 
-export const slices = {
+export const mergedSlices = {
   ...background.slices,
 };
 
-export const connects = [
+export const mergedConnects = [
   background.connect,
 ];
