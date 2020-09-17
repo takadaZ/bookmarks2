@@ -6,7 +6,7 @@ import {
   StateSubscriber,
   StateListener,
 } from './redux-provider';
-import { pipe } from './libUtils';
+import * as F from './libUtils';
 
 // SliceReducers
 
@@ -128,13 +128,12 @@ const initialOptions = {
 //   return promise;
 // }
 
-function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
-  return new Promise((resolve) => {
-    chrome.storage.local.get((items) => {
-      dispatch(sliceOptions.actions.update({ ...initOptions, ...items }));
-      resolve();
-    });
+async function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
+  const items = await new Promise<{ [key: string]: any }>((resolve) => {
+    chrome.storage.local.get('bookmarks2', resolve);
   });
+  // const items = await F.cbToPromise(F.curry(chrome.storage.local.get)('bookmarks2'));
+  dispatch(sliceOptions.actions.update({ ...initOptions, ...items }));
 }
 
 type Bookmarks = {
@@ -153,10 +152,9 @@ function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
   }, [] as IBookmarks[]);
 }
 
-function digBookmarks(bookmark: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
-  const {
-    id, title, url, parentId, children,
-  } = bookmark;
+function digBookmarks({
+  id, title, url, parentId, children,
+}: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
   return {
     id,
     title,
@@ -166,18 +164,14 @@ function digBookmarks(bookmark: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
   };
 }
 
-function getBookmarksTree(dispatch: AnyDispatch) {
-  return new Promise((resolve) => {
-    chrome.bookmarks.getTree(
-      pipe(
-        (treeNode) => treeNode.map((node) => digBookmarks(node)),
-        flattenBookmarksTree,
-        bookmarks.actions.update,
-        dispatch,
-        resolve,
-      ),
-    );
-  });
+async function getBookmarksTree(dispatch: AnyDispatch) {
+  const bookmarkTreeNode = await F.cbToPromise(chrome.bookmarks.getTree);
+  return F.pipe(
+    F.map(digBookmarks),
+    flattenBookmarksTree,
+    bookmarks.actions.update,
+    dispatch,
+  )(bookmarkTreeNode);
 }
 
 // Connect

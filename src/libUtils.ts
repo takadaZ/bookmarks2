@@ -1,5 +1,19 @@
 /* eslint-disable no-redeclare */
 /* eslint-disable no-unused-vars */
+
+export function map<T, U>(f: (element: T) => U) {
+  return (array: T[]) => array.map(f);
+}
+
+export async function cbToPromise<T>(f: (_: (a: T) => unknown) => unknown) {
+  return new Promise<T>((resolve) => f(resolve));
+}
+
+export function curry<T1, T2, U>(f: (p1: T1, p2: T2) => U): (p1: T1) => (p2: T2) => U;
+export function curry(f: (p1: any, p2: any) => any) {
+  return (p1: any) => (p2: any) => f(p1, p2);
+}
+
 const getClassName = Object.prototype.toString.call.bind(Object.prototype.toString);
 const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
@@ -59,6 +73,14 @@ export function objectEqaul(a: any, b: any, deep = false) {
   }
   return false;
 }
+
+// export function pipeP<T1 extends any[], R1, R2, R3, R4, R5>(
+//   fn1: (...a: T1) => R1,
+//   fn2: (a: R1) => R2,
+//   fn3: (a: R2) => R3,
+//   fn4: (a: R3) => R4,
+//   fn5: (a: R4) => R5
+// ): (...a: T1) => R5;
 
 export function pipe<T1 extends any[], R1>(fn1: (...a: T1) => R1): (...a: T1) => R1;
 export function pipe<T1 extends any[], R1, R2>(
@@ -135,5 +157,5 @@ export function pipe<T1 extends any[], R1, R2, R3, R4, R5, R6, R7, R8, R9, R10>(
 ): (...a: T1) => R10
 
 export function pipe(fn: any, ...fns: any[]) {
-  return (...a: any) => fns.reduce((prev, next) => next(prev), fn(...a));
+  return (...values: any) => fns.reduce((prevValue, nextFn) => nextFn(prevValue), fn(...values));
 }

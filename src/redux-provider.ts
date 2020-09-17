@@ -79,8 +79,9 @@ export type StateListener = <T, U, V>(handler: ListenerHandler<State, Dispatch, 
 function subscriber(handler: SubscribeHandler, actionTypes: Actions[] = []) {
   store.subscribe(() => {
     const state = store.getState();
-    // console.log((state as any).actionType);
-    if (actionTypes.find((actionTypeRoot) => (state as any).actionTypeRoot.startsWith(`${actionTypeRoot}/`))) {
+    // eslint-disable-next-line no-console
+    console.log((state as any).actionType);
+    if (actionTypes.find((action) => (state as any).actionType.startsWith(`${action}/`))) {
       handler(state, store.dispatch);
     }
   });
