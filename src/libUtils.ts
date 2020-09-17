@@ -74,36 +74,28 @@ export function objectEqaul(a: any, b: any, deep = false) {
   return false;
 }
 
-// export function pipeP<T1 extends any[], R1, R2, R3, R4, R5>(
-//   fn1: (...a: T1) => R1,
-//   fn2: (a: R1) => R2,
-//   fn3: (a: R2) => R3,
-//   fn4: (a: R3) => R4,
-//   fn5: (a: R4) => R5
-// ): (...a: T1) => R5;
-
 export function pipe<T1 extends any[], R1>(fn1: (...a: T1) => R1): (...a: T1) => R1;
 export function pipe<T1 extends any[], R1, R2>(
   fn1: (...a: T1) => R1,
-  fn2: (a: R1) => R2
+  fn2: (a: R1) => R2,
 ): (...a: T1) => R2;
 export function pipe<T1 extends any[], R1, R2, R3>(
   fn1: (...a: T1) => R1,
   fn2: (a: R1) => R2,
-  fn3: (a: R2) => R3
+  fn3: (a: R2) => R3,
 ): (...a: T1) => R3;
 export function pipe<T1 extends any[], R1, R2, R3, R4>(
   fn1: (...a: T1) => R1,
   fn2: (a: R1) => R2,
   fn3: (a: R2) => R3,
-  fn4: (a: R3) => R4
+  fn4: (a: R3) => R4,
 ): (...a: T1) => R4;
 export function pipe<T1 extends any[], R1, R2, R3, R4, R5>(
   fn1: (...a: T1) => R1,
   fn2: (a: R1) => R2,
   fn3: (a: R2) => R3,
   fn4: (a: R3) => R4,
-  fn5: (a: R4) => R5
+  fn5: (a: R4) => R5,
 ): (...a: T1) => R5;
 export function pipe<T1 extends any[], R1, R2, R3, R4, R5, R6>(
   fn1: (...a: T1) => R1,
@@ -154,8 +146,21 @@ export function pipe<T1 extends any[], R1, R2, R3, R4, R5, R6, R7, R8, R9, R10>(
   fn8: (a: R7) => R8,
   fn9: (a: R8) => R9,
   fn10: (a: R9) => R10,
-): (...a: T1) => R10
+): (...a: T1) => R10;
 
 export function pipe(fn: any, ...fns: any[]) {
   return (...values: any) => fns.reduce((prevValue, nextFn) => nextFn(prevValue), fn(...values));
+}
+
+export function pipeP<T1, R1, R2, R3, R4, R5>(
+  fn1: (a: T1) => R1,
+  fn2: (a: R1) => R2,
+  fn3: (a: R2) => R3,
+  fn4: (a: R3) => R4,
+): (a: Promise<T1>) => Promise<R4>;
+
+export function pipeP(...fns: any[]) {
+  return (p1: Promise<any>) => {
+    fns.reduce((prevPromise, nextFn) => prevPromise.then(nextFn), p1);
+  };
 }

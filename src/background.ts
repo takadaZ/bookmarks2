@@ -164,14 +164,13 @@ function digBookmarks({
   };
 }
 
-async function getBookmarksTree(dispatch: AnyDispatch) {
-  const bookmarkTreeNode = await F.cbToPromise(chrome.bookmarks.getTree);
-  return F.pipe(
+function getBookmarksTree(dispatch: AnyDispatch) {
+  return F.pipeP(
     F.map(digBookmarks),
     flattenBookmarksTree,
     bookmarks.actions.update,
     dispatch,
-  )(bookmarkTreeNode);
+  );
 }
 
 // Connect
@@ -184,5 +183,5 @@ export async function connect(
   subscribe(webRequestListener(listener), ['options']);
   await getSavedOptions(dispatch, initialOptions);
   // listener(saveOptions);
-  await getBookmarksTree(dispatch);
+  await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
 }
