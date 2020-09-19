@@ -8,7 +8,12 @@ import {
 } from './redux-provider';
 import * as F from './utils';
 import { $ } from './utils';
-import { BxLeaf, BookmarkElmentProps } from './custom-elements';
+import {
+  BxLeaf,
+  // LeafProps,
+  BxNode,
+  // nodeProps,
+} from './custom-elements';
 
 // SliceReducers
 
@@ -51,6 +56,7 @@ const sliceOptions = createSlice({
 
 export interface IBookmark extends Pick<chrome.bookmarks.BookmarkTreeNode, 'id' | 'url'>{
   content: string,
+  indent: number,
   parentId?: number;
   childrenIds?: number[];
 }
@@ -163,13 +169,14 @@ function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks {
 
 function digBookmarks({
   id, title, url, parentId, children,
-}: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
+}: chrome.bookmarks.BookmarkTreeNode, indent = 0): Bookmarks {
   return {
     id,
     url,
     parentId,
+    indent,
     content: title,
-    children: children?.map((child) => digBookmarks(child)),
+    children: children?.map((child) => digBookmarks(child, indent)),
   };
 }
 
@@ -183,11 +190,39 @@ function getBookmarksTree(dispatch: AnyDispatch) {
 }
 
 customElements.define('bx-leaf', BxLeaf, { extends: 'div' });
+customElements.define('bx-node', BxNode, { extends: 'div' });
+
+const BxLeaf1 = customElements.get('bx-leaf') as typeof BxLeaf;
+const BxNode1 = customElements.get('bx-node') as typeof BxNode;
+
+type BookmarkElements = (BxLeaf | BxNode)[];
+
+function addBookmark(
+  id: number,
+  nodes: IBookmarks,
+  elements: BookmarkElements,
+): BookmarkElements {
+  const node = nodes[id];
+  if (node.childrenIds) {
+    const children = node.childrenIds.map((childId) => addBookmark(childId, nodes, elements))
+      .flat();
+    return [...elements, new BxNode1({ ...node, id: String(id) }), ...children];
+  }
+  const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
+  return [...elements, new BxLeaf1({ ...node, id: String(id), sUrl })];
+}
 
 function makeHtmlBookmarks(state: State) {
-  const BxLeaf1 = customElements.get('bx-leaf') as typeof BxLeaf;
-  const leafs = Object.values(state.bookmarks)
-    .map((bookmark: BookmarkElmentProps) => new BxLeaf1(bookmark));
+  // const leafs = Object.entries(state.bookmarks)
+  //   // .filter()
+  //   .map(([id, node]: [string, IBookmark]) => {
+  //     if (node.childrenIds) {
+  //       return new BxNode1({ ...node, id });
+  //     }
+  //     const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
+  //     return new BxLeaf1({ ...node, id, sUrl });
+  //   });
+  const leafs = addBookmark(0, state.bookmarks, []);
   $('#bookmarks').append(...leafs);
 }
 

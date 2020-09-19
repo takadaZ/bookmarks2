@@ -1,37 +1,66 @@
-import { $ } from './utils';
+/* eslint-disable max-classes-per-file */
 
-export interface BookmarkElmentProps {
-  id: string,
-  content?: string;
+export interface LeafProps {
+  id: string;
+  parentId?: number;
+  content: string;
   url?: string;
-  iconClass: string;
   sUrl: string;
 }
 
-export class BxLeaf extends HTMLDivElement implements BookmarkElmentProps {
-  // props
+export class BxLeaf extends HTMLDivElement implements LeafProps {
+  parentId: number = 0;
   content: string = '';
-  iconClass: string = '';
   url: string = '';
   sUrl: string = '';
-  // child elements
-  link!: HTMLAnchorElement;
-  icon!: HTMLElement;
-  constructor(props: BookmarkElmentProps) {
+  constructor(props: LeafProps) {
     super();
     Object.assign(this, props);
     this.className = 'leaf';
-    const tmplBookmarkElement = $('.leaf', $<HTMLTemplateElement>('template').content);
-    const bookmarkElement = tmplBookmarkElement.firstElementChild!.cloneNode(true);
-    this.attachShadow({ mode: 'open' }).append(bookmarkElement);
-    this.link = $<HTMLAnchorElement>('a', this.shadowRoot!);
-    this.icon = $<HTMLElement>('i', this.shadowRoot!);
     this.update();
   }
   update() {
-    this.link.textContent = this.content;
-    this.link.title = this.sUrl;
-    this.link.style.backgroundImage = `url('chrome://favicon/${this.url}')`;
-    this.icon.className = this.iconClass;
+    this.dataset.parentId = String(this.parentId);
+    this.innerHTML = this.template();
+  }
+  template() {
+    const { content, url, sUrl } = this;
+    return `
+      <span>
+        <a href="#nul" title="${sUrl}" class="title2" style="background-image:url('chrome://favicon/${url}');">${content}</a>
+      </span>
+    `;
+  }
+}
+
+export interface NodeProps {
+  id: string;
+  parentId?: number;
+  content: string;
+  indent: number;
+}
+
+export class BxNode extends HTMLDivElement implements NodeProps {
+  parentId: number = 0;
+  content: string = '';
+  state: string = '';
+  indent: number = 0;
+  constructor(props: NodeProps) {
+    super();
+    Object.assign(this, props);
+    this.className = `folder ${this.state}`;
+    this.update();
+  }
+  update() {
+    this.dataset.parentId = String(this.parentId);
+    this.innerHTML = this.template();
+  }
+  template() {
+    const padding = this.indent * 15 + 5;
+    return `
+      <div class="marker">
+        <span class="expand-icon" style="margin-left:${padding}px"></span><span class="title" tabindex="2">${this.content}</span>
+      </div>
+    `;
   }
 }
