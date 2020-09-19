@@ -6,7 +6,7 @@ import {
   StateSubscriber,
   StateListener,
 } from './redux-provider';
-import * as F from './libUtils';
+import * as F from './utils';
 
 // SliceReducers
 
@@ -47,11 +47,10 @@ const sliceOptions = createSlice({
   },
 });
 
-interface IBookmarks {
-  id: string;
-  title: string;
-  url?: string;
-  parentId?: string;
+interface IBookmarks extends Pick<
+  chrome.bookmarks.BookmarkTreeNode,
+  'id' | 'title' | 'url' | 'parentId'
+>{
   children: string[];
 }
 
@@ -136,13 +135,7 @@ async function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
   dispatch(sliceOptions.actions.update({ ...initOptions, ...items }));
 }
 
-type Bookmarks = {
-  id: string;
-  title: string;
-  url?: string;
-  parentId?: string;
-  children: Bookmarks[] | null;
-}
+type Bookmarks = Omit<IBookmarks, 'children'> & { children?: Bookmarks[] };
 
 function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
   return bookmarksTree.reduce((acc, bookmark) => {
@@ -160,7 +153,7 @@ function digBookmarks({
     title,
     url,
     parentId,
-    children: children ? children.map((child) => digBookmarks(child)) : null,
+    children: children?.map((child) => digBookmarks(child)),
   };
 }
 
