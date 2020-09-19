@@ -1,6 +1,20 @@
 /* eslint-disable no-redeclare */
 /* eslint-disable no-unused-vars */
 
+export function $<T extends HTMLElement>(
+  selector: string,
+  parent: HTMLElement | DocumentFragment | Document = document,
+) {
+  return parent.querySelector(selector) as T;
+}
+
+export function $$<T extends HTMLElement[]>(
+  selector: string,
+  parent: HTMLElement | DocumentFragment | Document = document,
+) {
+  return [...parent.querySelectorAll(selector)] as T;
+}
+
 export function map<T, U>(f: (element: T) => U) {
   return (array: T[]) => array.map(f);
 }

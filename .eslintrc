@@ -16,6 +16,7 @@
     }
   },
   "rules": {
+    "lines-between-class-members": "off",
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/prefer-function-type": "off",
     "import/extensions": [

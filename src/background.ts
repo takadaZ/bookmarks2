@@ -7,6 +7,8 @@ import {
   StateListener,
 } from './redux-provider';
 import * as F from './utils';
+import { $ } from './utils';
+import { BxLeaf, BookmarkElmentProps } from './custom-elements';
 
 // SliceReducers
 
@@ -47,18 +49,21 @@ const sliceOptions = createSlice({
   },
 });
 
-interface IBookmarks extends Pick<
-  chrome.bookmarks.BookmarkTreeNode,
-  'id' | 'title' | 'url' | 'parentId'
->{
-  children: string[];
+export interface IBookmark extends Pick<chrome.bookmarks.BookmarkTreeNode, 'id' | 'url'>{
+  content: string,
+  parentId?: number;
+  childrenIds?: number[];
+}
+
+interface IBookmarks {
+  [id: number]: Omit<IBookmark, 'id'>;
 }
 
 const bookmarks = createSlice({
-  initialState: {} as IBookmarks[],
+  initialState: {} as IBookmarks,
   name: 'bookmarks',
   reducers: {
-    update: (state: IBookmarks[], { payload }: PayloadAction<IBookmarks[]>) => (
+    update: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
       { ...state, ...payload }
     ),
   },
@@ -135,14 +140,25 @@ async function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
   dispatch(sliceOptions.actions.update({ ...initOptions, ...items }));
 }
 
-type Bookmarks = Omit<IBookmarks, 'children'> & { children?: Bookmarks[] };
+type Bookmarks = Omit<IBookmark, 'children' | 'parentId'> & {
+  parentId?: string
+  children?: Bookmarks[]
+};
 
-function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks[] {
-  return bookmarksTree.reduce((acc, bookmark) => {
-    const childrenIds = bookmark.children?.map(({ id }) => id) || [];
-    const children = bookmark.children ? flattenBookmarksTree(bookmark.children) : [];
-    return [...acc, { ...bookmark, children: childrenIds }, ...children];
-  }, [] as IBookmarks[]);
+function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks {
+  return bookmarksTree.reduce((acc, {
+    id, content, url, parentId, children,
+  }) => {
+    const childrenIds = children?.map((child) => Number(child.id));
+    const thisChildren = children ? flattenBookmarksTree(children) : {};
+    return {
+      ...acc,
+      [id]: {
+        content, url, parentId, childrenIds,
+      },
+      ...thisChildren,
+    };
+  }, {} as IBookmarks);
 }
 
 function digBookmarks({
@@ -150,9 +166,9 @@ function digBookmarks({
 }: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
   return {
     id,
-    title,
     url,
     parentId,
+    content: title,
     children: children?.map((child) => digBookmarks(child)),
   };
 }
@@ -166,6 +182,15 @@ function getBookmarksTree(dispatch: AnyDispatch) {
   );
 }
 
+customElements.define('bx-leaf', BxLeaf, { extends: 'div' });
+
+function makeHtmlBookmarks(state: State) {
+  const BxLeaf1 = customElements.get('bx-leaf') as typeof BxLeaf;
+  const leafs = Object.values(state.bookmarks)
+    .map((bookmark: BookmarkElmentProps) => new BxLeaf1(bookmark));
+  $('#bookmarks').append(...leafs);
+}
+
 // Connect
 
 export async function connect(
@@ -177,4 +202,5 @@ export async function connect(
   await getSavedOptions(dispatch, initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
+  subscribe(makeHtmlBookmarks, ['bookmarks']);
 }
