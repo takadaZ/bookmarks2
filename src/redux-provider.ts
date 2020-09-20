@@ -65,24 +65,34 @@ export type Dispatch = typeof store.dispatch;
 export type AnyDispatch = DispatchA;
 // eslint-disable-next-line no-unused-vars
 export type SubscribeHandler = (state: State, dispatch: Dispatch) => void;
-// eslint-disable-next-line no-unused-vars
-export type StateSubscriber = (handler: SubscribeHandler, actionTypes: Actions[]) => void;
+export type StateSubscriber = (
+  // eslint-disable-next-line no-unused-vars
+  handler: SubscribeHandler,
+  // eslint-disable-next-line no-unused-vars
+  actionTypes: Actions[],
+  // eslint-disable-next-line no-unused-vars
+  once?: boolean,
+) => void;
 export type ListenerHandler<T = State, U = Dispatch, V = any, W = any, X = any> = (
   // eslint-disable-next-line no-unused-vars
   state: T, dispatch: U, arg1: V, arg2: W, arg3: X
 ) => void;
 // eslint-disable-next-line no-unused-vars
 export type StateListener = <T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>)
- // eslint-disable-next-line no-unused-vars
- => (arg1?: T, arg2?: U, arg3?: V) => ReturnType<ListenerHandler<State, Dispatch, T, U, V>>;
+  // eslint-disable-next-line no-unused-vars
+  => (arg1?: T, arg2?: U, arg3?: V) => ReturnType<ListenerHandler<State, Dispatch, T, U, V>>;
+// export type Once = (state: State) => any;
 
-function subscriber(handler: SubscribeHandler, actionTypes: Actions[] = []) {
-  store.subscribe(() => {
+function subscriber(handler: SubscribeHandler, actionTypes: Actions[] = [], once: boolean = false) {
+  const unsubscribe = store.subscribe(() => {
     const state = store.getState();
     // eslint-disable-next-line no-console
     console.log((state as any).actionType);
     if (actionTypes.find((action) => (state as any).actionType.startsWith(`${action}/`))) {
       handler(state, store.dispatch);
+      if (once) {
+        unsubscribe();
+      }
     }
   });
 }
@@ -92,5 +102,9 @@ function listener(handler: ListenerHandler) {
     handler(store.getState(), store.dispatch, arg1, arg2, arg3);
   };
 }
+
+// function once(handler: Once) {
+//   handler(store.getState());
+// }
 
 mergedConnects.map((connect) => connect(subscriber, listener, store.dispatch));

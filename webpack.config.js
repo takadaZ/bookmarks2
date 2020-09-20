@@ -1,19 +1,20 @@
 const CopyPlugin = require('copy-webpack-plugin');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
 
-const MODE = "development";
+const MODE = 'development';
 
-const enabledSourceMap = MODE === "development";
+const enabledSourceMap = MODE === 'development';
 
 module.exports = {
   mode: MODE,
   entry: {
-    popup: './src/index.ts',
-    bkg: './src/redux-provider.ts',
+    popup: './src/popup.ts',
+    background: './src/redux-provider.ts',
   },
   output: {
     filename: '[name].bundle.js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
   },
   module: {
     rules: [
@@ -30,7 +31,7 @@ module.exports = {
             options: {
               // オプションでCSS内のurl()メソッドの取り込みを禁止する
               url: false,
-              sourceMap: enabledSourceMap
+              sourceMap: enabledSourceMap,
             },
           },
         ],
@@ -51,7 +52,7 @@ module.exports = {
             ignore: [
               '**/*.ts',
             ],
-          },        
+          },
         },
       ],
     }),

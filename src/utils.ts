@@ -84,6 +84,7 @@ export function curry<T1, T2, T3, T4, T5, U>
 export function curry<T1, T2, T3, T4, T5, T6 extends any[], U>
   (f: (p1: T1, p2: T2, p3: T3, p4: T4, p5: T5, ..._tail: T6) => U):
     (p1: T1, p2: T2, p3: T3, p4: T4, p5: T5, ...p6: any[]) => (_last: Last<T6>) => U;
+
 export function curry(f: (...args: any[]) => any) {
   return (..._init: any[]) => (lastArg: any) => f(...[..._init, lastArg]);
 }
@@ -92,7 +93,13 @@ export function swap<T, U, V>(f: (a: T) => (b: U) => V) {
   return (b: U) => (a: T) => f(a)(b);
 }
 
-export async function cbToPromise<T>(f: (_: (a: T) => unknown) => unknown) {
+// tset
+function y(_a: number, _b: string, _c: boolean) {
+  return null;
+}
+swap(curry(curry(y))(3))(false)('aaa');
+
+export async function cbToPromise<T>(f: (_: (a: T) => any) => any) {
   return new Promise<T>((resolve) => f(resolve));
 }
 

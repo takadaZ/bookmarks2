@@ -14,6 +14,7 @@ import {
   BxNode,
   // nodeProps,
 } from './custom-elements';
+import * as bx from './types';
 
 // SliceReducers
 
@@ -75,7 +76,7 @@ const bookmarks = createSlice({
   },
 });
 
-// Exports Slices
+// Exports Redux toolkit Slice
 
 export const slices = {
   webRequest,
@@ -142,7 +143,6 @@ async function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
   const items = await new Promise<{ [key: string]: any }>((resolve) => {
     chrome.storage.local.get('bookmarks2', resolve);
   });
-  // const items = await F.cbToPromise(F.curry(chrome.storage.local.get)('bookmarks2'));
   dispatch(sliceOptions.actions.update({ ...initOptions, ...items }));
 }
 
@@ -204,8 +204,7 @@ function addBookmark(
 ): BookmarkElements {
   const node = nodes[id];
   if (node.childrenIds) {
-    const children = node.childrenIds.map((childId) => addBookmark(childId, nodes, elements))
-      .flat();
+    const children = node.childrenIds.flatMap((childId) => addBookmark(childId, nodes, elements));
     return [...elements, new BxNode1({ ...node, id: String(id) }), ...children];
   }
   const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
@@ -213,20 +212,27 @@ function addBookmark(
 }
 
 function makeHtmlBookmarks(state: State) {
-  // const leafs = Object.entries(state.bookmarks)
-  //   // .filter()
-  //   .map(([id, node]: [string, IBookmark]) => {
-  //     if (node.childrenIds) {
-  //       return new BxNode1({ ...node, id });
-  //     }
-  //     const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
-  //     return new BxLeaf1({ ...node, id, sUrl });
-  //   });
   const leafs = addBookmark(0, state.bookmarks, []);
   $('#bookmarks').append(...leafs);
 }
 
-// Connect
+// Popup messaging
+
+// const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as SendMessage;
+
+chrome.runtime.onMessage.addListener((msg: bx.Message, _, sendResponse) => {
+  // eslint-disable-next-line no-console
+  console.log(msg);
+  switch (msg.type) {
+    case bx.MessageTypes.clRequestHtml:
+      sendResponse($('#bookmarks').innerHTML);
+      break;
+    default:
+      break;
+  }
+});
+
+// Connect Redux
 
 export async function connect(
   subscribe: StateSubscriber,
@@ -237,5 +243,5 @@ export async function connect(
   await getSavedOptions(dispatch, initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
-  subscribe(makeHtmlBookmarks, ['bookmarks']);
+  subscribe(makeHtmlBookmarks, ['bookmarks'], true);
 }
