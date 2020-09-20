@@ -76,12 +76,27 @@ const bookmarks = createSlice({
   },
 });
 
+interface IBookmarksHtml {
+  html: string;
+}
+
+const bookmarksHtml = createSlice({
+  initialState: {} as IBookmarksHtml,
+  name: 'bookmarksHtml',
+  reducers: {
+    created: (state: IBookmarksHtml, { payload }: PayloadAction<string>) => (
+      { html: payload }
+    ),
+  },
+});
+
 // Exports Redux toolkit Slice
 
 export const slices = {
   webRequest,
   options: sliceOptions,
   bookmarks,
+  bookmarksHtml,
 };
 
 // Functions
@@ -211,26 +226,39 @@ function addBookmark(
   return [...elements, new BxLeaf1({ ...node, id: String(id), sUrl })];
 }
 
-function makeHtmlBookmarks(state: State) {
+function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
   const leafs = addBookmark(0, state.bookmarks, []);
-  $('#bookmarks').append(...leafs);
+  const $bookmarks = $('#bookmarks');
+  $bookmarks.append(...leafs);
+  dispatch(bookmarksHtml.actions.created($bookmarks.innerHTML));
+}
+
+const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.SendMessage;
+
+function sendHtml(state: State) {
+  sendMessage({
+    type: bx.MessageTypes.svrSendHtml,
+    html: state.bookmarksHtml.html,
+  });
 }
 
 // Popup messaging
 
-// const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as SendMessage;
-
-chrome.runtime.onMessage.addListener((msg: bx.Message, _, sendResponse) => {
+function onClientRequest(state: State, _: Dispatch, msg: bx.Message, __: any, sendResponse: any) {
   // eslint-disable-next-line no-console
   console.log(msg);
   switch (msg.type) {
     case bx.MessageTypes.clRequestHtml:
-      sendResponse($('#bookmarks').innerHTML);
+      sendResponse(state.bookmarksHtml.html);
       break;
     default:
       break;
   }
-});
+}
+
+function regsterClientlistener(listener: StateListener) {
+  chrome.runtime.onMessage.addListener(listener(onClientRequest));
+}
 
 // Connect Redux
 
@@ -239,9 +267,11 @@ export async function connect(
   listener: StateListener,
   dispatch: Dispatch,
 ) {
-  subscribe(webRequestListener(listener), ['options']);
+  subscribe(webRequestListener(listener), ['options', 'update']);
   await getSavedOptions(dispatch, initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
-  subscribe(makeHtmlBookmarks, ['bookmarks'], true);
+  subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
+  subscribe(sendHtml, ['bookmarksHtml', 'created']);
+  regsterClientlistener(listener);
 }
