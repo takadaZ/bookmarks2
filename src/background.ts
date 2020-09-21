@@ -15,7 +15,6 @@ import {
   BxNode,
   // nodeProps,
 } from './custom-elements';
-import * as bx from './types';
 
 // SliceReducers
 

@@ -1,7 +1,6 @@
 import './style.css';
 import { $ } from './utils';
 import * as F from './utils';
-import * as bx from './types';
 
 const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.SendMessage;
 
