@@ -1,3 +1,5 @@
+export { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
 import {
   configureStore,
   Slice,

@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
+  createSlice,
+  PayloadAction,
   State,
   Dispatch,
   AnyDispatch,
@@ -76,16 +77,12 @@ const bookmarks = createSlice({
   },
 });
 
-interface IBookmarksHtml {
-  html: string;
-}
-
 const bookmarksHtml = createSlice({
-  initialState: {} as IBookmarksHtml,
-  name: 'bookmarksHtml',
+  initialState: '',
+  name: 'html',
   reducers: {
-    created: (state: IBookmarksHtml, { payload }: PayloadAction<string>) => (
-      { html: payload }
+    created: (state: string, { payload }: PayloadAction<string>) => (
+      payload
     ),
   },
 });
@@ -96,7 +93,7 @@ export const slices = {
   webRequest,
   options: sliceOptions,
   bookmarks,
-  bookmarksHtml,
+  html: bookmarksHtml,
 };
 
 // Functions
@@ -238,7 +235,7 @@ const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.SendMe
 function sendHtml(state: State) {
   sendMessage({
     type: bx.MessageTypes.svrSendHtml,
-    html: state.bookmarksHtml.html,
+    html: state.html,
   });
 }
 
@@ -249,7 +246,7 @@ function onClientRequest(state: State, _: Dispatch, msg: bx.Message, __: any, se
   console.log(msg);
   switch (msg.type) {
     case bx.MessageTypes.clRequestHtml:
-      sendResponse(state.bookmarksHtml.html);
+      sendResponse(state.html);
       break;
     default:
       break;
@@ -272,6 +269,6 @@ export async function connect(
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
-  subscribe(sendHtml, ['bookmarksHtml', 'created']);
+  subscribe(sendHtml, ['html', 'created']);
   regsterClientlistener(listener);
 }
