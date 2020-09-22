@@ -1,3 +1,21 @@
 body {
   font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
+  font-size: 0.9em;
+}
+
+.leaf {
+  display: flex;
+  padding: 1px 0;
+}
+
+.leaf a {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  outline: 0;
+  padding-left: 20px;
+  background-repeat: no-repeat;
+  color: #222;
+  border: 1px solid transparent;
+  text-decoration: none;
 }

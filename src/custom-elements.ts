@@ -25,11 +25,7 @@ export class BxLeaf extends HTMLDivElement implements LeafProps {
   }
   template() {
     const { content, url, sUrl } = this;
-    return `
-      <span>
-        <a href="#nul" title="${sUrl}" class="title2" style="background-image:url('chrome://favicon/${url}');">${content}</a>
-      </span>
-    `;
+    return `<a href="#nul" title="${sUrl}" class="title2" style="background-image:url('chrome://favicon/${url}');">${content}</a>`;
   }
 }
 
@@ -37,14 +33,12 @@ export interface NodeProps {
   id: string;
   parentId?: number;
   content: string;
-  indent: number;
 }
 
 export class BxNode extends HTMLDivElement implements NodeProps {
   parentId: number = 0;
   content: string = '';
   state: string = '';
-  indent: number = 0;
   constructor(props: NodeProps) {
     super();
     Object.assign(this, props);
@@ -56,10 +50,9 @@ export class BxNode extends HTMLDivElement implements NodeProps {
     this.innerHTML = this.template();
   }
   template() {
-    const padding = this.indent * 15 + 5;
     return `
       <div class="marker">
-        <span class="expand-icon" style="margin-left:${padding}px"></span><span class="title" tabindex="2">${this.content}</span>
+        <span class="expand-icon"></span><span class="title" tabindex="2">${this.content}</span>
       </div>
     `;
   }

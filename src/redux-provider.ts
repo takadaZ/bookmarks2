@@ -1,3 +1,4 @@
+/* eslint-disable import/first */
 export { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import {

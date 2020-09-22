@@ -9,6 +9,7 @@ import {
 } from './redux-provider';
 import * as F from './utils';
 import { $ } from './utils';
+import * as bx from './types';
 import {
   BxLeaf,
   // LeafProps,
@@ -57,7 +58,6 @@ const sliceOptions = createSlice({
 
 export interface IBookmark extends Pick<chrome.bookmarks.BookmarkTreeNode, 'id' | 'url'>{
   content: string,
-  indent: number,
   parentId?: number;
   childrenIds?: number[];
 }
@@ -180,14 +180,13 @@ function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks {
 
 function digBookmarks({
   id, title, url, parentId, children,
-}: chrome.bookmarks.BookmarkTreeNode, indent = 0): Bookmarks {
+}: chrome.bookmarks.BookmarkTreeNode): Bookmarks {
   return {
     id,
     url,
     parentId,
-    indent,
     content: title,
-    children: children?.map((child) => digBookmarks(child, indent)),
+    children: children?.map((child) => digBookmarks(child)),
   };
 }
 
