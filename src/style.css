@@ -3,6 +3,10 @@ body {
   font-size: 0.9em;
 }
 
+.leafs {
+  width: 400px;
+}
+
 .leaf {
   display: flex;
   padding: 1px 0;

@@ -33,12 +33,16 @@ export interface NodeProps {
   id: string;
   parentId?: number;
   content: string;
+  // eslint-disable-next-line no-use-before-define
+  nodes?: BookmarkElements;
 }
 
 export class BxNode extends HTMLDivElement implements NodeProps {
   parentId: number = 0;
   content: string = '';
   state: string = '';
+  // eslint-disable-next-line no-use-before-define
+  nodes: BookmarkElements = [];
   constructor(props: NodeProps) {
     super();
     Object.assign(this, props);
@@ -48,6 +52,7 @@ export class BxNode extends HTMLDivElement implements NodeProps {
   update() {
     this.dataset.parentId = String(this.parentId);
     this.innerHTML = this.template();
+    this.append(...this.nodes);
   }
   template() {
     return `
@@ -57,3 +62,5 @@ export class BxNode extends HTMLDivElement implements NodeProps {
     `;
   }
 }
+
+export type BookmarkElements = Array<BxLeaf | BxNode>;
