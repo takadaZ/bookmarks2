@@ -102,4 +102,5 @@ main {
   color: white;
   outline: 1px auto #80bdff;
   background: #80bdff;
+  transition: .2s;
 }

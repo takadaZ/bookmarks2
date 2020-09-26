@@ -274,6 +274,7 @@ function onClientRequest(
       break;
     case bx.MessageTypes.clRequestSaveState:
       dispatch(clientState.actions.update(msg.clState!));
+      sendResponse();
       break;
     case bx.MessageTypes.clRequestHtml:
       sendResponse(state.html);
