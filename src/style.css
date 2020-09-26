@@ -55,15 +55,29 @@ main {
   text-decoration: none;
 }
 
+@keyframes fade-in {
+  0% {
+    display: none;
+    opacity: 0;
+  }
+  1% {
+    display: block;
+    opacity: 0;
+  }
+  100% {
+    display: block;
+    opacity: 1;
+  }
+}
+
 .leafs .folder > .leaf,
 .leafs .folder > .marker {
-  visibility: hidden;
-  position: absolute;
+  display: none;
 }
 
 .leafs .folder.open > .leaf {
-  visibility: visible;
-  position: static;
+  display: block;
+  animation: fade-in 0.15s ease-in-out;
 }
 
 /* Folders pane */
@@ -82,4 +96,10 @@ main {
 .folders .folder.path > .folder,
 .folders .folder.open > .folder {
   display: block;
+}
+
+.folders .open > .marker > .title {
+  color: white;
+  outline: 1px auto #80bdff;
+  background: #80bdff;
 }

@@ -9,6 +9,11 @@ export const initialOptions = {
 
 export type IOptions = typeof initialOptions;
 
+export interface IClientState {
+  open?: number;
+  paths?: Array<number>;
+}
+
 export interface IHtml {
   leafs: string;
   folders: string;
@@ -20,12 +25,14 @@ export const MessageTypes = {
   // svrSendHtml: 'svr-send-html',
   clRequestOptions: 'cl-request-options',
   // svrSendOptions: 'svr-send-options',
+  clRequestSaveState: 'cl-request-save-state',
 } as const;
 
 export type Message = {
   type: typeof MessageTypes [keyof typeof MessageTypes];
   html?: IHtml;
   options?: IOptions;
+  clState?: IClientState;
 }
 
 // eslint-disable-next-line no-unused-vars

@@ -25,7 +25,7 @@ export class BxLeaf extends HTMLDivElement implements LeafProps {
   }
   template() {
     const { content, url, sUrl } = this;
-    return `<a href="#nul" title="${sUrl}" class="title2" style="background-image:url('chrome://favicon/${url}');">${content}</a>`;
+    return `<a href="#nul" title="${sUrl}" style="background-image:url('chrome://favicon/${url}');">${content}</a>`;
   }
 }
 

@@ -83,6 +83,16 @@ const bookmarksHtml = createSlice({
   },
 });
 
+const clientState = createSlice({
+  initialState: {} as bx.IClientState,
+  name: 'clientState',
+  reducers: {
+    update: (state: bx.IClientState, { payload }: PayloadAction<bx.IClientState>) => (
+      payload
+    ),
+  },
+});
+
 // Exports Redux toolkit Slice
 
 export const slices = {
@@ -90,6 +100,7 @@ export const slices = {
   options: sliceOptions,
   bookmarks,
   html: bookmarksHtml,
+  clientState,
 };
 
 // Functions
@@ -244,7 +255,13 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
 
 // Popup messaging
 
-function onClientRequest(state: State, _: Dispatch, msg: bx.Message, __: any, sendResponse: any) {
+function onClientRequest(
+  state: State,
+  dispatch: Dispatch,
+  msg: bx.Message,
+  _: any,
+  sendResponse: any,
+) {
   // eslint-disable-next-line no-console
   console.log(msg);
   switch (msg.type) {
@@ -252,7 +269,11 @@ function onClientRequest(state: State, _: Dispatch, msg: bx.Message, __: any, se
       sendResponse({
         options: state.options,
         html: state.html,
+        clState: state.clientState,
       });
+      break;
+    case bx.MessageTypes.clRequestSaveState:
+      dispatch(clientState.actions.update(msg.clState!));
       break;
     case bx.MessageTypes.clRequestHtml:
       sendResponse(state.html);
