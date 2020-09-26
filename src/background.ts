@@ -43,15 +43,11 @@ const webRequest = createSlice({
   },
 });
 
-interface IOptions {
-  postPage: boolean,
-}
-
 const sliceOptions = createSlice({
-  initialState: {} as IOptions,
+  initialState: {} as bx.IOptions,
   name: 'options',
   reducers: {
-    update: (state: IOptions, { payload }: PayloadAction<IOptions>) => (
+    update: (state: bx.IOptions, { payload }: PayloadAction<bx.IOptions>) => (
       { ...state, ...payload }
     ),
   },
@@ -78,10 +74,10 @@ const bookmarks = createSlice({
 });
 
 const bookmarksHtml = createSlice({
-  initialState: '',
+  initialState: {} as bx.IHtml,
   name: 'html',
   reducers: {
-    created: (state: string, { payload }: PayloadAction<string>) => (
+    created: (state: bx.IHtml, { payload }: PayloadAction<bx.IHtml>) => (
       payload
     ),
   },
@@ -139,10 +135,6 @@ function webRequestListener(listener: StateListener) {
   };
 }
 
-const initialOptions = {
-  postPage: true,
-};
-
 // function saveOptions(state: State, dispatch: Dispatch, options: IOptions) {
 //   const promise = new Promise((resolve) => {
 //     chrome.storage.local.set(options, resolve);
@@ -151,7 +143,7 @@ const initialOptions = {
 //   return promise;
 // }
 
-async function getSavedOptions(dispatch: Dispatch, initOptions: IOptions) {
+async function getSavedOptions(dispatch: Dispatch, initOptions: bx.IOptions) {
   const items = await new Promise<{ [key: string]: any }>((resolve) => {
     chrome.storage.local.get('bookmarks2', resolve);
   });
@@ -206,18 +198,22 @@ customElements.define('bx-node', BxNode, { extends: 'div' });
 const BxLeaf1 = customElements.get('bx-leaf') as typeof BxLeaf;
 const BxNode1 = customElements.get('bx-node') as typeof BxNode;
 
-function addBookmark(
+function buildBookmarks(
   subscribe: StateSubscriber,
   id: number,
   nodes: IBookmarks,
   elements: BookmarkElements,
+  isFolders: boolean = false,
 ): BookmarkElements {
   const node = nodes[id];
   if (node.childrenIds) {
     const children = node.childrenIds.flatMap(
-      (childId) => addBookmark(subscribe, childId, nodes, elements),
+      (childId) => buildBookmarks(subscribe, childId, nodes, elements, isFolders),
     );
     return [...elements, new BxNode1({ ...node, nodes: children, id: String(id) })];
+  }
+  if (isFolders) {
+    return elements;
   }
   const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
   return [...elements, new BxLeaf1({ ...node, id: String(id), sUrl })];
@@ -225,21 +221,26 @@ function addBookmark(
 
 function makeHtmlBookmarks(subscribe: StateSubscriber) {
   return (state: State, dispatch: Dispatch) => {
-    const leafs = addBookmark(subscribe, 0, state.bookmarks, []);
-    const $bookmarks = $('#bookmarks');
-    $bookmarks.append(...leafs);
-    dispatch(bookmarksHtml.actions.created($bookmarks.innerHTML));
+    const [root] = buildBookmarks(subscribe, 0, state.bookmarks, []);
+    const $leafs = $('#leafs');
+    $leafs.append(...root.children);
+    const leafs = $leafs.innerHTML;
+    const [rootFolder] = buildBookmarks(subscribe, 0, state.bookmarks, [], true);
+    const $folders = $('#folders');
+    $folders.append(...rootFolder.children);
+    const folders = $folders.innerHTML;
+    dispatch(bookmarksHtml.actions.created({ leafs, folders }));
   };
 }
 
-const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.SendMessage;
+// const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.SendMessage;
 
-function sendHtml(state: State) {
-  sendMessage({
-    type: bx.MessageTypes.svrSendHtml,
-    html: state.html,
-  });
-}
+// function sendHtml(state: State) {
+//   sendMessage({
+//     type: bx.MessageTypes.svrSendHtml,
+//     html: state.html,
+//   });
+// }
 
 // Popup messaging
 
@@ -247,8 +248,17 @@ function onClientRequest(state: State, _: Dispatch, msg: bx.Message, __: any, se
   // eslint-disable-next-line no-console
   console.log(msg);
   switch (msg.type) {
+    case bx.MessageTypes.clRequestInitial:
+      sendResponse({
+        options: state.options,
+        html: state.html,
+      });
+      break;
     case bx.MessageTypes.clRequestHtml:
       sendResponse(state.html);
+      break;
+    case bx.MessageTypes.clRequestOptions:
+      sendResponse(state.options);
       break;
     default:
       break;
@@ -267,10 +277,10 @@ export async function connect(
   dispatch: Dispatch,
 ) {
   subscribe(webRequestListener(listener), ['options', 'update']);
-  await getSavedOptions(dispatch, initialOptions);
+  await getSavedOptions(dispatch, bx.initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks(subscribe), ['bookmarks', 'refresh']);
-  subscribe(sendHtml, ['html', 'created']);
+  // subscribe(sendHtml, ['html', 'created']);
   regsterClientlistener(listener);
 }
