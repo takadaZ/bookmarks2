@@ -10,15 +10,6 @@ main {
   grid-template-columns: min-content 1fr min-content auto;
 }
 
-.marker {
-  margin: 3px;
-}
-
-.title {
-  padding: 3px;
-  cursor: pointer;
-}
-
 /* Leafs pane */
 
 .leafs {
@@ -41,13 +32,15 @@ main {
 }
 
 .leaf a {
+  padding: 2px;
+  margin: 0 2px;
+  padding-left: 20px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  outline: 0;
-  padding-left: 20px;
   background-repeat: no-repeat;
-  border: 1px solid transparent;
+  background-repeat: no-repeat;
+  background-position: 1px center;
 }
 
 .leaf a:not(:hover) {
@@ -76,20 +69,27 @@ main {
 }
 
 .leafs .folder.open > .leaf {
-  display: block;
+  display: flex;
   animation: fade-in 0.15s ease-in-out;
 }
 
 /* Folders pane */
 
 .folders {
-  margin-top: 1px;
-  padding-top: 1px;
   overflow-x: hidden;
 }
 
+.folders > .folder {
+  margin: 1px;
+  padding: 1px;
+}
+
+/* .folders .folder {
+  background-image: url(images/folder-close.png);
+} */
+
 .folders .folder .folder {
-  padding-inline-start: 20px;
+  padding-inline-start: 16px;
   display: none;
 }
 
@@ -98,9 +98,22 @@ main {
   display: block;
 }
 
-.folders .open > .marker > .title {
+.marker {
+  max-width: fit-content;
+  padding: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.title {
+  pointer-events: none;
+}
+
+.folders .open > .marker {
   color: white;
-  outline: 1px auto #80bdff;
   background: #80bdff;
+  border-radius: 3px;
   transition: .2s;
 }

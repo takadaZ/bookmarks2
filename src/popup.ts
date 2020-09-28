@@ -11,8 +11,8 @@ function postMessage(message: bx.Message) {
 
 function setEventListners() {
   $('.folders').addEventListener('click', (e) => {
-    if ((e.target as HTMLDivElement).classList.contains('title')) {
-      const foldersFolder = (e.target as HTMLDivElement).parentElement?.parentElement!;
+    if ((e.target as HTMLDivElement).classList.contains('marker')) {
+      const foldersFolder = (e.target as HTMLDivElement).parentElement!;
       const folders = [foldersFolder, $(`.leafs [id="${foldersFolder.id}"]`)];
       const isOpen = foldersFolder.classList.contains('open');
       if (isOpen) {

@@ -56,8 +56,8 @@ export class BxNode extends HTMLDivElement implements NodeProps {
   }
   template() {
     return `
-      <div class="marker">
-        <span class="expand-icon"></span><span class="title" tabindex="2">${this.content}</span>
+      <div class="marker" tabindex="2">
+        <span class="title">${this.content}</span>
       </div>
     `;
   }
