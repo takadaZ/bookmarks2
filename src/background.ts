@@ -8,7 +8,7 @@ import {
   StateListener,
 } from './redux-provider';
 import * as F from './utils';
-import { $ } from './utils';
+import { $, $$ } from './utils';
 import * as bx from './types';
 import {
   BookmarkElements,
@@ -214,17 +214,13 @@ function buildBookmarks(
   id: number,
   nodes: IBookmarks,
   elements: BookmarkElements,
-  isFolders: boolean = false,
 ): BookmarkElements {
   const node = nodes[id];
   if (node.childrenIds) {
     const children = node.childrenIds.flatMap(
-      (childId) => buildBookmarks(subscribe, childId, nodes, elements, isFolders),
+      (childId) => buildBookmarks(subscribe, childId, nodes, elements),
     );
     return [...elements, new BxNode1({ ...node, nodes: children, id: String(id) })];
-  }
-  if (isFolders) {
-    return elements;
   }
   const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
   return [...elements, new BxLeaf1({ ...node, id: String(id), sUrl })];
@@ -236,9 +232,12 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
     const $leafs = $('#leafs');
     $leafs.append(...root.children);
     const leafs = $leafs.innerHTML;
-    const [rootFolder] = buildBookmarks(subscribe, 0, state.bookmarks, [], true);
+    const [rootFolder] = buildBookmarks(subscribe, 0, state.bookmarks, []);
     const $folders = $('#folders');
-    $folders.append(...rootFolder.children);
+    $folders.append(...$(':scope > [id="1"]', rootFolder).children);
+    $folders.append(...$$(':scope > .folder:not([id="1"])', rootFolder));
+    $$('.leaf:not([data-parent-id="1"])').forEach((leaf) => leaf.remove());
+    $(':scope > .marker', $folders).remove();
     const folders = $folders.innerHTML;
     dispatch(bookmarksHtml.actions.created({ leafs, folders }));
   };

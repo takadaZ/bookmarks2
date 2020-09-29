@@ -1,5 +1,5 @@
 body {
-  margin: 5px;
+  margin: 5px 0 5px 2px;
   margin-right: 0;
   font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
   font-size: 0.9em;
@@ -10,6 +10,16 @@ main {
   grid-template-columns: min-content 1fr min-content auto;
 }
 
+.resize-x,
+.split-h {
+  width: 2px;
+  height: 100%;
+}
+
+.resize-y {
+  height: 2px;
+}
+
 /* Leafs pane */
 
 .leafs {
@@ -17,7 +27,6 @@ main {
 }
 
 .leafs > .marker,
-.folders > .marker,
 .leafs > .folder > .marker {
   display: none;
 }
@@ -76,12 +85,8 @@ main {
 /* Folders pane */
 
 .folders {
+  padding: 2px;
   overflow-x: hidden;
-}
-
-.folders > .folder {
-  margin: 1px;
-  padding: 1px;
 }
 
 /* .folders .folder {

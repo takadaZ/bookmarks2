@@ -9,6 +9,20 @@ function postMessage(message: bx.Message) {
   return F.cbToPromise(F.curry(sendMessage)(message));
 }
 
+function onClickAnchor(e: MouseEvent) {
+  if ((e.target as HTMLDivElement).localName === 'a') {
+    const { backgroundImage } = (e.target as HTMLAnchorElement).style;
+    const [, url] = /url\("chrome:\/\/favicon\/([\s\S]*)"\)/.exec(backgroundImage) || [];
+    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+      chrome.tabs.create({
+        index: tab.index + 1,
+        windowId: tab.windowId,
+        url,
+      });
+    });
+  }
+}
+
 function setEventListners() {
   $('.folders').addEventListener('click', (e) => {
     if ((e.target as HTMLDivElement).classList.contains('marker')) {
@@ -34,21 +48,11 @@ function setEventListners() {
       const open = Number(foldersFolder.id);
       const clState = { open, paths };
       postMessage({ type, clState });
+      return;
     }
+    onClickAnchor(e);
   });
-  $('.leafs').addEventListener('click', (e) => {
-    if ((e.target as HTMLDivElement).localName === 'a') {
-      const { backgroundImage } = (e.target as HTMLAnchorElement).style;
-      const [, url] = /url\("chrome:\/\/favicon\/([\s\S]*)"\)/.exec(backgroundImage) || [];
-      chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-        chrome.tabs.create({
-          index: tab.index + 1,
-          windowId: tab.windowId,
-          url,
-        });
-      });
-    }
-  });
+  $('.leafs').addEventListener('click', onClickAnchor);
   // window.addEventListener('beforeunload', () => {
   //   const type = bx.MessageTypes.clRequestSaveState;
   //   const paths = $$('.folders .path').map((el) => Number(el.id));
