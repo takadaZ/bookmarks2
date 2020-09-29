@@ -57,7 +57,7 @@ export class BxNode extends HTMLDivElement implements NodeProps {
   template() {
     return `
       <div class="marker" tabindex="2">
-        <span class="title">${this.content}</span>
+        <span class="title"><i class="gl gl-angle-down"></i>${this.content}</span>
       </div>
     `;
   }
