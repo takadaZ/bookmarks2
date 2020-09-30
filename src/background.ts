@@ -243,47 +243,32 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
   };
 }
 
-// const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.SendMessage;
-
-// function sendHtml(state: State) {
-//   sendMessage({
-//     type: bx.MessageTypes.svrSendHtml,
-//     html: state.html,
-//   });
-// }
-
 // Popup messaging
+
+export const mapStateToResponse = {
+  [bx.MessageTypes.clRequestInitial]: (state: State) => ({
+    options: state.options,
+    html: state.html,
+    clState: state.clientState,
+  }),
+  [bx.MessageTypes.clRequestSaveState]: (_: State, dispatch: Dispatch, message: bx.Message) => {
+    dispatch(clientState.actions.update(message.clState!));
+  },
+  [bx.MessageTypes.clRequestHtml]: (state: State) => state.html,
+  [bx.MessageTypes.clRequestOptions]: (state: State) => state.options,
+};
 
 function onClientRequest(
   state: State,
   dispatch: Dispatch,
-  msg: bx.Message,
+  message: bx.Message,
   _: any,
   sendResponse: any,
 ) {
   // eslint-disable-next-line no-console
-  console.log(msg);
-  switch (msg.type) {
-    case bx.MessageTypes.clRequestInitial:
-      sendResponse({
-        options: state.options,
-        html: state.html,
-        clState: state.clientState,
-      });
-      break;
-    case bx.MessageTypes.clRequestSaveState:
-      dispatch(clientState.actions.update(msg.clState!));
-      sendResponse();
-      break;
-    case bx.MessageTypes.clRequestHtml:
-      sendResponse(state.html);
-      break;
-    case bx.MessageTypes.clRequestOptions:
-      sendResponse(state.options);
-      break;
-    default:
-      break;
-  }
+  console.log(message);
+  const responseState = mapStateToResponse[message.type](state, dispatch, message);
+  sendResponse(responseState);
 }
 
 function regsterClientlistener(listener: StateListener) {

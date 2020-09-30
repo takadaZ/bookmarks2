@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'Glyph';
-  src: url('./webfont/icomoon.eot');
-  src: url('./webfont/icomoon.eot') format('embedded-opentype'), url('./webfont/icomoon.woff') format('woff'), url('./webfont/icomoon.ttf') format('truetype'), url('./webfont/icomoon.svg') format('svg');
+  src: url('./webfont/icomoon.woff');
+  src: url('./webfont/icomoon.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -33,12 +33,10 @@ main {
   font: normal normal normal 14px/1 Glyph;
   font-size: inherit;
   text-rendering: auto;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-.gl-angle-down::before {
-  content: '\f107';
+.gl-angle-right::before {
+  content: '\f105';
 }
 
 /* Leafs pane */
@@ -110,9 +108,10 @@ main {
   overflow-x: hidden;
 }
 
-/* .folders .folder {
-  background-image: url(images/folder-close.png);
-} */
+.folders .folder {
+  margin-left: 4px;
+  /* background-image: url(images/folder-close.png); */
+}
 
 .folders .folder .folder {
   padding-inline-start: 16px;
@@ -124,28 +123,34 @@ main {
   display: block;
 }
 
-.marker {
+.folders .marker {
+  display: flex;
+  align-items: center;
   max-width: fit-content;
+}
+
+.folders .title {
   padding: 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: .2s;
   cursor: pointer;
 }
 
-.title {
-  align-items: center;
-  display: flex;
-  pointer-events: none;
-}
-
-.folders .open > .marker {
+.folders .open > .marker > .title {
   color: white;
   background: #80bdff;
   border-radius: 3px;
-  transition: .2s;
 }
 
-i.gl-angle-down {
+.gl-angle-right {
   margin-right: 5px;
+  transition: .1s;
+  cursor: pointer;
+}
+
+.open > .marker > .gl-angle-right,
+.path > .marker > .gl-angle-right {
+  transform: rotate(90deg);
 }

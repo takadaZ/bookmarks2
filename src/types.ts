@@ -1,3 +1,5 @@
+import { mapStateToResponse } from './background';
+
 export const initialOptions = {
   postPage: false,
   mainWidth: 500,
@@ -36,4 +38,10 @@ export type Message = {
 }
 
 // eslint-disable-next-line no-unused-vars
-export type SendMessage = (messgae: Message, resp?: (a: any) => any) => void;
+export type CliPostMessage<T extends Message> = typeof mapStateToResponse[T['type']];
+export type CliSendMessage<T extends Message> = (
+  // eslint-disable-next-line no-unused-vars
+  messgae: T,
+  // eslint-disable-next-line no-unused-vars
+  response?: (resp: CliPostMessage<T>) => void
+) => void;
