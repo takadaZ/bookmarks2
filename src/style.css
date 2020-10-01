@@ -130,11 +130,19 @@ main {
 
 .folders .title {
   padding: 3px;
+  padding-right: 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transition: .2s;
   cursor: pointer;
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+}
+
+.folders .title > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .folders .open > .marker > .title {
@@ -149,11 +157,28 @@ main {
   cursor: pointer;
 }
 
-.path > .marker > .fa-angle-right {
+.folders .path > .marker > .fa-angle-right {
   transform: rotate(90deg);
 }
 
 .folders [data-children='0'] .fa-angle-right {
   visibility: hidden;
   pointer-events: none;
+}
+
+.folders .title::before {
+  content: '\f07b';
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+  margin-left: 1px;
+  margin-right: 4px;
+  color: gray;
+  width: 1.0em;
+}
+
+.folders .open > .marker > .title::before {
+  content: '\f07c';
+  color: white;
 }

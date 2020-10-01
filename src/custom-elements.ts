@@ -59,7 +59,7 @@ export class BxNode extends HTMLDivElement implements NodeProps {
     return `
       <div class="marker">
         <i class="fa fa-angle-right"></i>
-        <div class="title" tabindex="2">${this.content}</div>
+        <div class="title" tabindex="2"><span>${this.content}</span></div>
       </div>
     `;
   }
