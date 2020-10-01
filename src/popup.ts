@@ -3,9 +3,9 @@ import { $, $$ } from './utils';
 import * as F from './utils';
 import * as bx from './types';
 
-const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.CliSendMessage<any>;
+const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.CliSendMessage;
 
-function postMessage<M extends bx.Message>(message: M): Promise<ReturnType<bx.CliPostMessage<M>>> {
+function postMessage<T extends bx.CliMessage>(message: T): Promise<bx.CliPostMessage<T>> {
   return F.cbToPromise(F.curry(sendMessage)(message));
 }
 
@@ -23,20 +23,23 @@ function onClickAnchor(e: MouseEvent) {
 
 function onClickAngle(e: MouseEvent) {
   const folder = (e.target as HTMLAnchorElement).parentElement?.parentElement!;
+  if ($('.open', folder)) {
+    ((e.target as HTMLAnchorElement).nextElementSibling as HTMLDivElement)?.click();
+  }
   folder.classList.toggle('path');
 }
 
 function sendStateOpenedPath(foldersFolder: HTMLElement) {
   $$('.path').forEach((el) => el.classList.remove('path'));
   let paths: Array<number> = [];
-  let folder = foldersFolder.parentElement!;
+  let folder = foldersFolder;
   while (folder.classList.contains('folder')) {
     folder.classList.add('path');
     paths = [...paths, Number(folder.id)];
     folder = folder.parentElement!;
   }
   // Send client state
-  const type = bx.MessageTypes.clRequestSaveState;
+  const type = bx.CliMessageTypes.requestSaveState;
   const open = Number(foldersFolder.id);
   const clState = { open, paths };
   postMessage({ type, clState });
@@ -49,7 +52,7 @@ function setEventListners() {
       const folders = [foldersFolder, $(`.leafs [id="${foldersFolder.id}"]`)];
       const isOpen = foldersFolder.classList.contains('open');
       if (isOpen) {
-        folders.forEach((el) => el.classList.remove('open'));
+        // folders.forEach((el) => el.classList.remove('open'));
         return;
       }
       $$('.open').forEach((el) => el.classList.remove('open'));
@@ -57,7 +60,7 @@ function setEventListners() {
       sendStateOpenedPath(foldersFolder);
     } else if ((e.target as HTMLDivElement).localName === 'a') {
       onClickAnchor(e);
-    } else if ((e.target as HTMLDivElement).classList.contains('gl-angle-right')) {
+    } else if ((e.target as HTMLDivElement).classList.contains('fa-angle-right')) {
       onClickAngle(e);
     }
   });
@@ -93,7 +96,7 @@ function setOptions(options: bx.IOptions) {
 }
 
 (async () => {
-  const { options, html, clState } = await postMessage({ type: bx.MessageTypes.clRequestInitial });
+  const { options, html, clState } = await postMessage({ type: bx.CliMessageTypes.requestInitial });
 
   if (document.readyState !== 'complete') {
     await F.cbToPromise(F.swap(F.curry(F.curry(document.addEventListener))('DOMContentLoaded'))(false));

@@ -1,5 +1,5 @@
 @font-face {
-  font-family: 'Glyph';
+  font-family: 'FontAwesome';
   src: url('./webfont/icomoon.woff');
   src: url('./webfont/icomoon.woff') format('woff');
   font-weight: normal;
@@ -28,14 +28,14 @@ main {
   height: 2px;
 }
 
-.gl {
+.fa {
   display: inline-block;
-  font: normal normal normal 14px/1 Glyph;
+  font: normal normal normal 14px/1 FontAwesome;
   font-size: inherit;
   text-rendering: auto;
 }
 
-.gl-angle-right::before {
+.fa-angle-right::before {
   content: '\f105';
 }
 
@@ -118,8 +118,7 @@ main {
   display: none;
 }
 
-.folders .folder.path > .folder,
-.folders .folder.open > .folder {
+.folders .folder.path > .folder {
   display: block;
 }
 
@@ -144,13 +143,17 @@ main {
   border-radius: 3px;
 }
 
-.gl-angle-right {
+.fa-angle-right {
   margin-right: 5px;
   transition: .1s;
   cursor: pointer;
 }
 
-.open > .marker > .gl-angle-right,
-.path > .marker > .gl-angle-right {
+.path > .marker > .fa-angle-right {
   transform: rotate(90deg);
+}
+
+.folders [data-children='0'] .fa-angle-right {
+  visibility: hidden;
+  pointer-events: none;
 }

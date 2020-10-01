@@ -21,25 +21,31 @@ export interface IHtml {
   folders: string;
 }
 
-export const MessageTypes = {
-  clRequestInitial: 'cl-request-initial',
-  clRequestHtml: 'cl-request-html',
+export const CliMessageTypes = {
+  requestInitial: 'cl-request-initial',
+  // requestHtml: 'cl-request-html',
   // svrSendHtml: 'svr-send-html',
-  clRequestOptions: 'cl-request-options',
+  // requestOptions: 'cl-request-options',
   // svrSendOptions: 'svr-send-options',
-  clRequestSaveState: 'cl-request-save-state',
+  requestSaveState: 'cl-request-save-state',
 } as const;
 
-export type Message = {
-  type: typeof MessageTypes [keyof typeof MessageTypes];
+export type CliMessage = {
+  type: typeof CliMessageTypes[keyof typeof CliMessageTypes];
   html?: IHtml;
   options?: IOptions;
   clState?: IClientState;
 }
 
+export type CliMessages = {
+  [CliMessageTypes.requestInitial]: {},
+  [CliMessageTypes.requestSaveState]: { clState: IClientState },
+}
+
 // eslint-disable-next-line no-unused-vars
-export type CliPostMessage<T extends Message> = typeof mapStateToResponse[T['type']];
-export type CliSendMessage<T extends Message> = (
+export type CliPostMessage<T extends CliMessage> = ReturnType<typeof mapStateToResponse[T['type']]>;
+
+export type CliSendMessage = <T extends CliMessage>(
   // eslint-disable-next-line no-unused-vars
   messgae: T,
   // eslint-disable-next-line no-unused-vars

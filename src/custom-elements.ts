@@ -50,14 +50,15 @@ export class BxNode extends HTMLDivElement implements NodeProps {
     this.update();
   }
   update() {
-    this.dataset.parentId = String(this.parentId);
+    // this.dataset.parentId = String(this.parentId);
+    this.dataset.children = String(this.nodes.filter((el) => el.classList.contains('folder')).length);
     this.innerHTML = this.template();
     this.append(...this.nodes);
   }
   template() {
     return `
       <div class="marker">
-        <i class="gl gl-angle-right"></i>
+        <i class="fa fa-angle-right"></i>
         <div class="title" tabindex="2">${this.content}</div>
       </div>
     `;

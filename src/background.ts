@@ -245,23 +245,36 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
 
 // Popup messaging
 
+// type MapStateToResponse = {
+//   [P in typeof bx.CliMessageTypes[keyof typeof bx.CliMessageTypes]]: (
+//     // eslint-disable-next-line no-unused-vars
+//     state: State,
+//     // eslint-disable-next-line no-unused-vars
+//     dispatch: Dispatch,
+//     // eslint-disable-next-line no-unused-vars
+//     message: bx.CliMessages[P]
+//   ) => any
+// }
+
+// eslint-disable-next-line no-use-before-define
 export const mapStateToResponse = {
-  [bx.MessageTypes.clRequestInitial]: (state: State) => ({
+  [bx.CliMessageTypes.requestInitial]: (state: State) => ({
     options: state.options,
     html: state.html,
     clState: state.clientState,
   }),
-  [bx.MessageTypes.clRequestSaveState]: (_: State, dispatch: Dispatch, message: bx.Message) => {
-    dispatch(clientState.actions.update(message.clState!));
-  },
-  [bx.MessageTypes.clRequestHtml]: (state: State) => state.html,
-  [bx.MessageTypes.clRequestOptions]: (state: State) => state.options,
+  [bx.CliMessageTypes.requestSaveState]:
+    (_: State, dispatch: Dispatch, message: bx.CliMessage) => {
+      dispatch(clientState.actions.update(message.clState!));
+    },
+  // [bx.CliMessageTypes.requestHtml]: (state: State) => state.html,
+  // [bx.CliMessageTypes.requestOptions]: (state: State) => state.options,
 };
 
 function onClientRequest(
   state: State,
   dispatch: Dispatch,
-  message: bx.Message,
+  message: bx.CliMessage,
   _: any,
   sendResponse: any,
 ) {
