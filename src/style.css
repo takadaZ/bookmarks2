@@ -1,31 +1,11 @@
+/* Glyphicon */
+
 @font-face {
   font-family: 'FontAwesome';
   src: url('./webfont/icomoon.woff');
   src: url('./webfont/icomoon.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-}
-
-body {
-  margin: 5px 0 5px 2px;
-  margin-right: 0;
-  font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
-  font-size: 0.9em;
-}
-
-main {
-  display: grid;
-  grid-template-columns: min-content 1fr min-content auto;
-}
-
-.resize-x,
-.split-h {
-  width: 2px;
-  height: 100%;
-}
-
-.resize-y {
-  height: 2px;
 }
 
 .fa {
@@ -39,9 +19,99 @@ main {
   content: '\f105';
 }
 
+.fa-times::before {
+  content: '\f00d';
+}
+
+.fa-search::before {
+  content: '\f002';
+}
+
+/* Scroll bar */
+
+.folders::-webkit-scrollbar {
+  width: 11px;
+}
+
+.leafs::-webkit-scrollbar {
+  width: 10px;
+}
+
+.folders::-webkit-scrollbar-thumb,
+.leafs::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.folders::-webkit-scrollbar-thumb:hover,
+.leafs::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.folders::-webkit-scrollbar-track,
+.leafs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* body */
+
+body {
+  margin: 5px 0 2px 2px;
+  margin-right: 0;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
+  font-size: 0.9em;
+}
+
+main {
+  display: grid;
+  grid-template-columns: min-content 1fr min-content auto;
+  grid-template-rows: min-content 1fr;
+}
+
+.resize-x,
+.split-h {
+  width: 2px;
+  height: 100%;
+  grid-row-start: span 2;
+}
+
+.resize-y {
+  height: 2px;
+}
+
+form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  top: -5px;
+}
+
+button[type='submit'] {
+  position: absolute;
+  background-color: transparent;
+  border: 0;
+  outline: 0;
+}
+
+input.query {
+  width: 100%;
+  background: #ddd;
+  border: 0;
+  outline: none;
+  padding: 6px;
+  font-size: 1.0em;
+  text-indent: 20px;
+}
+
+i.fa.fa-times {
+  position: absolute;
+  right: 5px;
+  display: none;
+}
+
 /* Leafs pane */
 
 .leafs {
+  grid-row-start: span 2;
   overflow-x: hidden;
 }
 
@@ -114,12 +184,16 @@ main {
 }
 
 .folders .folder .folder {
-  padding-inline-start: 16px;
+  padding-inline-start: 12px;
   display: none;
 }
 
 .folders .folder.path > .folder {
   display: block;
+}
+
+.folders .leah {
+  margin-left: 14px;
 }
 
 .folders .marker {
@@ -132,7 +206,6 @@ main {
   padding: 3px;
   padding-right: 4px;
   white-space: nowrap;
-  transition: .2s;
   cursor: pointer;
   display: flex;
   overflow: hidden;
@@ -152,7 +225,7 @@ main {
 }
 
 .fa-angle-right {
-  margin-right: 5px;
+  padding: 0 4px;
   transition: .1s;
   cursor: pointer;
 }

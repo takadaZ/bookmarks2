@@ -52,8 +52,8 @@ function setEventListners() {
       const folders = [foldersFolder, $(`.leafs [id="${foldersFolder.id}"]`)];
       const isOpen = foldersFolder.classList.contains('open');
       if (isOpen) {
-        // folders.forEach((el) => el.classList.remove('open'));
-        return;
+        folders.forEach((el) => el.classList.add('path'));
+        return false;
       }
       $$('.open').forEach((el) => el.classList.remove('open'));
       folders.forEach((el) => el.classList.add('open'));
@@ -63,8 +63,18 @@ function setEventListners() {
     } else if ((e.target as HTMLDivElement).classList.contains('fa-angle-right')) {
       onClickAngle(e);
     }
+    return false;
   });
-  $('.leafs').addEventListener('click', onClickAnchor);
+  $('.leafs').addEventListener('click', (e) => {
+    if ((e.target as HTMLDivElement).localName === 'a') {
+      onClickAnchor(e);
+    }
+  });
+  $('form').addEventListener('submit', () => {
+    const text = $<HTMLInputElement>('.query').value;
+    $$('.leafs a').filter((el) => el.textContent?.includes(text));
+    return false;
+  });
 }
 
 function setClientState(clState: bx.IClientState) {
@@ -95,6 +105,10 @@ function setOptions(options: bx.IOptions) {
   assignStyle('.folders', { width: `${options.foldersWidth}px` });
 }
 
+function init() {
+  $('.query').focus();
+}
+
 (async () => {
   const { options, html, clState } = await postMessage({ type: bx.CliMessageTypes.requestInitial });
 
@@ -105,6 +119,7 @@ function setOptions(options: bx.IOptions) {
   repaleceHtml(html);
   setClientState(clState);
   setEventListners();
+  init();
 
   // chrome.runtime.onMessage.addListener((msg: bx.Message) => {
   //   switch (msg.type) {
