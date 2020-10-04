@@ -135,7 +135,7 @@ function init() {
 (async () => {
   const { options, html, clState } = await postMessage({ type: bx.CliMessageTypes.requestInitial });
 
-  if (document.readyState !== 'complete') {
+  if (document.readyState === 'loading') {
     await F.cbToPromise(F.swap(F.curry(F.curry(document.addEventListener))('DOMContentLoaded'))(false));
   }
   setOptions(options);
