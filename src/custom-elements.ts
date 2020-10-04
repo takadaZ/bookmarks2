@@ -6,6 +6,7 @@ export interface LeafProps {
   content: string;
   url?: string;
   sUrl: string;
+  link?: HTMLAnchorElement;
 }
 
 export class BxLeaf extends HTMLDivElement implements LeafProps {
@@ -13,11 +14,13 @@ export class BxLeaf extends HTMLDivElement implements LeafProps {
   content: string = '';
   url: string = '';
   sUrl: string = '';
+  link: HTMLAnchorElement;
   constructor(props: LeafProps) {
     super();
     Object.assign(this, props);
     this.className = 'leaf';
     this.update();
+    this.link = this.firstElementChild as HTMLAnchorElement;
   }
   update() {
     this.dataset.parentId = String(this.parentId);

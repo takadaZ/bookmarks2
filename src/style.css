@@ -166,9 +166,23 @@ i.fa.fa-times {
   display: none;
 }
 
+.leafs > .folder.search-path[id='1'] > .marker {
+  display: none;
+}
+
+.leafs > .folder.search-path[id='1'] > .folder {
+  padding-inline-start: 0;
+  margin-left: 0;
+}
+
+.leafs .folder > .leaf.search-path,
 .leafs .folder.open > .leaf {
   display: flex;
   animation: fade-in 0.15s ease-in-out;
+}
+
+.leaf.search-path > a {
+  margin-left: 30px;
 }
 
 /* Folders pane */
@@ -178,31 +192,58 @@ i.fa.fa-times {
   overflow-x: hidden;
 }
 
+.folders .folder .folder {
+  display: none;
+}
+
+.folders .open > .marker > .title {
+  color: white;
+  background: #80bdff;
+  border-radius: 3px;
+}
+
+/* Leafs, Folders */
+
+.leafs .folder.search-path,
 .folders .folder {
   margin-left: 4px;
   /* background-image: url(images/folder-close.png); */
 }
 
+.leafs .folder .folder.search-path,
 .folders .folder .folder {
   padding-inline-start: 12px;
-  display: none;
 }
 
-.folders .folder.path > .folder {
-  display: block;
-}
-
-.folders .leah {
-  margin-left: 14px;
-}
-
+.leafs .folder.search-path > .marker,
 .folders .marker {
   display: flex;
   align-items: center;
   max-width: fit-content;
 }
 
-.folders .title {
+.leafs .folder.search-path > .folder,
+.folders .folder.path > .folder {
+  display: block;
+}
+
+.leafs .folder.search-path > .marker > .fa-angle-right,
+.folders .path > .marker > .fa-angle-right {
+  transform: rotate(90deg);
+}
+
+.fa-angle-right {
+  padding: 0 4px;
+  transition: .1s;
+  cursor: pointer;
+}
+
+[data-children='0'] .fa-angle-right {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.title {
   padding: 3px;
   padding-right: 4px;
   white-space: nowrap;
@@ -212,34 +253,18 @@ i.fa.fa-times {
   align-items: center;
 }
 
-.folders .title > span {
+.title > span {
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
 }
 
-.folders .open > .marker > .title {
+.open > .marker > .title::before {
+  content: '\f07c';
   color: white;
-  background: #80bdff;
-  border-radius: 3px;
 }
 
-.fa-angle-right {
-  padding: 0 4px;
-  transition: .1s;
-  cursor: pointer;
-}
-
-.folders .path > .marker > .fa-angle-right {
-  transform: rotate(90deg);
-}
-
-.folders [data-children='0'] .fa-angle-right {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.folders .title::before {
+.title::before {
   content: '\f07b';
   display: inline-block;
   font: normal normal normal 14px/1 FontAwesome;
@@ -249,9 +274,4 @@ i.fa.fa-times {
   margin-right: 4px;
   color: gray;
   width: 1.0em;
-}
-
-.folders .open > .marker > .title::before {
-  content: '\f07c';
-  color: white;
 }

@@ -70,10 +70,33 @@ function setEventListners() {
       onClickAnchor(e);
     }
   });
-  $('form').addEventListener('submit', () => {
-    const text = $<HTMLInputElement>('.query').value;
-    $$('.leafs a').filter((el) => el.textContent?.includes(text));
-    return false;
+  $('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = $<HTMLInputElement>('.query').value.trim();
+    const re = new RegExp(value, 'i');
+    $('.leafs .open')?.classList.remove('open');
+    $$('.leafs .search-path').forEach((el) => el.classList.remove('search-path'));
+    if (value === '') {
+      const openFolder = $('.folders .open');
+      if (openFolder) {
+        openFolder.classList.remove('open');
+        $(':scope > .marker > .title', openFolder)?.click();
+      }
+      return;
+    }
+    $$('.leafs .leaf')
+      .filter((leaf) => re.test(leaf.firstElementChild?.textContent!))
+      .map((el) => {
+        el.classList.add('search-path');
+        return el;
+      })
+      .forEach((el) => {
+        let folder = el.parentElement;
+        while (folder?.classList.contains('folder')) {
+          folder.classList.add('search-path');
+          folder = folder.parentElement;
+        }
+      });
   });
 }
 

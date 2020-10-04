@@ -230,6 +230,10 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
   return (state: State, dispatch: Dispatch) => {
     const [root] = buildBookmarks(subscribe, 0, state.bookmarks, []);
     const $leafs = $('#leafs');
+    // $leafs.append(...$(':scope > [id="1"]', root).children);
+    // $leafs.append(...$$(':scope > .folder:not([id="1"])', root));
+    // $$('.leaf:not([data-parent-id="1"])').forEach((leaf) => leaf.remove());
+    // $(':scope > .marker', $leafs).remove();
     $leafs.append(...root.children);
     const leafs = $leafs.innerHTML;
     const [rootFolder] = buildBookmarks(subscribe, 0, state.bookmarks, []);
