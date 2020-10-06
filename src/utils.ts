@@ -15,20 +15,46 @@ export function $$<T extends HTMLElement[]>(
   return [...parent.querySelectorAll(selector)] as T;
 }
 
-export function map<T, U>(f: (element: T) => U) {
-  return (array: T[]) => array.map(f);
+export type Map<T extends Array<any>, U, V> = U extends T
+  ? (f: (element: U[number], index: number, self: U) => V) => (array: T) => V[]
+  : (f: (element: T[number], index: number, self: T) => V) => (array: T) => V[]
+
+// export const map = <T, U, V>((f) => (array) => array.map(f)) as Map<T, U, V>;
+
+export function map<T extends Array<any>, U>(
+  f: (element: T[number], index: number, self: T[number][]) => U,
+) {
+  return (array: T) => array.map(f);
 }
 
-export function filter<T extends Array<any>>(f: T[number], index: number, self: T) {
-  return (array: T) => array.filter(f);
+export function filter<T extends Array<any>>(
+  f: (element: T[number], index: number, self: T[number][]) => boolean,
+) {
+  return (array: T) => array.filter(f) as T;
 }
 
-export function reduce<T, U>(f: (acc: U, element: T, i?: number, self?: T[]) => U, _init: U) {
-  return (array: T[]): U => array.reduce(f, _init);
+export function reduce<T extends Array<any>, U>(
+  f: (acc: U, element: T[number], index?: number, self?: T[number][]) => U, _init: U) {
+  return (array: T) => array.reduce(f, _init) as U;
 }
 
-export function find<T>(f: (element: T, i?: number, self?: T[]) => boolean) {
-  return (array: T[]) => array.find(f);
+export function find<T extends Array<any>>(
+  f: (element: T[number], index?: number, self?: T[number][]) => boolean,
+) {
+  return (array: T) => array.find(f) as T[number];
+}
+
+export function tap<T>(f: (a: T) => any) {
+  return (a: T) => {
+    f(a);
+    return a;
+  };
+}
+
+export function forEach<T extends Array<any>>(
+  f: (element: T[number], index: number, self: T[number][]) => void,
+) {
+  return (array: T) => array.forEach(f);
 }
 
 export function head<T>([a]: [T, ...any]) {
@@ -240,12 +266,18 @@ export function pipe(fn: any, ...fns: Array<any>) {
   return (...values: any) => fns.reduce((prevValue, nextFn) => nextFn(prevValue), fn(...values));
 }
 
+type through = (f: Function) => <T>(a: T) => T;
 export function tap<T>(f: (a: T) => any) {
   return (a: T) => {
     f(a);
     return a;
   };
 }
+const through = (f: <T extends Array<any>>(p: T[number]) => void) => (a) => a;
+
+const q = through(
+  (p) => p,
+)(['x']);
 
 export function pipeP<T, R1, R2>(
   fn1: (a: T) => R1,
