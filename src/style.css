@@ -30,7 +30,7 @@
 /* Scroll bar */
 
 .folders::-webkit-scrollbar {
-  width: 11px;
+  width: 10px;
 }
 
 .leafs::-webkit-scrollbar {
@@ -55,7 +55,7 @@
 /* body */
 
 body {
-  margin: 5px 0 2px 2px;
+  margin: 2px;
   margin-right: 0;
   font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
   font-size: 0.9em;
@@ -82,7 +82,7 @@ form {
   position: relative;
   display: flex;
   align-items: center;
-  top: -5px;
+  top: -2px;
 }
 
 button[type='submit'] {
@@ -102,15 +102,25 @@ input.query {
   text-indent: 20px;
 }
 
-i.fa.fa-times {
+.form-query .fa-times {
   position: absolute;
   right: 5px;
+  cursor: pointer;
+  display: inherit;
+}
+
+.query[value=""] + .fa-times {
   display: none;
+}
+
+.query:not([value=""]) {
+  background-color: #cce5ff;
 }
 
 /* Leafs pane */
 
 .leafs {
+  padding: 2px;
   grid-row-start: span 2;
   overflow-x: hidden;
 }
@@ -167,7 +177,7 @@ i.fa.fa-times {
 }
 
 .leafs > .folder.search-path[id='1'] > .marker {
-  display: none;
+  display: none !important;
 }
 
 .leafs > .folder.search-path[id='1'] > .folder {
@@ -175,7 +185,16 @@ i.fa.fa-times {
   margin-left: 0;
 }
 
-.leafs .folder > .leaf.search-path,
+.leafs .folder.search-path.path > .marker > .title::before {
+  content: '\f07c';
+}
+
+.leafs .folder.search-path > .folder,
+.leafs .folder.search-path > .leaf {
+  display: none;
+}
+
+.leafs .folder.search-path.path > .leaf.search-path,
 .leafs .folder.open > .leaf {
   display: flex;
   animation: fade-in 0.15s ease-in-out;
@@ -202,11 +221,16 @@ i.fa.fa-times {
   border-radius: 3px;
 }
 
+.folders .open > .marker > .title::before {
+  color: white;
+  content: '\f07c';
+}
+
 /* Leafs, Folders */
 
 .leafs .folder.search-path,
 .folders .folder {
-  margin-left: 4px;
+  margin-left: 2px;
   /* background-image: url(images/folder-close.png); */
 }
 
@@ -222,12 +246,12 @@ i.fa.fa-times {
   max-width: fit-content;
 }
 
-.leafs .folder.search-path > .folder,
+.leafs .folder.search-path.path > .folder,
 .folders .folder.path > .folder {
   display: block;
 }
 
-.leafs .folder.search-path > .marker > .fa-angle-right,
+.leafs .folder.path > .marker > .fa-angle-right,
 .folders .path > .marker > .fa-angle-right {
   transform: rotate(90deg);
 }
@@ -257,11 +281,6 @@ i.fa.fa-times {
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
-}
-
-.open > .marker > .title::before {
-  content: '\f07c';
-  color: white;
 }
 
 .title::before {

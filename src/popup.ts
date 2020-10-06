@@ -9,97 +9,6 @@ function postMessage<T extends bx.CliMessage>(message: T): Promise<bx.CliPostMes
   return F.cbToPromise(F.curry(sendMessage)(message));
 }
 
-function onClickAnchor(e: MouseEvent) {
-  const { backgroundImage } = (e.target as HTMLAnchorElement).style;
-  const [, url] = /url\("chrome:\/\/favicon\/([\s\S]*)"\)/.exec(backgroundImage) || [];
-  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-    chrome.tabs.create({
-      index: tab.index + 1,
-      windowId: tab.windowId,
-      url,
-    });
-  });
-}
-
-function onClickAngle(e: MouseEvent) {
-  const folder = (e.target as HTMLAnchorElement).parentElement?.parentElement!;
-  if ($('.open', folder)) {
-    ((e.target as HTMLAnchorElement).nextElementSibling as HTMLDivElement)?.click();
-  }
-  folder.classList.toggle('path');
-}
-
-function sendStateOpenedPath(foldersFolder: HTMLElement) {
-  $$('.path').forEach((el) => el.classList.remove('path'));
-  let paths: Array<number> = [];
-  let folder = foldersFolder;
-  while (folder.classList.contains('folder')) {
-    folder.classList.add('path');
-    paths = [...paths, Number(folder.id)];
-    folder = folder.parentElement!;
-  }
-  // Send client state
-  const type = bx.CliMessageTypes.requestSaveState;
-  const open = Number(foldersFolder.id);
-  const clState = { open, paths };
-  postMessage({ type, clState });
-}
-
-function setEventListners() {
-  $('.folders').addEventListener('click', (e) => {
-    if ((e.target as HTMLDivElement).classList.contains('title')) {
-      const foldersFolder = (e.target as HTMLDivElement).parentElement?.parentElement!;
-      const folders = [foldersFolder, $(`.leafs [id="${foldersFolder.id}"]`)];
-      const isOpen = foldersFolder.classList.contains('open');
-      if (isOpen) {
-        folders.forEach((el) => el.classList.add('path'));
-        return false;
-      }
-      $$('.open').forEach((el) => el.classList.remove('open'));
-      folders.forEach((el) => el.classList.add('open'));
-      sendStateOpenedPath(foldersFolder);
-    } else if ((e.target as HTMLDivElement).localName === 'a') {
-      onClickAnchor(e);
-    } else if ((e.target as HTMLDivElement).classList.contains('fa-angle-right')) {
-      onClickAngle(e);
-    }
-    return false;
-  });
-  $('.leafs').addEventListener('click', (e) => {
-    if ((e.target as HTMLDivElement).localName === 'a') {
-      onClickAnchor(e);
-    }
-  });
-  $('form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const value = $<HTMLInputElement>('.query').value.trim();
-    const re = new RegExp(value, 'i');
-    $('.leafs .open')?.classList.remove('open');
-    $$('.leafs .search-path').forEach((el) => el.classList.remove('search-path'));
-    if (value === '') {
-      const openFolder = $('.folders .open');
-      if (openFolder) {
-        openFolder.classList.remove('open');
-        $(':scope > .marker > .title', openFolder)?.click();
-      }
-      return;
-    }
-    $$('.leafs .leaf')
-      .filter((leaf) => re.test(leaf.firstElementChild?.textContent!))
-      .map((el) => {
-        el.classList.add('search-path');
-        return el;
-      })
-      .forEach((el) => {
-        let folder = el.parentElement;
-        while (folder?.classList.contains('folder')) {
-          folder.classList.add('search-path');
-          folder = folder.parentElement;
-        }
-      });
-  });
-}
-
 function setClientState(clState: bx.IClientState) {
   clState.paths?.forEach((id) => $(`.folders [id="${id}"]`).classList.add('path'));
   if (clState.open) {
@@ -141,19 +50,119 @@ function init() {
   setOptions(options);
   repaleceHtml(html);
   setClientState(clState);
+  // eslint-disable-next-line no-use-before-define
   setEventListners();
   init();
-
-  // chrome.runtime.onMessage.addListener((msg: bx.Message) => {
-  //   switch (msg.type) {
-  //     // case bx.MessageTypes.svrSendHtml:
-  //     //   repaleceHtml(msg.html!);
-  //     //   break;
-  //     // case bx.MessageTypes.svrSendOptions:
-  //     //   setOptions(msg.options!);
-  //     //   break;
-  //     default:
-  //       break;
-  //   }
-  // });
 })();
+
+function onClickAnchor(e: MouseEvent) {
+  const { backgroundImage } = (e.target as HTMLAnchorElement).style;
+  const [, url] = /url\("chrome:\/\/favicon\/([\s\S]*)"\)/.exec(backgroundImage) || [];
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    chrome.tabs.create({
+      index: tab.index + 1,
+      windowId: tab.windowId,
+      url,
+    });
+  });
+}
+
+function onClickAngle(e: MouseEvent) {
+  const target = e.target as HTMLAnchorElement;
+  const folder = target.parentElement?.parentElement!;
+  if ($('.open', folder)) {
+    (target.nextElementSibling as HTMLDivElement)?.click();
+  }
+  folder.classList.toggle('path');
+}
+
+function sendStateOpenedPath(foldersFolder: HTMLElement) {
+  $$('.path').forEach((el) => el.classList.remove('path'));
+  let paths: Array<number> = [];
+  let folder = foldersFolder;
+  while (folder.classList.contains('folder')) {
+    folder.classList.add('path');
+    paths = [...paths, Number(folder.id)];
+    folder = folder.parentElement!;
+  }
+  // Send client state
+  const type = bx.CliMessageTypes.requestSaveState;
+  const open = Number(foldersFolder.id);
+  const clState = { open, paths };
+  postMessage({ type, clState });
+}
+
+function clearQuery() {
+  const $query = $<HTMLInputElement>('.query');
+  $query.value = '';
+  $query.setAttribute('value', '');
+  $query.focus();
+  $('.form-query [type="submit"]').click();
+}
+
+function setEventListners() {
+  $('.folders').addEventListener('click', (e) => {
+    const target = e.target as HTMLDivElement;
+    if (target.classList.contains('title')) {
+      clearQuery();
+      const foldersFolder = target.parentElement?.parentElement!;
+      const folders = [foldersFolder, $(`.leafs [id="${foldersFolder.id}"]`)];
+      const isOpen = foldersFolder.classList.contains('open');
+      if (isOpen) {
+        folders.forEach((el) => el.classList.add('path'));
+        return false;
+      }
+      $$('.open').forEach((el) => el.classList.remove('open'));
+      folders.forEach((el) => el.classList.add('open'));
+      sendStateOpenedPath(foldersFolder);
+    } else if (target.localName === 'a') {
+      onClickAnchor(e);
+    } else if (target.classList.contains('fa-angle-right')) {
+      onClickAngle(e);
+    }
+    return false;
+  });
+  $('.leafs').addEventListener('click', (e) => {
+    const target = e.target as HTMLDivElement;
+    if (target.localName === 'a') {
+      onClickAnchor(e);
+    } else if ([...target.classList].find((className) => ['title', 'fa-angle-right'].includes(className))) {
+      const folder = target.parentElement?.parentElement!;
+      folder.classList.toggle('path');
+    }
+  });
+  $('.form-query').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const target = $<HTMLInputElement>('.query');
+    const value = target.value.trim();
+    target.setAttribute('value', value);
+    const re = new RegExp(value, 'i');
+    $('.leafs .open')?.classList.remove('open');
+    $$('.leafs .search-path').forEach((el) => el.classList.remove('search-path'));
+    $$('.leafs .path').forEach((el) => el.classList.remove('path'));
+    if (value === '') {
+      const openFolder = $('.folders .open');
+      if (openFolder) {
+        openFolder.classList.remove('open');
+        $(':scope > .marker > .title', openFolder)?.click();
+      }
+      return false;
+    }
+    $$('.leafs .leaf')
+      .filter((leaf) => re.test(leaf.firstElementChild?.textContent!))
+      .map((el) => {
+        el.classList.add('search-path');
+        return el;
+      })
+      .forEach((el) => {
+        let folder = el.parentElement;
+        while (folder?.classList.contains('folder')) {
+          folder.classList.add('search-path', 'path');
+          folder = folder.parentElement;
+        }
+      });
+    return false;
+  });
+  $('.query').addEventListener('input', () => $('.form-query [type="submit"]').click());
+  $('.form-query .fa-times').addEventListener('click', clearQuery);
+}
