@@ -266,19 +266,6 @@ export function pipe(fn: any, ...fns: Array<any>) {
   return (...values: any) => fns.reduce((prevValue, nextFn) => nextFn(prevValue), fn(...values));
 }
 
-type through = (f: Function) => <T>(a: T) => T;
-export function tap<T>(f: (a: T) => any) {
-  return (a: T) => {
-    f(a);
-    return a;
-  };
-}
-const through = (f: <T extends Array<any>>(p: T[number]) => void) => (a) => a;
-
-const q = through(
-  (p) => p,
-)(['x']);
-
 export function pipeP<T, R1, R2>(
   fn1: (a: T) => R1,
   fn2: (a: R1) => R2,
