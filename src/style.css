@@ -117,6 +117,10 @@ input.query {
   background-color: #cce5ff;
 }
 
+.split-h {
+  cursor: col-resize;
+}
+
 /* Leafs pane */
 
 .leafs {
@@ -154,6 +158,10 @@ input.query {
 .leaf a:not(:hover) {
   color: #222;
   text-decoration: none;
+}
+
+.leaf.search-path[data-parent-id="1"] > a {
+  margin-left: 0;
 }
 
 @keyframes fade-in {

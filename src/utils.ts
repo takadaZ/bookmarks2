@@ -34,7 +34,8 @@ export function filter<T extends Array<any>>(
 }
 
 export function reduce<T extends Array<any>, U>(
-  f: (acc: U, element: T[number], index?: number, self?: T[number][]) => U, _init: U) {
+  f: (acc: U, element: T[number], index?: number, self?: T[number][]) => U, _init: U,
+) {
   return (array: T) => array.reduce(f, _init) as U;
 }
 
@@ -310,4 +311,19 @@ export function pipeP(...fns: Array<any>) {
   return (p1: Promise<any>) => {
     fns.reduce((prevPromise, nextFn) => prevPromise.then(nextFn), p1);
   };
+}
+
+// eslint-disable-next-line no-undef
+export function eventListener<K extends keyof HTMLElementEventMap>(
+  type: K,
+  // eslint-disable-next-line no-undef
+  listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+  // eslint-disable-next-line no-undef
+  options?: boolean | AddEventListenerOptions,
+) {
+  return (htmlElement: HTMLElement) => htmlElement.addEventListener(type, listener, options);
+}
+
+export function setEvents(selector: string, ...listeners: ReturnType<typeof eventListener>[]) {
+  listeners.forEach((listener) => $$(selector).forEach(listener));
 }
