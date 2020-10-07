@@ -27,15 +27,16 @@ function assignStyle(selector: string, style: Partial<CSSStyleDeclaration>) {
 
 function setOptions(options: bx.IOptions) {
   assignStyle('body', {
+    width: `${options.width}px`,
+    height: `${options.height}px`,
     backgroundColor: options.bodyBackgroundColor,
   });
   assignStyle('main', {
-    width: `${options.mainWidth}px`,
-    height: `${options.mainHeight}px`,
-    gridTemplateColumns: `min-content 1fr min-content ${options.foldersWidth}px`,
+    gridTemplateColumns: `min-content 1fr min-content ${options.rightWidth}px`,
   });
-  assignStyle('.leafs', { backgroundColor: options.leafsBackgroundColor });
-  // assignStyle('.folders', { width: `${options.foldersWidth}px` });
+  assignStyle('.leafs', {
+    backgroundColor: options.leafsBackgroundColor,
+  });
 }
 
 function init() {
@@ -101,14 +102,42 @@ function clearQuery() {
   $('.form-query [type="submit"]').click();
 }
 
-function documentMousemoveHandler(e: MouseEvent) {
-  const width = Number(document.body.dataset.splitH) - e.x;
-  $('main').style.gridTemplateColumns = `min-content 1fr min-content ${width}px`;
+// eslint-disable-next-line no-unused-vars
+function setMouseEventListener(mouseMoveHandler: (e: MouseEvent) => any) {
+  const mouseMoveHandlerWrapper = (e: MouseEvent) => {
+    e.preventDefault();
+    mouseMoveHandler(e);
+  };
+  document.addEventListener('mousemove', mouseMoveHandlerWrapper, false);
+  document.addEventListener('mouseup', () => {
+    document.removeEventListener('mousemove', mouseMoveHandlerWrapper);
+    postMessage({
+      type: bx.CliMessageTypes.requestSaveOptions,
+      options: {
+        width: document.body.offsetWidth,
+        height: document.body.offsetHeight,
+        rightWidth: $('main > :last-child').offsetWidth,
+      },
+    });
+  }, { once: true });
 }
 
-function documentMouseupHandler() {
-  document.removeEventListener('mousemove', documentMousemoveHandler);
-  document.removeEventListener('mouseup', documentMouseupHandler);
+function resizeSplitHandler() {
+  const target = $('main');
+  return (e: MouseEvent) => {
+    const width = Number(document.body.dataset.rightPane) - e.x;
+    target.style.gridTemplateColumns = `min-content 1fr min-content ${width}px`;
+  };
+}
+
+function resizeWidthHandler(e: MouseEvent) {
+  const width = Number(document.body.dataset.startX) - e.screenX;
+  document.body.style.width = `${width}px`;
+}
+
+function resizeHeightHandler(e: MouseEvent) {
+  const height = Number(document.body.dataset.startY) + e.screenY;
+  document.body.style.height = `${height}px`;
 }
 
 function setEventListners() {
@@ -177,8 +206,15 @@ function setEventListners() {
   $('.query').addEventListener('input', () => $('.form-query [type="submit"]').click());
   $('.form-query .fa-times').addEventListener('click', clearQuery);
   $('.split-h').addEventListener('mousedown', (e) => {
-    document.body.dataset.splitH = String($('.folders').offsetWidth + e.x);
-    document.addEventListener('mousemove', documentMousemoveHandler);
-    document.addEventListener('mouseup', documentMouseupHandler);
+    document.body.dataset.rightPane = String($('main > :last-child').offsetWidth + e.x);
+    setMouseEventListener(resizeSplitHandler());
+  });
+  $('.resize-x').addEventListener('mousedown', (e) => {
+    document.body.dataset.startX = String($('body').offsetWidth + e.screenX);
+    setMouseEventListener(resizeWidthHandler);
+  });
+  $('.resize-y').addEventListener('mousedown', (e) => {
+    document.body.dataset.startY = String($('body').offsetHeight - e.screenY);
+    setMouseEventListener(resizeHeightHandler);
   });
 }

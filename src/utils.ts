@@ -8,11 +8,11 @@ export function $<T extends HTMLElement>(
   return parent.querySelector(selector) as T;
 }
 
-export function $$<T extends HTMLElement[]>(
+export function $$<T extends HTMLElement>(
   selector: string,
   parent: HTMLElement | DocumentFragment | Document = document,
 ) {
-  return [...parent.querySelectorAll(selector)] as T;
+  return [...parent.querySelectorAll(selector)] as Array<T>;
 }
 
 export type Map<T extends Array<any>, U, V> = U extends T
@@ -314,16 +314,34 @@ export function pipeP(...fns: Array<any>) {
 }
 
 // eslint-disable-next-line no-undef
-export function eventListener<K extends keyof HTMLElementEventMap>(
-  type: K,
+type EventListener<K extends keyof HTMLElementEventMap, T extends HTMLElement> = (
+  this: T,
   // eslint-disable-next-line no-undef
-  listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+  ev: HTMLElementEventMap[K]
+) => any;
+
+type EventListenerMap<T extends HTMLElement = HTMLElement> = {
+  // eslint-disable-next-line no-undef
+  [K in keyof Partial<HTMLElementEventMap>]: EventListener<K, T>
+}
+
+type EventListeners<
+  // eslint-disable-next-line no-undef
+  K extends keyof HTMLElementEventMap,
+  T extends HTMLElement
+> = [K, EventListener<K, T>];
+
+export function setEvents<T extends HTMLElement>(
+  htmlElements: Array<T>,
+  eventListeners: EventListenerMap<T>,
   // eslint-disable-next-line no-undef
   options?: boolean | AddEventListenerOptions,
 ) {
-  return (htmlElement: HTMLElement) => htmlElement.addEventListener(type, listener, options);
-}
-
-export function setEvents(selector: string, ...listeners: ReturnType<typeof eventListener>[]) {
-  listeners.forEach((listener) => $$(selector).forEach(listener));
+  const itrEventListeners = Object.entries(eventListeners) as
+    EventListeners<keyof typeof eventListeners, T>[];
+  itrEventListeners.forEach(([eventType, listener]) => {
+    htmlElements.forEach((htmlElement) => {
+      htmlElement.addEventListener(eventType, listener, options);
+    });
+  });
 }

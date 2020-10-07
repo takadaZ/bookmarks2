@@ -2,14 +2,14 @@ import { mapStateToResponse } from './background';
 
 export const initialOptions = {
   postPage: false,
-  mainWidth: 500,
-  mainHeight: 500,
-  foldersWidth: 200,
+  width: 500,
+  height: 500,
+  rightWidth: 200,
   bodyBackgroundColor: '#f6f6f6',
   leafsBackgroundColor: '#ffffff',
 };
 
-export type IOptions = typeof initialOptions;
+export type IOptions = Partial<typeof initialOptions>;
 
 export interface IClientState {
   open?: number;
@@ -23,10 +23,7 @@ export interface IHtml {
 
 export const CliMessageTypes = {
   requestInitial: 'cl-request-initial',
-  // requestHtml: 'cl-request-html',
-  // svrSendHtml: 'svr-send-html',
-  // requestOptions: 'cl-request-options',
-  // svrSendOptions: 'svr-send-options',
+  requestSaveOptions: 'cl-request-save-options',
   requestSaveState: 'cl-request-save-state',
 } as const;
 

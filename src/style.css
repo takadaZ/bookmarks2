@@ -55,7 +55,7 @@
 /* body */
 
 body {
-  margin: 2px;
+  margin: 2px 2px 0 0;
   margin-right: 0;
   font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
   font-size: 0.9em;
@@ -65,17 +65,23 @@ main {
   display: grid;
   grid-template-columns: min-content 1fr min-content auto;
   grid-template-rows: min-content 1fr;
+  height: 100%;
 }
 
 .resize-x,
 .split-h {
-  width: 2px;
+  width: 3px;
   height: 100%;
   grid-row-start: span 2;
 }
 
+.resize-x {
+  cursor: w-resize;
+}
+
 .resize-y {
-  height: 2px;
+  cursor: s-resize;
+  height: 3px;
 }
 
 form {
@@ -104,7 +110,7 @@ input.query {
 
 .form-query .fa-times {
   position: absolute;
-  right: 5px;
+  right: 6px;
   cursor: pointer;
   display: inherit;
 }
@@ -239,7 +245,6 @@ input.query {
 .leafs .folder.search-path,
 .folders .folder {
   margin-left: 2px;
-  /* background-image: url(images/folder-close.png); */
 }
 
 .leafs .folder .folder.search-path,

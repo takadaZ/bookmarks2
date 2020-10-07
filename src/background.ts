@@ -13,9 +13,7 @@ import * as bx from './types';
 import {
   BookmarkElements,
   BxLeaf,
-  // LeafProps,
   BxNode,
-  // nodeProps,
 } from './custom-elements';
 
 // SliceReducers
@@ -230,10 +228,6 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
   return (state: State, dispatch: Dispatch) => {
     const [root] = buildBookmarks(subscribe, 0, state.bookmarks, []);
     const $leafs = $('#leafs');
-    // $leafs.append(...$(':scope > [id="1"]', root).children);
-    // $leafs.append(...$$(':scope > .folder:not([id="1"])', root));
-    // $$('.leaf:not([data-parent-id="1"])').forEach((leaf) => leaf.remove());
-    // $(':scope > .marker', $leafs).remove();
     $leafs.append(...root.children);
     const leafs = $leafs.innerHTML;
     const [rootFolder] = buildBookmarks(subscribe, 0, state.bookmarks, []);
@@ -271,8 +265,10 @@ export const mapStateToResponse = {
     (_: State, dispatch: Dispatch, message: bx.CliMessage) => {
       dispatch(clientState.actions.update(message.clState!));
     },
-  // [bx.CliMessageTypes.requestHtml]: (state: State) => state.html,
-  // [bx.CliMessageTypes.requestOptions]: (state: State) => state.options,
+  [bx.CliMessageTypes.requestSaveOptions]:
+    (_: State, dispatch: Dispatch, message: bx.CliMessage) => {
+      dispatch(sliceOptions.actions.update(message.options!));
+    },
 };
 
 function onClientRequest(
@@ -304,6 +300,5 @@ export async function connect(
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks(subscribe), ['bookmarks', 'refresh']);
-  // subscribe(sendHtml, ['html', 'created']);
   regsterClientlistener(listener);
 }
