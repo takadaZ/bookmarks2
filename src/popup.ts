@@ -3,10 +3,14 @@ import { $, $$ } from './utils';
 import * as F from './utils';
 import * as bx from './types';
 
-const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as bx.CliSendMessage;
+const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as
+  // eslint-disable-next-line no-unused-vars
+  (message: any, responseCallback: (response: any) => void) => void;
 
-function postMessage<T extends bx.CliMessage>(message: T): Promise<bx.CliPostMessage<T>> {
-  return F.cbToPromise(F.curry(sendMessage)(message));
+function postMessage<T extends keyof bx.MapStateToResponse>(
+  msg: { type: T } & Partial<bx.PayloadAction<bx.MessageStateMapObject<bx.MapStateToResponse>[T]>>,
+): Promise<ReturnType<bx.MapStateToResponse[T]>> {
+  return F.cbToPromise(F.curry(sendMessage)(msg));
 }
 
 function setClientState(clState: bx.IClientState) {
@@ -88,10 +92,13 @@ function sendStateOpenedPath(foldersFolder: HTMLElement) {
     folder = folder.parentElement!;
   }
   // Send client state
-  const type = bx.CliMessageTypes.requestSaveState;
-  const open = Number(foldersFolder.id);
-  const clState = { open, paths };
-  postMessage({ type, clState });
+  postMessage({
+    type: bx.CliMessageTypes.requestSaveState,
+    payload: {
+      paths,
+      open: Number(foldersFolder.id),
+    },
+  });
 }
 
 function clearQuery() {
@@ -113,7 +120,7 @@ function setMouseEventListener(mouseMoveHandler: (e: MouseEvent) => any) {
     document.removeEventListener('mousemove', mouseMoveHandlerWrapper);
     postMessage({
       type: bx.CliMessageTypes.requestSaveOptions,
-      options: {
+      payload: {
         width: document.body.offsetWidth,
         height: document.body.offsetHeight,
         rightWidth: $('main > :last-child').offsetWidth,

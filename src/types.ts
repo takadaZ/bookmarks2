@@ -1,4 +1,20 @@
-import { mapStateToResponse } from './background';
+import {
+  PayloadAction,
+  State,
+  Dispatch,
+} from './redux-provider';
+
+import {
+  MapStateToResponse,
+} from './background';
+
+export {
+  PayloadAction
+} from '@reduxjs/toolkit';
+
+export {
+  MapStateToResponse,
+} from './background';
 
 export const initialOptions = {
   postPage: false,
@@ -27,24 +43,15 @@ export const CliMessageTypes = {
   requestSaveState: 'cl-request-save-state',
 } as const;
 
-export type CliMessage = {
-  type: typeof CliMessageTypes[keyof typeof CliMessageTypes];
-  html?: IHtml;
-  options?: IOptions;
-  clState?: IClientState;
-}
-
-export type CliMessages = {
-  [CliMessageTypes.requestInitial]: {},
-  [CliMessageTypes.requestSaveState]: { clState: IClientState },
-}
-
-// eslint-disable-next-line no-unused-vars
-export type CliPostMessage<T extends CliMessage> = ReturnType<typeof mapStateToResponse[T['type']]>;
-
-export type CliSendMessage = <T extends CliMessage>(
+export type RequestCallback<T> = (
   // eslint-disable-next-line no-unused-vars
-  messgae: T,
+  state: State,
   // eslint-disable-next-line no-unused-vars
-  response?: (resp: CliPostMessage<T>) => void
-) => void;
+  dispatch: Dispatch,
+  // eslint-disable-next-line no-unused-vars
+  { payload }: PayloadAction<T>
+) => ReturnType<MapStateToResponse[keyof MapStateToResponse]>;
+
+export type MessageStateMapObject<M extends MapStateToResponse> = {
+  [K in keyof M]: M[K] extends RequestCallback<infer S> ? S : never;
+}

@@ -262,19 +262,21 @@ export const mapStateToResponse = {
     clState: state.clientState,
   }),
   [bx.CliMessageTypes.requestSaveState]:
-    (_: State, dispatch: Dispatch, message: bx.CliMessage) => {
-      dispatch(clientState.actions.update(message.clState!));
+    (_: State, dispatch: Dispatch, { payload }: PayloadAction<bx.IClientState>) => {
+      dispatch(clientState.actions.update(payload));
     },
   [bx.CliMessageTypes.requestSaveOptions]:
-    (_: State, dispatch: Dispatch, message: bx.CliMessage) => {
-      dispatch(sliceOptions.actions.update(message.options!));
+    (_: State, dispatch: Dispatch, { payload }: PayloadAction<bx.IOptions>) => {
+      dispatch(sliceOptions.actions.update(payload));
     },
 };
+
+export type MapStateToResponse = typeof mapStateToResponse;
 
 function onClientRequest(
   state: State,
   dispatch: Dispatch,
-  message: bx.CliMessage,
+  message: { type: keyof MapStateToResponse } & PayloadAction<any>,
   _: any,
   sendResponse: any,
 ) {
