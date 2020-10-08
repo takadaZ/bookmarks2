@@ -55,7 +55,7 @@
 /* body */
 
 body {
-  margin: 2px 2px 0 0;
+  margin: 4px 0 0 0;
   margin-right: 0;
   font-family: 'Helvetica Neue', Arial, 'Hiragino SansHiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
   font-size: 0.9em;
@@ -70,25 +70,29 @@ main {
 
 .resize-x,
 .split-h {
-  width: 3px;
   height: 100%;
   grid-row-start: span 2;
 }
 
+.split-h {
+  width: 4px;
+}
+
 .resize-x {
   cursor: w-resize;
+  width: 4px;
 }
 
 .resize-y {
   cursor: s-resize;
-  height: 3px;
+  height: 4px;
 }
 
 form {
   position: relative;
   display: flex;
   align-items: center;
-  top: -2px;
+  top: -4px;
 }
 
 button[type='submit'] {
