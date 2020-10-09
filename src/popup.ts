@@ -224,4 +224,11 @@ function setEventListners() {
     document.body.dataset.startY = String($('body').offsetHeight - e.screenY);
     setMouseEventListener(resizeHeightHandler);
   });
+  F.setEvents($$('.main-menu'), {
+    click: (e) => {
+      // eslint-disable-next-line no-alert
+      alert((e.target as HTMLElement).className);
+    },
+    mousedown: (e) => e.preventDefault(),
+  });
 }

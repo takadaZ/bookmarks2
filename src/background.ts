@@ -243,17 +243,6 @@ function makeHtmlBookmarks(subscribe: StateSubscriber) {
 
 // Popup messaging
 
-// type MapStateToResponse = {
-//   [P in typeof bx.CliMessageTypes[keyof typeof bx.CliMessageTypes]]: (
-//     // eslint-disable-next-line no-unused-vars
-//     state: State,
-//     // eslint-disable-next-line no-unused-vars
-//     dispatch: Dispatch,
-//     // eslint-disable-next-line no-unused-vars
-//     message: bx.CliMessages[P]
-//   ) => any
-// }
-
 // eslint-disable-next-line no-use-before-define
 export const mapStateToResponse = {
   [bx.CliMessageTypes.requestInitial]: (state: State) => ({
