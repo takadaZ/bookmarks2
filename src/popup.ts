@@ -166,6 +166,8 @@ function setEventListners() {
       onClickAnchor(e);
     } else if (target.classList.contains('fa-angle-right')) {
       onClickAngle(e);
+    } else if (target.classList.contains('folder')) {
+      $$('.open').forEach((el) => el.classList.remove('open'));
     }
     return false;
   });

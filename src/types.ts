@@ -9,7 +9,7 @@ import {
 } from './background';
 
 export {
-  PayloadAction
+  PayloadAction,
 } from '@reduxjs/toolkit';
 
 export {
