@@ -260,7 +260,7 @@ input.query {
 
 .leaf {
   display: flex;
-  padding: 1px 0;
+  padding: 2px;
 }
 
 .leaf a {
@@ -358,7 +358,7 @@ input.query {
 
 .leafs .folder.search-path,
 .folders .folder {
-  margin-left: 2px;
+  margin: 2px;
 }
 
 .leafs .folder .folder.search-path,
@@ -420,4 +420,30 @@ input.query {
   margin-right: 4px;
   color: gray;
   width: 1.0em;
+}
+
+.leaf:hover {
+  background-color: rgba(0,0,0,0.08);
+}
+
+.leaf > button {
+  display: none;
+  margin-left: auto;
+  width: 18px;
+  height: 20px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: 0;
+  transition: .4s;
+  font-size: 1.2em;
+  background-color: transparent;
+}
+
+.leaf:hover > button {
+  display: flex;
+}
+
+.leaf > button:not(:hover) .fa {
+  color: #999;
 }
