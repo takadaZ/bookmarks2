@@ -7,10 +7,11 @@ const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as
   // eslint-disable-next-line no-unused-vars
   (message: any, responseCallback: (response: any) => void) => void;
 
-function postMessage<T extends keyof bx.MapStateToResponse>(
+async function postMessage<T extends keyof bx.MapStateToResponse>(
   msg: { type: T } & Partial<bx.PayloadAction<bx.MessageStateMapObject<bx.MapStateToResponse>[T]>>,
 ): Promise<ReturnType<bx.MapStateToResponse[T]>> {
-  return F.cbToPromise(F.curry(sendMessage)(msg));
+  const [response] = await F.cbToPromise(F.curry(sendMessage)(msg));
+  return response;
 }
 
 function setClientState(clState: bx.IClientState) {

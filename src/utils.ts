@@ -126,8 +126,8 @@ function y(_a: number, _b: string, _c: boolean) {
 }
 swap(curry(curry(y))(3))(false)('aaa');
 
-export async function cbToPromise<T>(f: (_: (a: T) => any) => any) {
-  return new Promise<T>((resolve) => f(resolve));
+export async function cbToPromise<T extends Array<any>>(f: (cb: (...args: T) => any) => any) {
+  return new Promise<T>((resolve) => f((...args) => resolve(args)));
 }
 
 const getClassName = Object.prototype.toString.call.bind(Object.prototype.toString);

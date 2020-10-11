@@ -65,7 +65,7 @@ const bookmarks = createSlice({
   initialState: {} as IBookmarks,
   name: 'bookmarks',
   reducers: {
-    refresh: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
+    update: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
       { ...state, ...payload }
     ),
   },
@@ -196,7 +196,7 @@ function getBookmarksTree(dispatch: AnyDispatch) {
   return F.pipeP(
     F.map(digBookmarks),
     flattenBookmarksTree,
-    bookmarks.actions.refresh,
+    bookmarks.actions.update,
     dispatch,
   );
 }
@@ -279,6 +279,19 @@ function regsterClientlistener(listener: StateListener) {
   chrome.runtime.onMessage.addListener(listener(onClientRequest));
 }
 
+async function regsterOnCreateBookmark(dispatch: Dispatch) {
+  const [id, treeNode] = await F.cbToPromise(
+    chrome.bookmarks.onCreated.addListener.bind(chrome.bookmarks.onCreated),
+  );
+  dispatch(bookmarks.actions.update({
+    [Number(id)]: {
+      url: treeNode.url,
+      parentId: Number(treeNode.parentId),
+      content: treeNode.title,
+    },
+  }));
+}
+
 // Connect Redux
 
 export async function connect(
@@ -286,10 +299,11 @@ export async function connect(
   listener: StateListener,
   dispatch: Dispatch,
 ) {
-  subscribe(webRequestListener(listener), ['options', 'update']);
+  regsterOnCreateBookmark(dispatch);
+  // subscribe(webRequestListener(listener), ['options', 'update']);
   await getSavedOptions(dispatch, bx.initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
-  subscribe(makeHtmlBookmarks(subscribe), ['bookmarks', 'refresh']);
+  subscribe(makeHtmlBookmarks(subscribe), ['bookmarks', 'update']);
   regsterClientlistener(listener);
 }
