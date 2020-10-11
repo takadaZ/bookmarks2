@@ -68,6 +68,9 @@ const bookmarks = createSlice({
     update: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
       { ...state, ...payload }
     ),
+    add: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
+      { ...state, ...payload }
+    ),
   },
 });
 
@@ -75,7 +78,7 @@ const bookmarksHtml = createSlice({
   initialState: {} as bx.IHtml,
   name: 'html',
   reducers: {
-    created: (state: bx.IHtml, { payload }: PayloadAction<bx.IHtml>) => (
+    created: (_: bx.IHtml, { payload }: PayloadAction<bx.IHtml>) => (
       payload
     ),
   },
@@ -85,7 +88,7 @@ const clientState = createSlice({
   initialState: {} as bx.IClientState,
   name: 'clientState',
   reducers: {
-    update: (state: bx.IClientState, { payload }: PayloadAction<bx.IClientState>) => (
+    update: (_: bx.IClientState, { payload }: PayloadAction<bx.IClientState>) => (
       payload
     ),
   },
@@ -208,7 +211,6 @@ const BxLeaf1 = customElements.get('bx-leaf') as typeof BxLeaf;
 const BxNode1 = customElements.get('bx-node') as typeof BxNode;
 
 function buildBookmarks(
-  subscribe: StateSubscriber,
   id: number,
   nodes: IBookmarks,
   elements: BookmarkElements,
@@ -216,7 +218,7 @@ function buildBookmarks(
   const node = nodes[id];
   if (node.childrenIds) {
     const children = node.childrenIds.flatMap(
-      (childId) => buildBookmarks(subscribe, childId, nodes, elements),
+      (childId) => buildBookmarks(childId, nodes, elements),
     );
     return [...elements, new BxNode1({ ...node, nodes: children, id: String(id) })];
   }
@@ -224,21 +226,21 @@ function buildBookmarks(
   return [...elements, new BxLeaf1({ ...node, id: String(id), sUrl })];
 }
 
-function makeHtmlBookmarks(subscribe: StateSubscriber) {
-  return (state: State, dispatch: Dispatch) => {
-    const [root] = buildBookmarks(subscribe, 0, state.bookmarks, []);
-    const $leafs = $('#leafs');
-    $leafs.append(...root.children);
-    const leafs = $leafs.innerHTML;
-    const [rootFolder] = buildBookmarks(subscribe, 0, state.bookmarks, []);
-    const $folders = $('#folders');
-    $folders.append(...$(':scope > [id="1"]', rootFolder).children);
-    $folders.append(...$$(':scope > .folder:not([id="1"])', rootFolder));
-    $$('.leaf:not([data-parent-id="1"])').forEach((leaf) => leaf.remove());
-    $(':scope > .marker', $folders).remove();
-    const folders = $folders.innerHTML;
-    dispatch(bookmarksHtml.actions.created({ leafs, folders }));
-  };
+function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
+  const [root] = buildBookmarks(0, state.bookmarks, []);
+  const $leafs = $('#leafs');
+  $leafs.innerHTML = '';
+  $leafs.append(...root.children);
+  const leafs = $leafs.innerHTML;
+  const [rootFolder] = buildBookmarks(0, state.bookmarks, []);
+  const $folders = $('#folders');
+  $folders.innerHTML = '';
+  $folders.append(...$(':scope > [id="1"]', rootFolder).children);
+  $folders.append(...$$(':scope > .folder:not([id="1"])', rootFolder));
+  $$('.leaf:not([data-parent-id="1"])').forEach((leaf) => leaf.remove());
+  $(':scope > .marker', $folders).remove();
+  const folders = $folders.innerHTML;
+  dispatch(bookmarksHtml.actions.created({ leafs, folders }));
 }
 
 // Popup messaging
@@ -275,19 +277,28 @@ function onClientRequest(
   sendResponse(responseState);
 }
 
-function regsterClientlistener(listener: StateListener) {
-  chrome.runtime.onMessage.addListener(listener(onClientRequest));
-}
-
-async function regsterOnCreateBookmark(dispatch: Dispatch) {
-  const [id, treeNode] = await F.cbToPromise(
-    chrome.bookmarks.onCreated.addListener.bind(chrome.bookmarks.onCreated),
-  );
-  dispatch(bookmarks.actions.update({
+async function onCreateBookmark(
+  state: State,
+  dispatch: Dispatch,
+  id: string,
+  treeNode: chrome.bookmarks.BookmarkTreeNode,
+) {
+  const parentId = Number(treeNode.parentId);
+  dispatch(bookmarks.actions.add({
     [Number(id)]: {
+      parentId,
       url: treeNode.url,
-      parentId: Number(treeNode.parentId),
       content: treeNode.title,
+    },
+  }));
+  const [nodeTree] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(treeNode.parentId!));
+  const childrenIds = nodeTree.children?.map((child) => Number(child.id));
+  const parent = state.bookmarks[parentId];
+  dispatch(bookmarks.actions.update({
+    [parentId]: {
+      parentId: Number(parent.parentId),
+      content: parent.content,
+      childrenIds,
     },
   }));
 }
@@ -299,11 +310,11 @@ export async function connect(
   listener: StateListener,
   dispatch: Dispatch,
 ) {
-  regsterOnCreateBookmark(dispatch);
+  chrome.bookmarks.onCreated.addListener(listener(onCreateBookmark));
   // subscribe(webRequestListener(listener), ['options', 'update']);
   await getSavedOptions(dispatch, bx.initialOptions);
   // listener(saveOptions);
   await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
-  subscribe(makeHtmlBookmarks(subscribe), ['bookmarks', 'update']);
-  regsterClientlistener(listener);
+  subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
+  chrome.runtime.onMessage.addListener(listener(onClientRequest));
 }

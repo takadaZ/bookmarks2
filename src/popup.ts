@@ -10,8 +10,7 @@ const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as
 async function postMessage<T extends keyof bx.MapStateToResponse>(
   msg: { type: T } & Partial<bx.PayloadAction<bx.MessageStateMapObject<bx.MapStateToResponse>[T]>>,
 ): Promise<ReturnType<bx.MapStateToResponse[T]>> {
-  const [response] = await F.cbToPromise(F.curry(sendMessage)(msg));
-  return response;
+  return F.cbToPromise(F.curry(sendMessage)(msg));
 }
 
 function setClientState(clState: bx.IClientState) {
