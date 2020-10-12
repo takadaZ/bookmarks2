@@ -310,11 +310,11 @@ export async function connect(
   listener: StateListener,
   dispatch: Dispatch,
 ) {
-  chrome.bookmarks.onCreated.addListener(listener(onCreateBookmark));
-  // subscribe(webRequestListener(listener), ['options', 'update']);
+  subscribe(webRequestListener(listener), ['options', 'update']);
   await getSavedOptions(dispatch, bx.initialOptions);
   // listener(saveOptions);
-  await getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
+  getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
+  chrome.bookmarks.onCreated.addListener(listener(onCreateBookmark));
   chrome.runtime.onMessage.addListener(listener(onClientRequest));
 }

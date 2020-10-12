@@ -78,14 +78,14 @@ export type StateSubscriber = <T extends Actions>(
   // eslint-disable-next-line no-unused-vars
   once?: boolean,
 ) => void;
-export type ListenerHandler<T = State, U = Dispatch, V = any, W = any, X = any> = (
+export type ListenerHandler<T extends State, U extends Dispatch, V, W, X> = (
   // eslint-disable-next-line no-unused-vars
   state: T, dispatch: U, arg1: V, arg2: W, arg3: X
 ) => void;
 // eslint-disable-next-line no-unused-vars
 export type StateListener = <T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>)
   // eslint-disable-next-line no-unused-vars
-  => (arg1?: T, arg2?: U, arg3?: V) => ReturnType<ListenerHandler<State, Dispatch, T, U, V>>;
+  => (arg1: T, arg2?: U, arg3?: V) => ReturnType<ListenerHandler<State, Dispatch, T, U, V>>;
 
 function compareActionPaths(
   firedActionType: string,
@@ -116,9 +116,9 @@ function subscriber<T extends Actions>(
   });
 }
 
-function listener(handler: ListenerHandler) {
-  return (arg1: any, arg2?: any, arg3?: any) => {
-    handler(store.getState(), store.dispatch, arg1, arg2, arg3);
+function listener<T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>) {
+  return (arg1: T, arg2?: U, arg3?: V) => {
+    handler(store.getState(), store.dispatch, arg1 as any, arg2 as any, arg3 as any);
   };
 }
 

@@ -21,10 +21,6 @@
        }
     }
   },
-  "icons": {
-    "128": "images/db1.png",
-     "48": "images/db1.png"
-  },
   "web_accessible_resources": ["new.html"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'",
   "permissions": [
