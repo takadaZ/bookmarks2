@@ -336,6 +336,7 @@ input.query {
 
 .folders {
   padding: 2px;
+  padding-left: 0;
   overflow-x: hidden;
 }
 

@@ -118,7 +118,7 @@ function subscriber<T extends Actions>(
 
 function listener<T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>) {
   return (arg1: T, arg2?: U, arg3?: V) => {
-    handler(store.getState(), store.dispatch, arg1 as any, arg2 as any, arg3 as any);
+    handler(store.getState(), store.dispatch, arg1, arg2 as any, arg3 as any);
   };
 }
 
