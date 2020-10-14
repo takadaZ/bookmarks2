@@ -6,6 +6,7 @@ import {
   AnyDispatch,
   StateSubscriber,
   StateListener,
+  ReduxHandlers,
 } from './redux-provider';
 import * as F from './utils';
 import { $, $$ } from './utils';
@@ -107,8 +108,7 @@ export const slices = {
 // Functions
 
 function onBeforeRequestHandler(
-  _: State,
-  dispatch: Dispatch,
+  { dispatch } : ReduxHandlers,
   details: chrome.webRequest.WebRequestBodyDetails,
 ) {
   if (
@@ -122,7 +122,7 @@ function onBeforeRequestHandler(
   }
 }
 
-function onRemovedTabsHandler(_: State, dispatch: Dispatch, tabId: number) {
+function onRemovedTabsHandler({ dispatch }: ReduxHandlers, tabId: number) {
   dispatch(webRequest.actions.removePostData(tabId));
 }
 
@@ -237,7 +237,7 @@ function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
   $folders.innerHTML = '';
   $folders.append(...$(':scope > [id="1"]', rootFolder).children);
   $folders.append(...$$(':scope > .folder:not([id="1"])', rootFolder));
-  $$('.leaf:not([data-parent-id="1"])').forEach((leaf) => leaf.remove());
+  $$('.leaf:not([data-parent-id="1"])', $folders).forEach((leaf) => leaf.remove());
   $(':scope > .marker', $folders).remove();
   const folders = $folders.innerHTML;
   dispatch(bookmarksHtml.actions.created({ leafs, folders }));
@@ -245,41 +245,66 @@ function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
 
 // Popup messaging
 
-// eslint-disable-next-line no-use-before-define
 export const mapStateToResponse = {
-  [bx.CliMessageTypes.requestInitial]: (state: State) => ({
+  [bx.CliMessageTypes.initialize]: ({ state }: ReduxHandlers) => ({
     options: state.options,
     html: state.html,
     clState: state.clientState,
   }),
-  [bx.CliMessageTypes.requestSaveState]:
-    (_: State, dispatch: Dispatch, { payload }: PayloadAction<bx.IClientState>) => {
+  [bx.CliMessageTypes.saveState]:
+    ({ dispatch }: ReduxHandlers, { payload }: PayloadAction<bx.IClientState>) => {
       dispatch(clientState.actions.update(payload));
     },
-  [bx.CliMessageTypes.requestSaveOptions]:
-    (_: State, dispatch: Dispatch, { payload }: PayloadAction<bx.IOptions>) => {
+  [bx.CliMessageTypes.saveOptions]:
+    ({ dispatch }: ReduxHandlers, { payload }: PayloadAction<bx.IOptions>) => {
       dispatch(sliceOptions.actions.update(payload));
+    },
+  [bx.CliMessageTypes.openBookmark]:
+    async ({ state }: ReduxHandlers, { payload }: PayloadAction<number>) => {
+      const tab = await F.getCurrentTab();
+      chrome.tabs.create({
+        index: tab.index + 1,
+        windowId: tab.windowId,
+        url: state.bookmarks[payload].url,
+      });
+    },
+  [bx.CliMessageTypes.addBookmark]:
+    async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
+      const { title, url } = await F.getCurrentTab();
+      const creator = F.curry(chrome.bookmarks.create)({
+        title,
+        url,
+        parentId: payload,
+      });
+      const { id } = await F.cbToPromise(creator);
+      const html = await new Promise<string>((resolve) => {
+        subscribe(() => {
+          resolve($(`[id="${id}"]`).outerHTML);
+        }, ['html', 'created'], true);
+      });
+      return { id, html };
     },
 };
 
 export type MapStateToResponse = typeof mapStateToResponse;
 
-function onClientRequest(
-  state: State,
-  dispatch: Dispatch,
+async function onClientRequest(
+  reduxHandlers: ReduxHandlers,
   message: { type: keyof MapStateToResponse } & PayloadAction<any>,
   _: any,
   sendResponse: any,
 ) {
   // eslint-disable-next-line no-console
   console.log(message);
-  const responseState = mapStateToResponse[message.type](state, dispatch, message);
+  const responseState = await mapStateToResponse[message.type](reduxHandlers, message);
   sendResponse(responseState);
 }
 
 async function onCreateBookmark(
-  state: State,
-  dispatch: Dispatch,
+  {
+    state,
+    dispatch,
+  }: ReduxHandlers,
   id: string,
   treeNode: chrome.bookmarks.BookmarkTreeNode,
 ) {

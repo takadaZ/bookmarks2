@@ -48,7 +48,7 @@ function init() {
 }
 
 (async () => {
-  const { options, html, clState } = await postMessage({ type: bx.CliMessageTypes.requestInitial });
+  const { options, html, clState } = await postMessage({ type: bx.CliMessageTypes.initialize });
 
   if (document.readyState === 'loading') {
     await F.cbToPromise(F.swap(F.curry(F.curry(document.addEventListener))('DOMContentLoaded'))(false));
@@ -62,14 +62,10 @@ function init() {
 })();
 
 function onClickAnchor(e: MouseEvent) {
-  const { backgroundImage } = (e.target as HTMLAnchorElement).style;
-  const [, url] = /url\("chrome:\/\/favicon\/([\s\S]*)"\)/.exec(backgroundImage) || [];
-  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-    chrome.tabs.create({
-      index: tab.index + 1,
-      windowId: tab.windowId,
-      url,
-    });
+  const { id } = (e.target as HTMLAnchorElement).parentElement!;
+  postMessage({
+    type: bx.CliMessageTypes.openBookmark,
+    payload: Number(id),
   });
 }
 
@@ -93,7 +89,7 @@ function sendStateOpenedPath(foldersFolder: HTMLElement) {
   }
   // Send client state
   postMessage({
-    type: bx.CliMessageTypes.requestSaveState,
+    type: bx.CliMessageTypes.saveState,
     payload: {
       paths,
       open: Number(foldersFolder.id),
@@ -119,7 +115,7 @@ function setMouseEventListener(mouseMoveHandler: (e: MouseEvent) => any) {
   document.addEventListener('mouseup', () => {
     document.removeEventListener('mousemove', mouseMoveHandlerWrapper);
     postMessage({
-      type: bx.CliMessageTypes.requestSaveOptions,
+      type: bx.CliMessageTypes.saveOptions,
       payload: {
         width: document.body.offsetWidth,
         height: document.body.offsetHeight,
@@ -227,9 +223,21 @@ function setEventListners() {
     setMouseEventListener(resizeHeightHandler);
   });
   F.setEvents($$('.main-menu'), {
-    click: (e) => {
-      // eslint-disable-next-line no-alert
-      alert((e.target as HTMLElement).className);
+    click: async (e) => {
+      switch ((e.target as HTMLElement).dataset.value) {
+        case 'add-bookmark': {
+          const $folder = $('.leafs .open') || $('.folders');
+          const { id, html } = await postMessage({
+            type: bx.CliMessageTypes.addBookmark,
+            payload: $folder.id || '1',
+          });
+          $folder.insertAdjacentHTML('beforeend', html);
+          (($(`.folders [id="${id}"]`) || $(`.leafs [id="${id}"]`)).firstElementChild as HTMLAnchorElement)!.focus();
+          break;
+        }
+        default:
+      }
+      // $('.menu-button > button').blur();
     },
     mousedown: (e) => e.preventDefault(),
   });

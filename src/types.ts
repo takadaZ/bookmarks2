@@ -1,7 +1,6 @@
 import {
   PayloadAction,
-  State,
-  Dispatch,
+  ReduxHandlers,
 } from './redux-provider';
 
 import {
@@ -38,19 +37,19 @@ export interface IHtml {
 }
 
 export const CliMessageTypes = {
-  requestInitial: 'cl-request-initial',
-  requestSaveOptions: 'cl-request-save-options',
-  requestSaveState: 'cl-request-save-state',
+  initialize: 'cl-initialize',
+  saveOptions: 'cl-save-options',
+  saveState: 'cl-save-state',
+  openBookmark: 'cl-open-bookmark',
+  addBookmark: 'cl-add-bookmark',
 } as const;
 
 export type RequestCallback<T> = (
   // eslint-disable-next-line no-unused-vars
-  state: State,
-  // eslint-disable-next-line no-unused-vars
-  dispatch: Dispatch,
+  reduxHandlers: ReduxHandlers,
   // eslint-disable-next-line no-unused-vars
   { payload }: PayloadAction<T>
-) => ReturnType<MapStateToResponse[keyof MapStateToResponse]>;
+) => any;
 
 export type MessageStateMapObject<M extends MapStateToResponse> = {
   [K in keyof M]: M[K] extends RequestCallback<infer S> ? S : never;

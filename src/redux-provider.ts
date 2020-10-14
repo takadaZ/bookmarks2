@@ -78,14 +78,19 @@ export type StateSubscriber = <T extends Actions>(
   // eslint-disable-next-line no-unused-vars
   once?: boolean,
 ) => void;
-export type ListenerHandler<T extends State, U extends Dispatch, V, W, X> = (
+export type ReduxHandlers = {
+  state: State,
+  dispatch: Dispatch,
+  subscribe: StateSubscriber,
+}
+export type ListenerHandler<T extends ReduxHandlers, U, V, W> = (
   // eslint-disable-next-line no-unused-vars
-  state: T, dispatch: U, arg1: V, arg2: W, arg3: X
+  reduxHandlers: T, arg1: U, arg2: V, arg3: W
 ) => void;
 // eslint-disable-next-line no-unused-vars
-export type StateListener = <T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>)
+export type StateListener = <T extends ReduxHandlers, U, V, W>(handler: ListenerHandler<T, U, V, W>)
   // eslint-disable-next-line no-unused-vars
-  => (arg1: T, arg2?: U, arg3?: V) => ReturnType<ListenerHandler<State, Dispatch, T, U, V>>;
+  => (arg1: U, arg2?: V, arg3?: W) => ReturnType<ListenerHandler<ReduxHandlers, T, U, V>>;
 
 function compareActionPaths(
   firedActionType: string,
@@ -97,7 +102,7 @@ function compareActionPaths(
   return firedActionType.concat('/').startsWith(`${hookActionPath.join('/')}/`);
 }
 
-function subscriber<T extends Actions>(
+function subscribe<T extends Actions>(
   handler: SubscribeHandler,
   hookActionPath?: ActionPath<T>,
   once: boolean = false,
@@ -116,10 +121,20 @@ function subscriber<T extends Actions>(
   });
 }
 
-function listener<T, U, V>(handler: ListenerHandler<State, Dispatch, T, U, V>) {
-  return (arg1: T, arg2?: U, arg3?: V) => {
-    handler(store.getState(), store.dispatch, arg1, arg2 as any, arg3 as any);
+function listener<T extends ReduxHandlers, U, V, W>(handler: ListenerHandler<T, U, V, W>) {
+  return (arg1: U, arg2?: V, arg3?: W) => {
+    handler(
+      {
+        subscribe,
+        state: store.getState(),
+        dispatch: store.dispatch,
+      } as T,
+      arg1,
+      arg2 as any,
+      arg3 as any,
+    );
+    return true;
   };
 }
 
-mergedConnects.map((connect) => connect(subscriber, listener, store.dispatch));
+mergedConnects.map((connect) => connect(subscribe, listener, store.dispatch));

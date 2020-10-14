@@ -349,3 +349,11 @@ export function setEvents<T extends HTMLElement>(
     });
   });
 }
+
+export async function getCurrentTab() {
+  return new Promise<chrome.tabs.Tab>((resolve) => {
+    chrome.windows.getLastFocused((win) => {
+      chrome.tabs.query({ active: true, windowId: win.id }, ([tab]) => resolve(tab));
+    });
+  });
+}
