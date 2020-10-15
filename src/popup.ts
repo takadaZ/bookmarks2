@@ -232,7 +232,12 @@ function setEventListners() {
             payload: $folder.id || '1',
           });
           $folder.insertAdjacentHTML('beforeend', html);
-          (($(`.folders [id="${id}"]`) || $(`.leafs [id="${id}"]`)).firstElementChild as HTMLAnchorElement)!.focus();
+          const $target = $(`.folders [id="${id}"]`) || $(`.leafs [id="${id}"]`);
+          ($target.firstElementChild as HTMLAnchorElement).focus();
+          $target.classList.add('hilite');
+          break;
+        }
+        case 'remove': {
           break;
         }
         default:
