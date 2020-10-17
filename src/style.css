@@ -49,10 +49,7 @@
 
 /* Scroll bar */
 
-.folders::-webkit-scrollbar {
-  width: 10px;
-}
-
+.folders::-webkit-scrollbar,
 .leafs::-webkit-scrollbar {
   width: 10px;
 }
@@ -64,12 +61,13 @@
 
 .folders::-webkit-scrollbar-thumb:hover,
 .leafs::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .folders::-webkit-scrollbar-track,
 .leafs::-webkit-scrollbar-track {
-  background: transparent;
+  background: #fff;
+  border-left: 1px solid #eee;
 }
 
 /* body */

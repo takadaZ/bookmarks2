@@ -1,4 +1,3 @@
-import './style.css';
 import { $, $$ } from './utils';
 import * as F from './utils';
 import * as bx from './types';
