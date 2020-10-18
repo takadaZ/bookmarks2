@@ -143,6 +143,22 @@ function resizeHeightHandler(e: MouseEvent) {
 }
 
 function setEventListners() {
+  document.body.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.parentElement?.classList.contains('leaf-menu-button')) {
+      const $menuButton = target.parentElement;
+      $menuButton.classList.remove('menu-pos-top');
+      const $menu = $('.leaf-menu');
+      $menuButton.parentElement?.insertBefore($menu, null);
+      const { top, height } = $menu.getBoundingClientRect();
+      $menuButton.classList.toggle('menu-pos-top', (top + height) >= document.body.offsetHeight);
+    }
+  });
+  F.setEvents($$('.leaf-menu'), {
+    click: (e) => {
+    },
+    mousedown: (e) => e.preventDefault(),
+  });
   $('.folders').addEventListener('click', (e) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains('title')) {

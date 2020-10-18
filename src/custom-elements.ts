@@ -30,7 +30,7 @@ export class BxLeaf extends HTMLDivElement implements LeafProps {
     const { content, url, sUrl } = this;
     return `
       <a href="#nul" title="${sUrl}" style="background-image:url('chrome://favicon/${url}');">${content}</a>
-      <button><i class="fa fa-ellipsis-v"></i></button>
+      <button class="leaf-menu-button"><i class="fa fa-ellipsis-v"></i></button>
     `;
   }
 }

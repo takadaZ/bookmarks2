@@ -32,7 +32,7 @@
 }
 
 .fa-edit::before {
-  content: '\e908';
+  content: '\e90d';
 }
 
 .fa-trash-alt::before {
@@ -45,6 +45,18 @@
 
 .fa-ellipsis-v::before {
   content: '\e90b';
+}
+
+.fa-window-restore::before {
+  content: '\e90a';
+}
+
+.fa-mask::before {
+  content: '\e90c';
+}
+
+.fa-file-alt::before {
+  content: '\e909';
 }
 
 /* Scroll bar */
@@ -104,6 +116,30 @@ main {
 .resize-y {
   cursor: s-resize;
   height: 4px;
+}
+
+/* Leaf menu */
+
+.leaf-menu {
+  display: none;
+}
+
+.leaf-menu-button:focus + .leaf-menu {
+  display: block;
+  top: calc(100% - 2px);
+}
+
+.leaf-menu-button:focus {
+  pointer-events: none;
+}
+
+.leaf-menu-button:active {
+  pointer-events: all;
+}
+
+.leaf-menu-button.menu-pos-top + .leaf-menu {
+  bottom: calc(100% - 2px);
+  top: auto;
 }
 
 /* Search area */
@@ -207,7 +243,7 @@ input.query {
   font-size: .875rem;
   font-weight: 400;
   line-height: 1.25rem;
-  padding: 4px 12px 4px 10px;
+  padding: 4px 12px 4px 0;
   position: relative;
   color: #333;
   cursor: pointer;
@@ -236,7 +272,8 @@ input.query {
 }
 
 [role="menuitem"] > i {
-  width: 1.5em;
+  width: 2.5em;
+  text-align: center;
 }
 
 /* Leafs pane */
@@ -257,8 +294,10 @@ input.query {
 }
 
 .leaf {
+  position: relative;
   display: flex;
   padding: 2px;
+  align-items: center;
 }
 
 .leaf.hilite {
@@ -345,7 +384,6 @@ input.query {
 .folders {
   padding: 2px;
   padding-left: 0;
-  overflow-x: hidden;
 }
 
 .folders .folder .folder {
