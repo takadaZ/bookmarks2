@@ -42,6 +42,7 @@ export const CliMessageTypes = {
   saveState: 'cl-save-state',
   openBookmark: 'cl-open-bookmark',
   addBookmark: 'cl-add-bookmark',
+  removeBookmark: 'cl-remove-bookmark',
 } as const;
 
 export type RequestCallback<T> = (

@@ -147,15 +147,43 @@ function setEventListners() {
     const target = e.target as HTMLElement;
     if (target.parentElement?.classList.contains('leaf-menu-button')) {
       const $menuButton = target.parentElement;
-      $menuButton.classList.remove('menu-pos-top');
       const $menu = $('.leaf-menu');
+      $menu.style.top = '';
+      $menu.style.left = '';
       $menuButton.parentElement?.insertBefore($menu, null);
+      if ($menuButton.parentElement!.parentElement!.classList.contains('folders')) {
+        const rect = $menuButton.getBoundingClientRect();
+        const { width, height } = $menu.getBoundingClientRect();
+        $menu.style.left = `${rect.left - width + rect.width}px`;
+        if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
+          $menu.style.top = `${rect.top - height}px`;
+        } else {
+          $menu.style.top = `${rect.top + rect.height}px`;
+        }
+        return;
+      }
+      $menuButton.classList.remove('menu-pos-top');
       const { top, height } = $menu.getBoundingClientRect();
-      $menuButton.classList.toggle('menu-pos-top', (top + height) >= document.body.offsetHeight);
+      $menuButton.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
     }
   });
   F.setEvents($$('.leaf-menu'), {
-    click: (e) => {
+    click: async (e) => {
+      const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement;
+      switch ((e.target as HTMLElement).dataset.value) {
+        case 'remove': {
+          const succeed = await postMessage({
+            type: bx.CliMessageTypes.removeBookmark,
+            payload: $leaf!.id,
+          });
+          if (succeed) {
+            $leaf?.remove();
+          }
+          break;
+        }
+        default:
+      }
+      // $('.menu-button > button').blur();
     },
     mousedown: (e) => e.preventDefault(),
   });

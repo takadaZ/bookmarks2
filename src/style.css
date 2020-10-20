@@ -124,11 +124,6 @@ main {
   display: none;
 }
 
-.leaf-menu-button:focus + .leaf-menu {
-  display: block;
-  top: calc(100% - 2px);
-}
-
 .leaf-menu-button:focus {
   pointer-events: none;
 }
@@ -137,9 +132,19 @@ main {
   pointer-events: all;
 }
 
-.leaf-menu-button.menu-pos-top + .leaf-menu {
+.leafs .leaf-menu-button:focus + .leaf-menu {
+  display: block;
+  top: calc(100% - 2px);
+}
+
+.leafs .leaf-menu-button.menu-pos-top + .leaf-menu {
   bottom: calc(100% - 2px);
   top: auto;
+}
+
+.folders .leaf-menu-button:focus + .leaf-menu {
+  display: block;
+  position: fixed;
 }
 
 /* Search area */
@@ -223,16 +228,15 @@ input.query {
   z-index: 1;
   transition: opacity .218s;
   background: #fff;
-  border: 1px solid #ccc;
   border: 1px solid rgba(0,0,0,.2);
   cursor: default;
   font-size: 13px;
   margin: 0;
   outline: none;
   padding: 6px 0;
-  position: absolute;
-  right: 0;
   top: 100%;
+  right: 0;
+  width: fit-content;
   display: none;
 }
 
@@ -384,6 +388,7 @@ input.query {
 .folders {
   padding: 2px;
   padding-left: 0;
+  overflow: auto;
 }
 
 .folders .folder .folder {
@@ -405,7 +410,7 @@ input.query {
 
 .leafs .folder.search-path,
 .folders .folder {
-  margin: 2px;
+  margin: 2px 0 2px 2px;
 }
 
 .leafs .folder .folder.search-path,

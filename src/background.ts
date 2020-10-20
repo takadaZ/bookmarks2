@@ -72,6 +72,10 @@ const bookmarks = createSlice({
     add: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
       { ...state, ...payload }
     ),
+    remove: (state: IBookmarks, { payload }: PayloadAction<number>) => {
+      const { [payload]: omitted, ...rest } = state;
+      return rest;
+    },
   },
 });
 
@@ -284,6 +288,15 @@ export const mapStateToResponse = {
       });
       return { id, html };
     },
+  [bx.CliMessageTypes.removeBookmark]:
+    async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
+      const creator = F.curry(chrome.bookmarks.remove)(payload);
+      await F.cbToPromise(creator);
+      const succeed = await new Promise<boolean>((resolve) => {
+        subscribe(() => resolve(true), ['html', 'created'], true);
+      });
+      return succeed;
+    },
 };
 
 export type MapStateToResponse = typeof mapStateToResponse;
@@ -298,6 +311,19 @@ async function onClientRequest(
   console.log(message);
   const responseState = await mapStateToResponse[message.type](reduxHandlers, message);
   sendResponse(responseState);
+}
+
+async function updateFolderState(state: State, dispatch: Dispatch, parentId: number) {
+  const [node] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(String(parentId)));
+  const childrenIds = node.children?.map((child) => Number(child.id));
+  const parent = state.bookmarks[parentId];
+  dispatch(bookmarks.actions.update({
+    [parentId]: {
+      parentId: Number(parent.parentId),
+      content: parent.content,
+      childrenIds,
+    },
+  }));
 }
 
 async function onCreateBookmark(
@@ -316,16 +342,19 @@ async function onCreateBookmark(
       content: treeNode.title,
     },
   }));
-  const [nodeTree] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(treeNode.parentId!));
-  const childrenIds = nodeTree.children?.map((child) => Number(child.id));
-  const parent = state.bookmarks[parentId];
-  dispatch(bookmarks.actions.update({
-    [parentId]: {
-      parentId: Number(parent.parentId),
-      content: parent.content,
-      childrenIds,
-    },
-  }));
+  updateFolderState(state, dispatch, parentId);
+}
+
+async function onRemoveBookmark(
+  {
+    state,
+    dispatch,
+  }: ReduxHandlers,
+  id: string,
+  removeInfo: chrome.bookmarks.BookmarkRemoveInfo,
+) {
+  dispatch(bookmarks.actions.remove(Number(id)));
+  updateFolderState(state, dispatch, Number(removeInfo.parentId));
 }
 
 // Connect Redux
@@ -341,5 +370,6 @@ export async function connect(
   getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
   chrome.bookmarks.onCreated.addListener(listener(onCreateBookmark));
+  chrome.bookmarks.onRemoved.addListener(listener(onRemoveBookmark));
   chrome.runtime.onMessage.addListener(listener(onClientRequest));
 }
