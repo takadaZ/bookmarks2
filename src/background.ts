@@ -264,13 +264,30 @@ export const mapStateToResponse = {
       dispatch(sliceOptions.actions.update(payload));
     },
   [bx.CliMessageTypes.openBookmark]:
-    async ({ state }: ReduxHandlers, { payload }: PayloadAction<number>) => {
-      const tab = await F.getCurrentTab();
-      chrome.tabs.create({
-        index: tab.index + 1,
-        windowId: tab.windowId,
-        url: state.bookmarks[payload].url,
-      });
+    async ({ state }: ReduxHandlers, { payload }: PayloadAction<bx.OpenBookmarkTypes>) => {
+      switch (payload.openType) {
+        case bx.OpenBookmarkType.tab: {
+          const tab = await F.getCurrentTab();
+          chrome.tabs.create({
+            index: tab.index + 1,
+            windowId: tab.windowId,
+            url: state.bookmarks[payload.id].url,
+          });
+          break;
+        }
+        case bx.OpenBookmarkType.window: {
+          chrome.windows.create({ url: state.bookmarks[payload.id].url });
+          break;
+        }
+        case bx.OpenBookmarkType.incognito: {
+          chrome.windows.create({
+            url: state.bookmarks[payload.id].url,
+            incognito: true,
+          });
+          break;
+        }
+        default:
+      }
     },
   [bx.CliMessageTypes.addBookmark]:
     async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {

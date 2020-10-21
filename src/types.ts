@@ -55,3 +55,14 @@ export type RequestCallback<T> = (
 export type MessageStateMapObject<M extends MapStateToResponse> = {
   [K in keyof M]: M[K] extends RequestCallback<infer S> ? S : never;
 }
+
+export const OpenBookmarkType = {
+  tab: 'tab',
+  window: 'window',
+  incognito: 'incognito',
+} as const;
+
+export type OpenBookmarkTypes = {
+  openType: keyof typeof OpenBookmarkType;
+  id: number;
+}

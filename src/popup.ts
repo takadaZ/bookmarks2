@@ -60,11 +60,17 @@ function init() {
   init();
 })();
 
-function onClickAnchor(e: MouseEvent) {
-  const { id } = (e.target as HTMLAnchorElement).parentElement!;
+function openBookmark(
+  target: EventTarget | HTMLElement,
+  openType: keyof typeof bx.OpenBookmarkType = bx.OpenBookmarkType.tab,
+) {
+  const { id } = (target as HTMLAnchorElement).parentElement!;
   postMessage({
     type: bx.CliMessageTypes.openBookmark,
-    payload: Number(id),
+    payload: {
+      openType,
+      id: Number(id),
+    },
   });
 }
 
@@ -145,14 +151,15 @@ function resizeHeightHandler(e: MouseEvent) {
 function setEventListners() {
   document.body.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    if (target.parentElement?.classList.contains('leaf-menu-button')) {
-      const $menuButton = target.parentElement;
+    if (target.classList.contains('leaf-menu-button')) {
       const $menu = $('.leaf-menu');
       $menu.style.top = '';
       $menu.style.left = '';
-      $menuButton.parentElement?.insertBefore($menu, null);
-      if ($menuButton.parentElement!.parentElement!.classList.contains('folders')) {
-        const rect = $menuButton.getBoundingClientRect();
+      if (target.parentElement !== $menu.parentElement) {
+        target.parentElement?.insertBefore($menu, null);
+      }
+      if (target.parentElement!.parentElement!.classList.contains('folders')) {
+        const rect = target.getBoundingClientRect();
         const { width, height } = $menu.getBoundingClientRect();
         $menu.style.left = `${rect.left - width + rect.width}px`;
         if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
@@ -162,15 +169,21 @@ function setEventListners() {
         }
         return;
       }
-      $menuButton.classList.remove('menu-pos-top');
+      target.classList.remove('menu-pos-top');
       const { top, height } = $menu.getBoundingClientRect();
-      $menuButton.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
+      target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
     }
   });
   F.setEvents($$('.leaf-menu'), {
     click: async (e) => {
       const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement;
       switch ((e.target as HTMLElement).dataset.value) {
+        case 'open-new-window':
+          openBookmark($leaf!.firstElementChild as HTMLElement, bx.OpenBookmarkType.window);
+          break;
+        case 'open-incognito':
+          openBookmark($leaf!.firstElementChild as HTMLElement, bx.OpenBookmarkType.incognito);
+          break;
         case 'remove': {
           const succeed = await postMessage({
             type: bx.CliMessageTypes.removeBookmark,
@@ -202,7 +215,7 @@ function setEventListners() {
       folders.forEach((el) => el.classList.add('open'));
       sendStateOpenedPath(foldersFolder);
     } else if (target.localName === 'a') {
-      onClickAnchor(e);
+      openBookmark(e.target!);
     } else if (target.classList.contains('fa-angle-right')) {
       onClickAngle(e);
     } else if (target.classList.contains('folder')) {
@@ -213,7 +226,7 @@ function setEventListners() {
   $('.leafs').addEventListener('click', (e) => {
     const target = e.target as HTMLDivElement;
     if (target.localName === 'a') {
-      onClickAnchor(e);
+      openBookmark(e.target!);
     } else if ([...target.classList].find((className) => ['title', 'fa-angle-right'].includes(className))) {
       const folder = target.parentElement?.parentElement!;
       folder.classList.toggle('path');

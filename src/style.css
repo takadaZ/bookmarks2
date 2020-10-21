@@ -20,43 +20,51 @@
 }
 
 .fa-times::before {
-  content: '\e904';
+  content: '\f00d';
 }
 
 .fa-search::before {
-  content: '\e905';
+  content: '\f002';
 }
 
 .fa-plus::before {
-  content: '\e903';
+  content: '\f067';
 }
 
 .fa-edit::before {
-  content: '\e90d';
+  content: '\f044';
 }
 
 .fa-trash-alt::before {
-  content: '\e901';
+  content: '\f1f8';
 }
 
 .fa-folder-plus::before {
-  content: '\e902';
+  content: '\f114';
 }
 
 .fa-ellipsis-v::before {
-  content: '\e90b';
+  content: '\f142';
 }
 
 .fa-window-restore::before {
-  content: '\e90a';
+  content: '\f2d2';
 }
 
 .fa-mask::before {
-  content: '\e90c';
+  content: '\f21b';
 }
 
-.fa-file-alt::before {
-  content: '\e909';
+.fa-font::before {
+  content: '\f031';
+}
+
+.fa-link::before {
+  content: '\f0c1';
+}
+
+.fa-star::before {
+  content: '\f005';
 }
 
 /* Scroll bar */
@@ -124,6 +132,10 @@ main {
   display: none;
 }
 
+.leaf-menu-button > .fa-ellipsis-v {
+  pointer-events: none;
+}
+
 .leaf-menu-button:focus {
   pointer-events: none;
 }
@@ -135,6 +147,7 @@ main {
 .leafs .leaf-menu-button:focus + .leaf-menu {
   display: block;
   top: calc(100% - 2px);
+  animation: fade-in 0.15s ease-in-out;
 }
 
 .leafs .leaf-menu-button.menu-pos-top + .leaf-menu {
@@ -145,6 +158,7 @@ main {
 .folders .leaf-menu-button:focus + .leaf-menu {
   display: block;
   position: fixed;
+  animation: fade-in 0.15s ease-in-out;
 }
 
 /* Search area */
@@ -269,6 +283,7 @@ input.query {
 
 .menu-button > button:focus + .main-menu {
   display: block;
+  animation: fade-in 0.15s ease-in-out;
 }
 
 .menu-button > button:focus {
@@ -365,7 +380,7 @@ input.query {
 }
 
 .leafs .folder.search-path.path > .marker > .title::before {
-  content: '\e906';
+  content: '\f07c';
 }
 
 .leafs .folder.search-path > .folder,
@@ -403,7 +418,7 @@ input.query {
 
 .folders .open > .marker > .title::before {
   color: white;
-  content: '\e906';
+  content: '\f07c';
 }
 
 /* Leafs, Folders */
@@ -463,7 +478,7 @@ input.query {
 }
 
 .title::before {
-  content: '\e907';
+  content: '\f07b';
   display: inline-block;
   font: normal normal normal 14px/1 FontAwesome;
   font-size: inherit;
