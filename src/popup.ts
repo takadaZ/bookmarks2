@@ -177,26 +177,66 @@ function setEventListners() {
   F.setEvents($$('.leaf-menu'), {
     click: async (e) => {
       const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement;
+      const $anchor = $leaf!.firstElementChild as HTMLAnchorElement;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'open-new-window':
-          openBookmark($leaf!.firstElementChild as HTMLElement, bx.OpenBookmarkType.window);
+          openBookmark($anchor, bx.OpenBookmarkType.window);
           break;
         case 'open-incognito':
-          openBookmark($leaf!.firstElementChild as HTMLElement, bx.OpenBookmarkType.incognito);
+          openBookmark($anchor, bx.OpenBookmarkType.incognito);
           break;
+        case 'edit-title': {
+          const title = $anchor.textContent;
+          // eslint-disable-next-line no-alert
+          const value = prompt('Edit title', title!);
+          if (value == null) {
+            break;
+          }
+          const ret = await postMessage({
+            type: bx.CliMessageTypes.editBookmark,
+            payload: {
+              value,
+              editType: bx.EditBookmarkType.title,
+              id: $leaf!.id,
+            },
+          });
+          $anchor.setAttribute('title', ret.title);
+          $anchor.textContent = value;
+          break;
+        }
+        case 'edit-url': {
+          const url = await postMessage({ type: bx.CliMessageTypes.getUrl, payload: $leaf!.id });
+          // eslint-disable-next-line no-alert
+          const value = prompt('Edit url', url!);
+          if (value == null) {
+            break;
+          }
+          const { title, style } = await postMessage({
+            type: bx.CliMessageTypes.editBookmark,
+            payload: {
+              value,
+              editType: bx.EditBookmarkType.url,
+              id: $leaf!.id,
+            },
+          });
+          $anchor.setAttribute('title', title);
+          $anchor.setAttribute('style', style);
+          break;
+        }
         case 'remove': {
           const succeed = await postMessage({
             type: bx.CliMessageTypes.removeBookmark,
             payload: $leaf!.id,
           });
           if (succeed) {
-            $leaf?.remove();
+            document.body.appendChild($('.leaf-menu'));
+            $leaf!.remove();
           }
           break;
         }
         default:
       }
-      // $('.menu-button > button').blur();
+      ($anchor.nextElementSibling as HTMLElement).blur();
     },
     mousedown: (e) => e.preventDefault(),
   });

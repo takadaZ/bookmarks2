@@ -43,6 +43,8 @@ export const CliMessageTypes = {
   openBookmark: 'cl-open-bookmark',
   addBookmark: 'cl-add-bookmark',
   removeBookmark: 'cl-remove-bookmark',
+  editBookmark: 'cl-edit-bookmark',
+  getUrl: 'cl-get-url',
 } as const;
 
 export type RequestCallback<T> = (
@@ -65,4 +67,15 @@ export const OpenBookmarkType = {
 export type OpenBookmarkTypes = {
   openType: keyof typeof OpenBookmarkType;
   id: number;
+}
+
+export const EditBookmarkType = {
+  title: 'title',
+  url: 'url',
+} as const;
+
+export type EditBookmarkTypes = {
+  editType: keyof typeof EditBookmarkType;
+  value: string;
+  id: string;
 }

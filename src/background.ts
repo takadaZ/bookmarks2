@@ -307,10 +307,28 @@ export const mapStateToResponse = {
     },
   [bx.CliMessageTypes.removeBookmark]:
     async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
-      const creator = F.curry(chrome.bookmarks.remove)(payload);
-      await F.cbToPromise(creator);
+      F.cbToPromise(F.curry(chrome.bookmarks.remove)(payload));
       const succeed = await new Promise<boolean>((resolve) => {
         subscribe(() => resolve(true), ['html', 'created'], true);
+      });
+      return succeed;
+    },
+  [bx.CliMessageTypes.getUrl]:
+    ({ state }: ReduxHandlers, { payload }: PayloadAction<string>) => (
+      state.bookmarks[Number(payload)].url
+    ),
+  [bx.CliMessageTypes.editBookmark]:
+    async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<bx.EditBookmarkTypes>) => {
+      const changes = { [payload.editType]: payload.value };
+      const succeed = await new Promise<{ title: string, style: string }>((resolve) => {
+        subscribe(() => {
+          const anchor = $(`[id="${payload.id}"] > a`);
+          resolve({
+            title: anchor.getAttribute('title')!,
+            style: anchor.getAttribute('style')!,
+          });
+        }, ['html', 'created'], true);
+        F.cbToPromise(F.curry(chrome.bookmarks.update)(payload.id, changes));
       });
       return succeed;
     },
@@ -374,6 +392,20 @@ async function onRemoveBookmark(
   updateFolderState(state, dispatch, Number(removeInfo.parentId));
 }
 
+function onChangeBookmark(
+  {
+    state,
+    dispatch,
+  }: ReduxHandlers,
+  id: string,
+  { title, url }: chrome.bookmarks.BookmarkChangeInfo,
+) {
+  const { [Number(id)]: bookmark } = state.bookmarks;
+  dispatch(bookmarks.actions.update({
+    [Number(id)]: { ...bookmark, url, content: title },
+  }));
+}
+
 // Connect Redux
 
 export async function connect(
@@ -388,5 +420,6 @@ export async function connect(
   subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
   chrome.bookmarks.onCreated.addListener(listener(onCreateBookmark));
   chrome.bookmarks.onRemoved.addListener(listener(onRemoveBookmark));
+  chrome.bookmarks.onChanged.addListener(listener(onChangeBookmark));
   chrome.runtime.onMessage.addListener(listener(onClientRequest));
 }
