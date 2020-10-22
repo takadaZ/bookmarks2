@@ -324,8 +324,14 @@ input.query {
   animation-duration: 1.5s !important;
 }
 
+.remove-hilite {
+  animation-name: fade-color !important;
+  animation-duration: .5s !important;
+  animation-timing-function: ease-out;
+}
+
 @keyframes fade-color {
-  from {background-color: #fff3cd;}
+  from {background-color: #feefc3;}
   to {background-color: transparent;}
 }
 

@@ -68,8 +68,8 @@ function openBookmark(
   postMessage({
     type: bx.CliMessageTypes.openBookmark,
     payload: {
+      id,
       openType,
-      id: Number(id),
     },
   });
 }
@@ -85,11 +85,11 @@ function onClickAngle(e: MouseEvent) {
 
 function sendStateOpenedPath(foldersFolder: HTMLElement) {
   $$('.path').forEach((el) => el.classList.remove('path'));
-  let paths: Array<number> = [];
+  let paths: Array<string> = [];
   let folder = foldersFolder;
   while (folder.classList.contains('folder')) {
     folder.classList.add('path');
-    paths = [...paths, Number(folder.id)];
+    paths = [...paths, folder.id];
     folder = folder.parentElement!;
   }
   // Send client state
@@ -97,7 +97,7 @@ function sendStateOpenedPath(foldersFolder: HTMLElement) {
     type: bx.CliMessageTypes.saveState,
     payload: {
       paths,
-      open: Number(foldersFolder.id),
+      open: foldersFolder.id,
     },
   });
 }
@@ -148,6 +148,13 @@ function resizeHeightHandler(e: MouseEvent) {
   document.body.style.height = `${height}px`;
 }
 
+function setAnimationClass(el: HTMLElement, className: string) {
+  el.classList.remove(className);
+  // eslint-disable-next-line no-void
+  void el.offsetWidth;
+  el.classList.add(className);
+}
+
 function setEventListners() {
   document.body.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
@@ -176,7 +183,7 @@ function setEventListners() {
   });
   F.setEvents($$('.leaf-menu'), {
     click: async (e) => {
-      const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement;
+      const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement!;
       const $anchor = $leaf!.firstElementChild as HTMLAnchorElement;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'open-new-window':
@@ -202,6 +209,7 @@ function setEventListners() {
           });
           $anchor.setAttribute('title', ret.title);
           $anchor.textContent = value;
+          setAnimationClass($leaf, 'hilite');
           break;
         }
         case 'edit-url': {
@@ -221,6 +229,7 @@ function setEventListners() {
           });
           $anchor.setAttribute('title', title);
           $anchor.setAttribute('style', style);
+          setAnimationClass($leaf, 'hilite');
           break;
         }
         case 'remove': {
@@ -230,7 +239,9 @@ function setEventListners() {
           });
           if (succeed) {
             document.body.appendChild($('.leaf-menu'));
-            $leaf!.remove();
+            $leaf.addEventListener('animationend', () => $leaf.remove(), { once: true });
+            $leaf.classList.remove('hilite');
+            setAnimationClass($leaf, 'remove-hilite');
           }
           break;
         }
@@ -330,7 +341,7 @@ function setEventListners() {
           $folder.insertAdjacentHTML('beforeend', html);
           const $target = $(`.folders [id="${id}"]`) || $(`.leafs [id="${id}"]`);
           ($target.firstElementChild as HTMLAnchorElement).focus();
-          $target.classList.add('hilite');
+          setAnimationClass($target, 'hilite');
           break;
         }
         case 'remove': {

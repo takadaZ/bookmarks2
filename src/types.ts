@@ -27,8 +27,8 @@ export const initialOptions = {
 export type IOptions = Partial<typeof initialOptions>;
 
 export interface IClientState {
-  open?: number;
-  paths?: Array<number>;
+  open?: string;
+  paths?: Array<string>;
 }
 
 export interface IHtml {
@@ -66,7 +66,7 @@ export const OpenBookmarkType = {
 
 export type OpenBookmarkTypes = {
   openType: keyof typeof OpenBookmarkType;
-  id: number;
+  id: string;
 }
 
 export const EditBookmarkType = {

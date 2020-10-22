@@ -54,25 +54,26 @@ const sliceOptions = createSlice({
 
 export interface IBookmark extends Pick<chrome.bookmarks.BookmarkTreeNode, 'id' | 'url'>{
   content: string,
-  parentId?: number;
-  childrenIds?: number[];
+  parentId?: string;
+  childrenIds?: string[];
 }
 
 interface IBookmarks {
-  [id: number]: Omit<IBookmark, 'id'>;
+  [id: string]: Omit<IBookmark, 'id'>;
 }
 
 const bookmarks = createSlice({
   initialState: {} as IBookmarks,
   name: 'bookmarks',
   reducers: {
-    update: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
-      { ...state, ...payload }
-    ),
+    // eslint-disable-next-line arrow-body-style
+    update: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => {
+      return { ...state, ...payload };
+    },
     add: (state: IBookmarks, { payload }: PayloadAction<IBookmarks>) => (
       { ...state, ...payload }
     ),
-    remove: (state: IBookmarks, { payload }: PayloadAction<number>) => {
+    remove: (state: IBookmarks, { payload }: PayloadAction<string>) => {
       const { [payload]: omitted, ...rest } = state;
       return rest;
     },
@@ -175,7 +176,7 @@ function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks {
   return bookmarksTree.reduce((acc, {
     id, content, url, parentId, children,
   }) => {
-    const childrenIds = children?.map((child) => Number(child.id));
+    const childrenIds = children?.map((child) => child.id);
     const thisChildren = children ? flattenBookmarksTree(children) : {};
     return {
       ...acc,
@@ -215,7 +216,7 @@ const BxLeaf1 = customElements.get('bx-leaf') as typeof BxLeaf;
 const BxNode1 = customElements.get('bx-node') as typeof BxNode;
 
 function buildBookmarks(
-  id: number,
+  id: string,
   nodes: IBookmarks,
   elements: BookmarkElements,
 ): BookmarkElements {
@@ -224,19 +225,19 @@ function buildBookmarks(
     const children = node.childrenIds.flatMap(
       (childId) => buildBookmarks(childId, nodes, elements),
     );
-    return [...elements, new BxNode1({ ...node, nodes: children, id: String(id) })];
+    return [...elements, new BxNode1({ ...node, nodes: children, id })];
   }
   const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
-  return [...elements, new BxLeaf1({ ...node, id: String(id), sUrl })];
+  return [...elements, new BxLeaf1({ ...node, id, sUrl })];
 }
 
 function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
-  const [root] = buildBookmarks(0, state.bookmarks, []);
+  const [root] = buildBookmarks('0', state.bookmarks, []);
   const $leafs = $('#leafs');
   $leafs.innerHTML = '';
   $leafs.append(...root.children);
   const leafs = $leafs.innerHTML;
-  const [rootFolder] = buildBookmarks(0, state.bookmarks, []);
+  const [rootFolder] = buildBookmarks('0', state.bookmarks, []);
   const $folders = $('#folders');
   $folders.innerHTML = '';
   $folders.append(...$(':scope > [id="1"]', rootFolder).children);
@@ -348,30 +349,32 @@ async function onClientRequest(
   sendResponse(responseState);
 }
 
-async function updateFolderState(state: State, dispatch: Dispatch, parentId: number) {
-  const [node] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(String(parentId)));
-  const childrenIds = node.children?.map((child) => Number(child.id));
-  const parent = state.bookmarks[parentId];
-  dispatch(bookmarks.actions.update({
-    [parentId]: {
-      parentId: Number(parent.parentId),
-      content: parent.content,
+async function buildFolderState(state: State, folderId: string) {
+  const [node] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(folderId));
+  const childrenIds = node.children?.map(({ id }) => id);
+  const currentState = state.bookmarks[folderId];
+  return {
+    [folderId]: {
+      parentId: node.parentId,
+      content: currentState.content,
       childrenIds,
     },
-  }));
+  };
 }
 
-async function onCreateBookmark(
-  {
-    state,
-    dispatch,
-  }: ReduxHandlers,
+async function updateFolderState(state: State, dispatch: Dispatch, parentId: string) {
+  const folderState = await buildFolderState(state, parentId);
+  dispatch(bookmarks.actions.update(folderState));
+}
+
+async function onCreatedBookmark(
+  { state, dispatch }: ReduxHandlers,
   id: string,
   treeNode: chrome.bookmarks.BookmarkTreeNode,
 ) {
-  const parentId = Number(treeNode.parentId);
+  const parentId = treeNode.parentId!;
   dispatch(bookmarks.actions.add({
-    [Number(id)]: {
+    [id]: {
       parentId,
       url: treeNode.url,
       content: treeNode.title,
@@ -380,30 +383,39 @@ async function onCreateBookmark(
   updateFolderState(state, dispatch, parentId);
 }
 
-async function onRemoveBookmark(
-  {
-    state,
-    dispatch,
-  }: ReduxHandlers,
+async function onRemovedBookmark(
+  { state, dispatch }: ReduxHandlers,
   id: string,
   removeInfo: chrome.bookmarks.BookmarkRemoveInfo,
 ) {
-  dispatch(bookmarks.actions.remove(Number(id)));
-  updateFolderState(state, dispatch, Number(removeInfo.parentId));
+  dispatch(bookmarks.actions.remove(id));
+  updateFolderState(state, dispatch, removeInfo.parentId);
 }
 
-function onChangeBookmark(
-  {
-    state,
-    dispatch,
-  }: ReduxHandlers,
+function onChangedBookmark(
+  { state, dispatch }: ReduxHandlers,
   id: string,
   { title, url }: chrome.bookmarks.BookmarkChangeInfo,
 ) {
-  const { [Number(id)]: bookmark } = state.bookmarks;
+  const { [id]: bookmark } = state.bookmarks;
   dispatch(bookmarks.actions.update({
-    [Number(id)]: { ...bookmark, url, content: title },
+    [id]: { ...bookmark, url, content: title },
   }));
+}
+
+async function onMovedBookmark(
+  { state, dispatch }: ReduxHandlers,
+  id: string,
+  { parentId, oldParentId }: chrome.bookmarks.BookmarkMoveInfo,
+) {
+  const currentNode = { ...state.bookmarks[id], parentId };
+  const folderState = await buildFolderState(state, parentId);
+  if (parentId === oldParentId) {
+    dispatch(bookmarks.actions.update({ [id]: currentNode, ...folderState }));
+    return;
+  }
+  const folderState2 = await buildFolderState(state, oldParentId);
+  dispatch(bookmarks.actions.update({ [id]: currentNode, ...folderState, ...folderState2 }));
 }
 
 // Connect Redux
@@ -418,8 +430,9 @@ export async function connect(
   // listener(saveOptions);
   getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
-  chrome.bookmarks.onCreated.addListener(listener(onCreateBookmark));
-  chrome.bookmarks.onRemoved.addListener(listener(onRemoveBookmark));
-  chrome.bookmarks.onChanged.addListener(listener(onChangeBookmark));
+  chrome.bookmarks.onCreated.addListener(listener(onCreatedBookmark));
+  chrome.bookmarks.onRemoved.addListener(listener(onRemovedBookmark));
+  chrome.bookmarks.onChanged.addListener(listener(onChangedBookmark));
+  chrome.bookmarks.onMoved.addListener(listener(onMovedBookmark));
   chrome.runtime.onMessage.addListener(listener(onClientRequest));
 }

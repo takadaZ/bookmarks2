@@ -2,7 +2,7 @@
 
 export interface LeafProps {
   id: string;
-  parentId?: number;
+  parentId?: string;
   content: string;
   url?: string;
   sUrl: string;
@@ -10,7 +10,7 @@ export interface LeafProps {
 }
 
 export class BxLeaf extends HTMLDivElement implements LeafProps {
-  parentId: number = 0;
+  parentId: string = '';
   content: string = '';
   url: string = '';
   sUrl: string = '';
@@ -37,14 +37,14 @@ export class BxLeaf extends HTMLDivElement implements LeafProps {
 
 export interface NodeProps {
   id: string;
-  parentId?: number;
+  parentId?: string;
   content: string;
   // eslint-disable-next-line no-use-before-define
   nodes?: BookmarkElements;
 }
 
 export class BxNode extends HTMLDivElement implements NodeProps {
-  parentId: number = 0;
+  parentId: string = '';
   content: string = '';
   state: string = '';
   // eslint-disable-next-line no-use-before-define
