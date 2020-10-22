@@ -67,6 +67,11 @@
   content: '\f005';
 }
 
+.fa-star-o::before {
+  content: '\f006';
+  color: dodgerblue;
+}
+
 /* Scroll bar */
 
 .folders::-webkit-scrollbar,
