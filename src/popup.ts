@@ -1,3 +1,4 @@
+import './style.scss';
 import { $, $$ } from './utils';
 import * as F from './utils';
 import * as bx from './types';
@@ -179,6 +180,23 @@ function setEventListners() {
       target.classList.remove('menu-pos-top');
       const { top, height } = $menu.getBoundingClientRect();
       target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
+      return;
+    }
+    if (target.classList.contains('folder-menu-button')) {
+      const $menu = $('.folder-menu');
+      $menu.style.top = '';
+      $menu.style.left = '';
+      if (target.parentElement !== $menu.parentElement) {
+        target.parentElement?.insertBefore($menu, null);
+      }
+      const rect = target.getBoundingClientRect();
+      const { width, height } = $menu.getBoundingClientRect();
+      $menu.style.left = `${rect.left - width + rect.width}px`;
+      if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
+        $menu.style.top = `${rect.top - height}px`;
+      } else {
+        $menu.style.top = `${rect.top + rect.height}px`;
+      }
     }
   });
   F.setEvents($$('.leaf-menu'), {
@@ -329,7 +347,7 @@ function setEventListners() {
     document.body.dataset.startY = String($('body').offsetHeight - e.screenY);
     setMouseEventListener(resizeHeightHandler);
   });
-  F.setEvents($$('.main-menu'), {
+  F.setEvents($$('.folder-menu'), {
     click: async (e) => {
       switch ((e.target as HTMLElement).dataset.value) {
         case 'add-bookmark': {
