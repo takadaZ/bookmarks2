@@ -18,13 +18,16 @@ $hover-color: rgb(232, 240, 254);
 }
 
 @keyframes hilite-fade-out {
-  from {background-color: #feefc3;}
-  to {background-color: transparent;}
+  from {
+    background-color: #feefc3;
+    color: initial;
+  }
+  to { background-color: transparent; }
 }
 
 @keyframes hilite-fade-in {
-  from {background-color: transparent;}
-  to {background-color: #feefc3;}
+  from { background-color: transparent; }
+  to { background-color: #feefc3; }
 }
 
 // body/other
@@ -302,7 +305,7 @@ input.query {
   &.hilite {
     animation-name: hilite-fade-out !important;
     animation-duration: 1.5s !important;
-  }  
+  }
 
   a {
     padding: 2px;
@@ -430,7 +433,18 @@ input.query {
       position: fixed;
       animation: fade-in 0.15s ease-in-out;
     }
+
+    &.hilite::before {
+      animation-name: hilite-fade-out !important;
+      animation-duration: 1.5s !important;
+    }
   
+    &.remove-hilite::before {
+      animation-name: hilite-fade-in !important;
+      animation-duration: .3s !important;
+      animation-timing-function: ease-out;
+    }
+
   }
 }
 

@@ -20,6 +20,7 @@ export const initialOptions = {
   width: 500,
   height: 500,
   rightWidth: 200,
+  bodyColor: '#222222',
   bodyBackgroundColor: '#f6f6f6',
   leafsBackgroundColor: '#ffffff',
 };
@@ -44,6 +45,9 @@ export const CliMessageTypes = {
   addBookmark: 'cl-add-bookmark',
   removeBookmark: 'cl-remove-bookmark',
   editBookmark: 'cl-edit-bookmark',
+  addFolder: 'cl-add-folder',
+  editFolder: 'cl-edit-folder',
+  removeFolder: 'cl-remove-folder',
   getUrl: 'cl-get-url',
 } as const;
 

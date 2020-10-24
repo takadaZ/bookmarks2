@@ -14,9 +14,9 @@ async function postMessage<T extends keyof bx.MapStateToResponse>(
 }
 
 function setClientState(clState: bx.IClientState) {
-  clState.paths?.forEach((id) => $(`.folders [id="${id}"]`).classList.add('path'));
+  clState.paths?.forEach((id) => $(`.folders [id="${id}"]`)?.classList.add('path'));
   if (clState.open) {
-    $$(`[id="${clState.open}"]`).forEach((el) => el.classList.add('open'));
+    $$(`[id="${clState.open}"]`)?.forEach((el) => el.classList.add('open'));
   }
 }
 
@@ -34,6 +34,7 @@ function setOptions(options: bx.IOptions) {
     width: `${options.width}px`,
     height: `${options.height}px`,
     backgroundColor: options.bodyBackgroundColor,
+    color: options.bodyColor,
   });
   assignStyle('main', {
     gridTemplateColumns: `min-content 1fr min-content ${options.rightWidth}px`,
@@ -153,6 +154,7 @@ function setAnimationClass(el: HTMLElement, className: string) {
   el.classList.remove(className);
   // eslint-disable-next-line no-void
   void el.offsetWidth;
+  // el.addEventListener('animationend', () => el.classList.remove(className), { once: true });
   el.classList.add(className);
 }
 
@@ -354,20 +356,81 @@ function setEventListners() {
       const $folder = F.getParentElement(e.target as HTMLElement, 4)!;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'add-bookmark': {
-          // const $folder = $('.leafs .open') || $('.folders');
-          const $targetFolder = $(`.leafs [id="${$folder.id}"]`) || $(`.folders [id="${$folder.id}"]`);
-          const { id, html } = await postMessage({
+          const { id, html, exists } = await postMessage({
             type: bx.CliMessageTypes.addBookmark,
             payload: $folder.id || '1',
           });
+          if (exists) {
+            // eslint-disable-next-line no-alert
+            alert('This bookmark already exists in this folder.');
+            break;
+          }
           $('.title', $folder).click();
+          const $targetFolder = $(`.leafs [id="${$folder.id}"]`) || $(`.folders [id="${$folder.id}"]`);
           $targetFolder.insertAdjacentHTML('beforeend', html);
           const $target = $(`.leafs [id="${id}"]`) || $(`.folders [id="${id}"]`);
           ($target.firstElementChild as HTMLAnchorElement).focus();
           setAnimationClass($target, 'hilite');
           break;
         }
+        case 'edit': {
+          const $title = $('.title > span', $folder);
+          // eslint-disable-next-line no-alert
+          const title = prompt('Edit folder name', $title.textContent as string);
+          if (title == null) {
+            break;
+          }
+          const succeed = await postMessage({
+            type: bx.CliMessageTypes.editFolder,
+            payload: {
+              title,
+              id: $folder.id,
+            },
+          });
+          if (succeed) {
+            $title.textContent = title;
+            setAnimationClass($title.parentElement!.parentElement!, 'hilite');
+          }
+          break;
+        }
+        case 'add-folder': {
+          // eslint-disable-next-line no-alert
+          const title = prompt('Create folder name');
+          if (title == null) {
+            break;
+          }
+          const { id, html, exists } = await postMessage({
+            type: bx.CliMessageTypes.addFolder,
+            payload: {
+              title,
+              parentId: $folder.id || '1',
+            },
+          });
+          if (exists) {
+            // eslint-disable-next-line no-alert
+            alert('The same name folder already exists.');
+            break;
+          }
+          $$(`[id="${$folder.id}"]`).forEach(($targetFolder) => {
+            $targetFolder.insertAdjacentHTML('beforeend', html);
+          });
+          const $target = $(`.folders [id="${id}"] > .marker > .title`);
+          $target.click();
+          setAnimationClass($target.parentElement!, 'hilite');
+          break;
+        }
         case 'remove': {
+          const succeed = await postMessage({
+            type: bx.CliMessageTypes.removeFolder,
+            payload: $folder!.id,
+          });
+          if (succeed) {
+            document.body.appendChild($('.folder-menu'));
+            const $marker = $('.marker', $folder);
+            $marker.addEventListener('animationend', () => $folder.remove(), { once: true });
+            $marker.classList.remove('hilite');
+            setAnimationClass($marker, 'remove-hilite');
+          }
           break;
         }
         default:

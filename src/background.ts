@@ -221,11 +221,11 @@ function buildBookmarks(
   elements: BookmarkElements,
 ): BookmarkElements {
   const node = nodes[id];
-  if (node.childrenIds) {
-    const children = node.childrenIds.flatMap(
+  if (node.url == null) {
+    const children = node.childrenIds?.flatMap(
       (childId) => buildBookmarks(childId, nodes, elements),
     );
-    return [...elements, new BxNode1({ ...node, nodes: children, id })];
+    return [...elements, new BxNode1({ ...node, id, nodes: children || [] })];
   }
   const sUrl = `${node.content}\n${node.url?.substring(0, 128)}...`;
   return [...elements, new BxLeaf1({ ...node, id, sUrl })];
@@ -299,12 +299,14 @@ export const mapStateToResponse = {
         parentId: payload,
       });
       const { id } = await F.cbToPromise(creator);
-      const html = await new Promise<string>((resolve) => {
-        subscribe(() => {
-          resolve($(`[id="${id}"]`).outerHTML);
-        }, ['html', 'created'], true);
+      const [html, exists] = await new Promise<[string, boolean]>((resolve) => {
+        const test = !!document.getElementById(id);
+        if (test) {
+          return resolve(['', test]);
+        }
+        return subscribe(() => resolve([$(`[id="${id}"]`).outerHTML, test]), ['html', 'created'], true);
       });
-      return { id, html };
+      return { id, html, exists };
     },
   [bx.CliMessageTypes.removeBookmark]:
     async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
@@ -323,13 +325,47 @@ export const mapStateToResponse = {
       const changes = { [payload.editType]: payload.value };
       const succeed = await new Promise<{ title: string, style: string }>((resolve) => {
         subscribe(() => {
-          const anchor = $(`[id="${payload.id}"] > a`);
+          const anchor = $(`#${CSS.escape(payload.id)} > a`);
           resolve({
             title: anchor.getAttribute('title')!,
             style: anchor.getAttribute('style')!,
           });
         }, ['html', 'created'], true);
         F.cbToPromise(F.curry(chrome.bookmarks.update)(payload.id, changes));
+      });
+      return succeed;
+    },
+  [bx.CliMessageTypes.editFolder]:
+    async (
+      { subscribe }: ReduxHandlers,
+      { payload: { id, title } }: PayloadAction<{ id: string, title:string }>,
+    ) => {
+      F.cbToPromise(F.curry(chrome.bookmarks.update)(id, { title }));
+      const succeed = await new Promise<boolean>((resolve) => {
+        subscribe(() => resolve(true), ['html', 'created'], true);
+      });
+      return succeed;
+    },
+  [bx.CliMessageTypes.addFolder]:
+    async (
+      { subscribe }: ReduxHandlers,
+      { payload: { parentId, title } }: PayloadAction<{ parentId: string, title:string }>,
+    ) => {
+      const { id } = await F.cbToPromise(F.curry(chrome.bookmarks.create)({ parentId, title }));
+      const [html, exists] = await new Promise<[string, boolean]>((resolve) => {
+        const test = !!document.getElementById(id);
+        if (test) {
+          return resolve(['', test]);
+        }
+        return subscribe(() => resolve([$(`[id="${id}"]`).outerHTML, test]), ['html', 'created'], true);
+      });
+      return { id, html, exists };
+    },
+  [bx.CliMessageTypes.removeFolder]:
+    async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
+      F.cbToPromise(F.curry(chrome.bookmarks.removeTree)(payload));
+      const succeed = await new Promise<boolean>((resolve) => {
+        subscribe(() => resolve(true), ['html', 'created'], true);
       });
       return succeed;
     },
