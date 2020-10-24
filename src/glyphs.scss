@@ -69,4 +69,8 @@
     color: dodgerblue;
   }
 
+  &.fa-cog::before {
+    content: '\f013';
+  }
+
 }

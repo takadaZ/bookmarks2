@@ -66,7 +66,9 @@ export class BxNode extends HTMLDivElement implements NodeProps {
       <div class="marker">
         <i class="fa fa-angle-right"></i>
         <div class="title" tabindex="2"><span>${this.content}</span></div>
-        <button class="folder-menu-button"><i class="fa fa-ellipsis-v"></i></button>
+        <div class="button-wrapper">
+          <button class="folder-menu-button"><i class="fa fa-ellipsis-v"></i></button>
+        </div>
       </div>
     `;
   }

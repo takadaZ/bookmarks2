@@ -1,6 +1,6 @@
 $hover-color: rgb(232, 240, 254);
 
-@import 'glyphicon';
+@import 'glyphs';
 
 @keyframes fade-in {
   0% {
@@ -73,7 +73,19 @@ main {
 
 .leaf-menu-button,
 .folder-menu-button {
-  
+  display: flex;
+  z-index: 1;
+  margin-left: auto;
+  width: 18px;
+  height: 20px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: 0;
+  transition: .4s;
+  font-size: 1.2em;
+  background-color: transparent;
+
   > .fa-ellipsis-v {
     pointer-events: none;
   }
@@ -172,26 +184,29 @@ input.query {
 }
 
 [role="menu"] {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  padding: 6px 0;
+  width: fit-content;
+  top: 100%;
+  right: 0;
   background-color: #fff;
   border-width: 0;
   box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302), 0 2px 6px 2px rgba(60,64,67,0.149);
-  position: absolute;
   border-radius: 4px;
-  z-index: 2;
   transition: opacity .218s;
   background: #fff;
   border: 1px solid rgba(0,0,0,.2);
-  cursor: default;
-  font-size: 13px;
-  margin: 0;
   outline: none;
-  padding: 6px 0;
-  top: 100%;
-  right: 0;
-  width: fit-content;
-  display: none;
+  font-size: 13px;
+  cursor: default;
 
   > div {
+    position: relative;
+    display: flex;
+    align-items: center;
     border: 1px solid transparent;
     letter-spacing: .01428571em;
     font-family: Roboto,Arial,sans-serif;
@@ -199,7 +214,6 @@ input.query {
     font-weight: 400;
     line-height: 1.25rem;
     padding: 4px 12px 4px 0;
-    position: relative;
     color: #333;
     cursor: pointer;
     list-style: none;
@@ -244,17 +258,16 @@ input.query {
   }
 
   > .marker,
-  > .folder > .marker {
+  > .folder > .marker,
+  .folder > .leaf,
+  .folder > .marker,
+  .folder.search-path > .folder,
+  .folder.search-path > .leaf {
     display: none;
   }
 
   > .folder {
     padding: 0;
-  }
-
-  .folder > .leaf,
-  .folder > .marker {
-    display: none;
   }
   
   > .folder.search-path[id='1'] > .marker {
@@ -269,12 +282,7 @@ input.query {
   .folder.search-path.path > .marker > .title::before {
     content: '\f07c';
   }
-  
-  .folder.search-path > .folder,
-  .folder.search-path > .leaf {
-    display: none;
-  }
-  
+    
   .folder.search-path.path > .leaf.search-path,
   .folder.open > .leaf {
     display: flex;
@@ -396,8 +404,11 @@ input.query {
       &::before {
         background-color: $hover-color;
       }
-      > .folder-menu-button {
+      > .button-wrapper {
         display: flex;
+        margin-left: auto;
+        pointer-events: all;
+        z-index: 2;
       }
     }
 
@@ -406,26 +417,11 @@ input.query {
       z-index: 1;
     }
 
-    > .folder-menu-button {
+    > .button-wrapper {
       display: none;
-      z-index: 1;
-      margin-left: auto;
-      width: 18px;
-      height: 20px;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      border: 0;
-      transition: .4s;
-      font-size: 1.2em;
-      background-color: transparent;
-
-      > .fa-ellipsis-v {
-        pointer-events: none;
-      }
     }
 
-    > .folder-menu-button:not(:hover) .fa {
+    .folder-menu-button:not(:hover) .fa {
       color: #999;
     }    
 
@@ -481,7 +477,7 @@ input.query {
   padding: 3px;
   padding-right: 4px;
   white-space: nowrap;
-  cursor: pointer;
+  // cursor: pointer;
   display: flex;
   overflow: hidden;
   align-items: center;

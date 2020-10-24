@@ -180,23 +180,6 @@ function setEventListners() {
       target.classList.remove('menu-pos-top');
       const { top, height } = $menu.getBoundingClientRect();
       target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
-      return;
-    }
-    if (target.classList.contains('folder-menu-button')) {
-      const $menu = $('.folder-menu');
-      $menu.style.top = '';
-      $menu.style.left = '';
-      if (target.parentElement !== $menu.parentElement) {
-        target.parentElement?.insertBefore($menu, null);
-      }
-      const rect = target.getBoundingClientRect();
-      const { width, height } = $menu.getBoundingClientRect();
-      $menu.style.left = `${rect.left - width + rect.width}px`;
-      if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
-        $menu.style.top = `${rect.top - height}px`;
-      } else {
-        $menu.style.top = `${rect.top + rect.height}px`;
-      }
     }
   });
   F.setEvents($$('.leaf-menu'), {
@@ -289,6 +272,25 @@ function setEventListners() {
       onClickAngle(e);
     } else if (target.classList.contains('folder')) {
       $$('.open').forEach((el) => el.classList.remove('open'));
+    } else if (target.classList.contains('marker')) {
+      $('.title', target).click();
+    } else if (target.classList.contains('button-wrapper')) {
+      e.stopImmediatePropagation();
+    } else if (target.classList.contains('folder-menu-button')) {
+      const $menu = $('.folder-menu');
+      $menu.style.top = '';
+      $menu.style.left = '';
+      if (target.parentElement !== $menu.parentElement) {
+        target.parentElement?.insertBefore($menu, null);
+      }
+      const rect = target.getBoundingClientRect();
+      const { width, height } = $menu.getBoundingClientRect();
+      $menu.style.left = `${rect.left - width + rect.width}px`;
+      if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
+        $menu.style.top = `${rect.top - height}px`;
+      } else {
+        $menu.style.top = `${rect.top + rect.height}px`;
+      }
     }
     return false;
   });
@@ -349,15 +351,18 @@ function setEventListners() {
   });
   F.setEvents($$('.folder-menu'), {
     click: async (e) => {
+      const $folder = F.getParentElement(e.target as HTMLElement, 4)!;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'add-bookmark': {
-          const $folder = $('.leafs .open') || $('.folders');
+          // const $folder = $('.leafs .open') || $('.folders');
+          const $targetFolder = $(`.leafs [id="${$folder.id}"]`) || $(`.folders [id="${$folder.id}"]`);
           const { id, html } = await postMessage({
             type: bx.CliMessageTypes.addBookmark,
             payload: $folder.id || '1',
           });
-          $folder.insertAdjacentHTML('beforeend', html);
-          const $target = $(`.folders [id="${id}"]`) || $(`.leafs [id="${id}"]`);
+          $('.title', $folder).click();
+          $targetFolder.insertAdjacentHTML('beforeend', html);
+          const $target = $(`.leafs [id="${id}"]`) || $(`.folders [id="${id}"]`);
           ($target.firstElementChild as HTMLAnchorElement).focus();
           setAnimationClass($target, 'hilite');
           break;
@@ -367,7 +372,6 @@ function setEventListners() {
         }
         default:
       }
-      // $('.menu-button > button').blur();
     },
     mousedown: (e) => e.preventDefault(),
   });

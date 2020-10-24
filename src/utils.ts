@@ -357,3 +357,10 @@ export async function getCurrentTab() {
     });
   });
 }
+
+export function getParentElement(el: HTMLElement, level: number): HTMLElement | null {
+  if (level <= 0 || !el || !el.parentElement) {
+    return el;
+  }
+  return getParentElement(el.parentElement, level - 1);
+}
