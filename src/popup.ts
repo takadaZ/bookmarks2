@@ -144,7 +144,11 @@ function setAnimationClass(el: HTMLElement, className: string) {
   el.classList.remove(className);
   // eslint-disable-next-line no-void
   void el.offsetWidth;
-  // el.addEventListener('animationend', () => el.classList.remove(className), { once: true });
+  el.classList.add(className);
+}
+
+function setAnimationFolder(el: HTMLElement, className: string) {
+  el.addEventListener('animationend', () => el.classList.remove(className), { once: true });
   el.classList.add(className);
 }
 
@@ -258,6 +262,7 @@ function setEventListners() {
       $$('.open').forEach((el) => el.classList.remove('open'));
       folders.forEach((el) => el.classList.add('open'));
       sendStateOpenedPath(foldersFolder);
+      $$('.hilite').map((el) => el.classList.remove('hilite'));
     } else if (target.localName === 'a') {
       openBookmark(e.target!);
     } else if (target.classList.contains('fa-angle-right')) {
@@ -379,7 +384,7 @@ function setEventListners() {
           });
           if (succeed) {
             $title.textContent = title;
-            setAnimationClass($title.parentElement!.parentElement!, 'hilite');
+            setAnimationFolder($title.parentElement!.parentElement!, 'hilite');
           }
           break;
         }
@@ -406,7 +411,8 @@ function setEventListners() {
           });
           const $target = $(`.folders ${F.cssid(id)} > .marker > .title`);
           $target.click();
-          setAnimationClass($target.parentElement!, 'hilite');
+          setAnimationFolder($target.parentElement!, 'hilite');
+          $folder.dataset.children = String($folder.children.length - 1);
           break;
         }
         case 'remove': {
@@ -417,9 +423,14 @@ function setEventListners() {
           if (succeed) {
             document.body.appendChild($('.folder-menu'));
             const $marker = $('.marker', $folder);
-            $marker.addEventListener('animationend', () => $folder.remove(), { once: true });
+            $marker.addEventListener('animationend', () => {
+              const $parent = $folder.parentElement!;
+              $folder.remove();
+              $parent.dataset.children = String($parent.children.length - 1);
+              $('.title', $parent).click();
+            }, { once: true });
             $marker.classList.remove('hilite');
-            setAnimationClass($marker, 'remove-hilite');
+            setAnimationFolder($marker, 'remove-hilite');
           }
           break;
         }
