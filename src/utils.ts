@@ -1,6 +1,8 @@
 /* eslint-disable no-redeclare */
 /* eslint-disable no-unused-vars */
 
+import * as bx from './types';
+
 export function $<T extends HTMLElement>(
   selector: string,
   parent: HTMLElement | DocumentFragment | Document = document,
@@ -363,4 +365,18 @@ export function getParentElement(el: HTMLElement, level: number): HTMLElement | 
     return el;
   }
   return getParentElement(el.parentElement, level - 1);
+}
+
+const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as
+  // eslint-disable-next-line no-unused-vars
+  (message: any, responseCallback: (response: any) => void) => void;
+
+export async function postMessage<T extends keyof bx.MapStateToResponse>(
+  msg: { type: T } & Partial<bx.PayloadAction<bx.MessageStateMapObject<bx.MapStateToResponse>[T]>>,
+): Promise<ReturnType<bx.MapStateToResponse[T]>> {
+  return cbToPromise(curry(sendMessage)(msg));
+}
+
+export function cssid(id: string | number) {
+  return `#${CSS.escape(id as string)}`;
 }

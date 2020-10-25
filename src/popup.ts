@@ -3,20 +3,10 @@ import { $, $$ } from './utils';
 import * as F from './utils';
 import * as bx from './types';
 
-const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as
-  // eslint-disable-next-line no-unused-vars
-  (message: any, responseCallback: (response: any) => void) => void;
-
-async function postMessage<T extends keyof bx.MapStateToResponse>(
-  msg: { type: T } & Partial<bx.PayloadAction<bx.MessageStateMapObject<bx.MapStateToResponse>[T]>>,
-): Promise<ReturnType<bx.MapStateToResponse[T]>> {
-  return F.cbToPromise(F.curry(sendMessage)(msg));
-}
-
 function setClientState(clState: bx.IClientState) {
-  clState.paths?.forEach((id) => $(`.folders [id="${id}"]`)?.classList.add('path'));
+  clState.paths?.forEach((id) => $(`.folders ${F.cssid(id)}`)?.classList.add('path'));
   if (clState.open) {
-    $$(`[id="${clState.open}"]`)?.forEach((el) => el.classList.add('open'));
+    $$(F.cssid(clState.open))?.forEach((el) => el.classList.add('open'));
   }
 }
 
@@ -49,7 +39,7 @@ function init() {
 }
 
 (async () => {
-  const { options, html, clState } = await postMessage({ type: bx.CliMessageTypes.initialize });
+  const { options, html, clState } = await F.postMessage({ type: bx.CliMessageTypes.initialize });
 
   if (document.readyState === 'loading') {
     await F.cbToPromise(F.swap(F.curry(F.curry(document.addEventListener))('DOMContentLoaded'))(false));
@@ -67,7 +57,7 @@ function openBookmark(
   openType: keyof typeof bx.OpenBookmarkType = bx.OpenBookmarkType.tab,
 ) {
   const { id } = (target as HTMLAnchorElement).parentElement!;
-  postMessage({
+  F.postMessage({
     type: bx.CliMessageTypes.openBookmark,
     payload: {
       id,
@@ -95,7 +85,7 @@ function sendStateOpenedPath(foldersFolder: HTMLElement) {
     folder = folder.parentElement!;
   }
   // Send client state
-  postMessage({
+  F.postMessage({
     type: bx.CliMessageTypes.saveState,
     payload: {
       paths,
@@ -121,7 +111,7 @@ function setMouseEventListener(mouseMoveHandler: (e: MouseEvent) => any) {
   document.addEventListener('mousemove', mouseMoveHandlerWrapper, false);
   document.addEventListener('mouseup', () => {
     document.removeEventListener('mousemove', mouseMoveHandlerWrapper);
-    postMessage({
+    F.postMessage({
       type: bx.CliMessageTypes.saveOptions,
       payload: {
         width: document.body.offsetWidth,
@@ -202,7 +192,7 @@ function setEventListners() {
           if (value == null) {
             break;
           }
-          const ret = await postMessage({
+          const ret = await F.postMessage({
             type: bx.CliMessageTypes.editBookmark,
             payload: {
               value,
@@ -216,13 +206,13 @@ function setEventListners() {
           break;
         }
         case 'edit-url': {
-          const url = await postMessage({ type: bx.CliMessageTypes.getUrl, payload: $leaf!.id });
+          const url = await F.postMessage({ type: bx.CliMessageTypes.getUrl, payload: $leaf!.id });
           // eslint-disable-next-line no-alert
           const value = prompt('Edit url', url!);
           if (value == null) {
             break;
           }
-          const { title, style } = await postMessage({
+          const { title, style } = await F.postMessage({
             type: bx.CliMessageTypes.editBookmark,
             payload: {
               value,
@@ -236,7 +226,7 @@ function setEventListners() {
           break;
         }
         case 'remove': {
-          const succeed = await postMessage({
+          const succeed = await F.postMessage({
             type: bx.CliMessageTypes.removeBookmark,
             payload: $leaf!.id,
           });
@@ -259,7 +249,7 @@ function setEventListners() {
     if (target.classList.contains('title')) {
       clearQuery();
       const foldersFolder = target.parentElement?.parentElement!;
-      const folders = [foldersFolder, $(`.leafs [id="${foldersFolder.id}"]`)];
+      const folders = [foldersFolder, $(`.leafs ${F.cssid(foldersFolder.id)}`)];
       const isOpen = foldersFolder.classList.contains('open');
       if (isOpen) {
         folders.forEach((el) => el.classList.add('path'));
@@ -356,7 +346,7 @@ function setEventListners() {
       const $folder = F.getParentElement(e.target as HTMLElement, 4)!;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'add-bookmark': {
-          const { id, html, exists } = await postMessage({
+          const { id, html, exists } = await F.postMessage({
             type: bx.CliMessageTypes.addBookmark,
             payload: $folder.id || '1',
           });
@@ -366,9 +356,9 @@ function setEventListners() {
             break;
           }
           $('.title', $folder).click();
-          const $targetFolder = $(`.leafs [id="${$folder.id}"]`) || $(`.folders [id="${$folder.id}"]`);
+          const $targetFolder = $(`.leafs ${F.cssid($folder.id)}`) || $(`.folders ${F.cssid($folder.id)}`);
           $targetFolder.insertAdjacentHTML('beforeend', html);
-          const $target = $(`.leafs [id="${id}"]`) || $(`.folders [id="${id}"]`);
+          const $target = $(`.leafs ${F.cssid(id)}`) || $(`.folders ${F.cssid(id)}`);
           ($target.firstElementChild as HTMLAnchorElement).focus();
           setAnimationClass($target, 'hilite');
           break;
@@ -380,7 +370,7 @@ function setEventListners() {
           if (title == null) {
             break;
           }
-          const succeed = await postMessage({
+          const succeed = await F.postMessage({
             type: bx.CliMessageTypes.editFolder,
             payload: {
               title,
@@ -399,7 +389,7 @@ function setEventListners() {
           if (title == null) {
             break;
           }
-          const { id, html, exists } = await postMessage({
+          const { id, html, exists } = await F.postMessage({
             type: bx.CliMessageTypes.addFolder,
             payload: {
               title,
@@ -411,16 +401,16 @@ function setEventListners() {
             alert('The same name folder already exists.');
             break;
           }
-          $$(`[id="${$folder.id}"]`).forEach(($targetFolder) => {
+          $$(F.cssid($folder.id)).forEach(($targetFolder) => {
             $targetFolder.insertAdjacentHTML('beforeend', html);
           });
-          const $target = $(`.folders [id="${id}"] > .marker > .title`);
+          const $target = $(`.folders ${F.cssid(id)} > .marker > .title`);
           $target.click();
           setAnimationClass($target.parentElement!, 'hilite');
           break;
         }
         case 'remove': {
-          const succeed = await postMessage({
+          const succeed = await F.postMessage({
             type: bx.CliMessageTypes.removeFolder,
             payload: $folder!.id,
           });

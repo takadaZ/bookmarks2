@@ -240,8 +240,8 @@ function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
   const [rootFolder] = buildBookmarks('0', state.bookmarks, []);
   const $folders = $('#folders');
   $folders.innerHTML = '';
-  $folders.append(...$(':scope > [id="1"]', rootFolder).children);
-  $folders.append(...$$(':scope > .folder:not([id="1"])', rootFolder));
+  $folders.append(...$(`:scope > ${F.cssid(1)}`, rootFolder).children);
+  $folders.append(...$$(`:scope > .folder:not(${F.cssid(1)})`, rootFolder));
   $$('.leaf:not([data-parent-id="1"])', $folders).forEach((leaf) => leaf.remove());
   $(':scope > .marker', $folders).remove();
   const folders = $folders.innerHTML;
@@ -304,7 +304,7 @@ export const mapStateToResponse = {
         if (test) {
           return resolve(['', test]);
         }
-        return subscribe(() => resolve([$(`[id="${id}"]`).outerHTML, test]), ['html', 'created'], true);
+        return subscribe(() => resolve([$(F.cssid(id)).outerHTML, test]), ['html', 'created'], true);
       });
       return { id, html, exists };
     },
@@ -357,7 +357,7 @@ export const mapStateToResponse = {
         if (test) {
           return resolve(['', test]);
         }
-        return subscribe(() => resolve([$(`[id="${id}"]`).outerHTML, test]), ['html', 'created'], true);
+        return subscribe(() => resolve([$(F.cssid(id)).outerHTML, test]), ['html', 'created'], true);
       });
       return { id, html, exists };
     },
