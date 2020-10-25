@@ -1,4 +1,5 @@
-$hover-color: rgb(232, 240, 254);
+// $hover-color: rgb(232, 240, 254);
+$hover-color: rgba(0,0,0,.05);
 
 @import 'glyphs';
 
@@ -46,6 +47,31 @@ main {
   height: 100%;
 }
 
+button {
+  outline: none;
+  background-color: transparent;
+  border-radius: 3px;
+
+  > .fa {
+    color: rgba(0, 0, 0, .4);
+  }
+
+  &:hover > .fa,
+  &:focus > .fa {
+    color: rgba(0, 0, 0, .5);
+  }
+  
+  &:hover,
+  &:focus {
+    background-color: rgba(0, 0, 0, .1);
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, .2);
+  }
+
+}
+
 .resize-x,
 .split-h {
   height: 100%;
@@ -87,7 +113,7 @@ main {
   border: 0;
   transition: .4s;
   font-size: 1.2em;
-  background-color: transparent;
+  // background-color: transparent;
 
   > .fa-ellipsis-v {
     pointer-events: none;
@@ -106,10 +132,10 @@ main {
 // Search
 
 form {
-  position: relative;
+  // position: relative;
   display: flex;
   align-items: center;
-  top: -4px;
+  // top: -4px;
 }
 
 button[type='submit'] {
@@ -117,21 +143,24 @@ button[type='submit'] {
   background-color: transparent;
   border: 0;
   outline: 0;
+  display: flex;
+  margin-left: 2px;
 }
 
 input.query {
   width: 100%;
-  background: #ddd;
+  background: rgba(0, 0, 0, .1);
   border: 0;
   outline: none;
   padding: 6px;
   font-size: 1.0em;
   text-indent: 20px;
+  border-radius: 20px;
 }
 
 .form-query .fa-times {
   position: absolute;
-  right: 6px;
+  right: 32px;
   cursor: pointer;
   display: inherit;
 }
@@ -141,10 +170,12 @@ input.query {
 }
 
 .menu-button {
-  position: absolute;
-  right: 2px;
-  align-items: center;
-  display: flex;
+  // position: absolute;
+  // right: 2px;
+  // align-items: center;
+  // display: flex;
+  position: relative;
+  margin: 0 3px;
 
   > button {
     display: flex;
@@ -156,10 +187,6 @@ input.query {
     border: 0;
     transition: .4s;
     font-size: 1.2em;
-  }
-
-  > button:not(:hover) {
-    background-color: transparent;
   }
 
   > button:focus {
@@ -180,9 +207,9 @@ input.query {
 .query:not([value=""]) {
   background-color: #cce5ff;
   
-  ~ .menu-button {
-    display: none;
-  }
+  // ~ .menu-button {
+  //   display: none;
+  // }
 
 }
 
@@ -344,15 +371,11 @@ input.query {
     border: 0;
     transition: .4s;
     font-size: 1.2em;
-    background-color: transparent;
+    // background-color: transparent;
   }
   
   &:hover > button {
     display: flex;
-  }
-  
-  > button:not(:hover) .fa {
-    color: #999;
   }
   
   &.search-path > a {
@@ -364,6 +387,7 @@ input.query {
 // Folders pane
 
 .folders {
+  margin-top: 2px;
   padding: 2px;
   padding-left: 0;
   overflow: auto;
@@ -425,9 +449,9 @@ input.query {
       display: none;
     }
 
-    .folder-menu-button:not(:hover) .fa {
-      color: #999;
-    }    
+    // .folder-menu-button:not(:hover) .fa {
+    //   color: #999;
+    // }
 
     .folder-menu-button:focus + .folder-menu {
       display: block;
@@ -511,7 +535,7 @@ input.query {
     text-rendering: auto;
     margin-left: 1px;
     margin-right: 4px;
-    color: gray;
+    color: rgba(0, 0, 0, .5);
     width: 1.0em;
   }
 
@@ -536,6 +560,6 @@ input.query {
 }
 
 ::-webkit-scrollbar-track {
-  background: #fff;
-  border-left: 1px solid #eee;
+  background: rgba(0, 0, 0, .1);
+  border-left: 1px solid rgba(0, 0, 0, .1);
 }
