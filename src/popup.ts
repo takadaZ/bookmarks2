@@ -346,6 +346,31 @@ function setEventListners() {
     document.body.dataset.startY = String($('body').offsetHeight - e.screenY);
     setMouseEventListener(resizeHeightHandler);
   });
+  F.setEvents($$('.main-menu'), {
+    click: async (e) => {
+      switch ((e.target as HTMLElement).dataset.value) {
+        case 'add-bookmark': {
+          const { id, html, exists } = await F.postMessage({
+            type: bx.CliMessageTypes.addBookmark,
+            payload: '1',
+          });
+          if (exists) {
+            // eslint-disable-next-line no-alert
+            alert('This bookmark already exists in this folder.');
+            break;
+          }
+          const $targetFolder = $(`.folders ${F.cssid(2)}`);
+          $targetFolder.insertAdjacentHTML('beforebegin', html);
+          const $target = $(`.leafs ${F.cssid(id)}`) || $(`.folders ${F.cssid(id)}`);
+          ($target.firstElementChild as HTMLAnchorElement).focus();
+          setAnimationClass($target, 'hilite');
+          break;
+        }
+        default:
+      }
+    },
+    mousedown: (e) => e.preventDefault(),
+  });
   F.setEvents($$('.folder-menu'), {
     click: async (e) => {
       const $folder = F.getParentElement(e.target as HTMLElement, 4)!;
