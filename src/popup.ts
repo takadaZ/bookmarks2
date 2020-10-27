@@ -178,6 +178,32 @@ function setEventListners() {
       target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
     }
   });
+  const $scrollContainers = $$('.leafs, .folders');
+  // eslint-disable-next-line no-undef
+  let timerScrollbar: NodeJS.Timeout;
+  F.setEvents($$('.scrollbar-area'), {
+    mouseenter: (e) => {
+      function endScrolling(e2: MouseEvent) {
+        if (!(e2.relatedTarget as HTMLElement)?.classList.contains('scrollbar-area')) {
+          clearTimeout(timerScrollbar);
+          $scrollContainers.forEach(($target) => {
+            $target.classList.remove('scrolling');
+            $target.removeEventListener('mouseover', endScrolling);
+            $target.removeEventListener('mouseleave', endScrolling);
+          });
+        }
+      }
+      F.setEvents($scrollContainers, {
+        mouseover: endScrolling,
+        mouseleave: endScrolling,
+      });
+      const $target = (e.currentTarget as HTMLElement)!.previousElementSibling! as HTMLElement;
+      clearTimeout(timerScrollbar);
+      timerScrollbar = setTimeout(() => {
+        $target.classList.add('scrolling');
+      }, 100);
+    },
+  });
   F.setEvents($$('.leaf-menu'), {
     click: async (e) => {
       const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement!;
@@ -283,7 +309,7 @@ function setEventListners() {
       const rect = target.getBoundingClientRect();
       const { width, height } = $menu.getBoundingClientRect();
       $menu.style.left = `${rect.left - width + rect.width}px`;
-      if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
+      if ((rect.top + rect.height + height) >= (document.body.offsetHeight + 4)) {
         $menu.style.top = `${rect.top - height}px`;
       } else {
         $menu.style.top = `${rect.top + rect.height}px`;

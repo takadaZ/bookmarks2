@@ -98,11 +98,22 @@ button {
   animation-timing-function: ease-out;
 }
 
+.leafs-wrap {
+  grid-row-start: span 2;
+}
+
+.leafs-wrap,
+.folders-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+
 // Leaf menu
 
 .leaf-menu-button,
 .folder-menu-button {
-  display: flex;
+  display: none;
   z-index: 1;
   margin-left: auto;
   width: 18px;
@@ -113,7 +124,6 @@ button {
   border: 0;
   transition: .4s;
   font-size: 1.2em;
-  // background-color: transparent;
 
   > .fa-ellipsis-v {
     pointer-events: none;
@@ -272,9 +282,9 @@ input.query {
 // Leafs pane
 
 .leafs {
+  height: 100%;
   padding: 2px;
-  grid-row-start: span 2;
-  overflow-x: hidden;
+  overflow-y: auto;
 
   .leaf-menu-button:focus + .leaf-menu {
     display: block;
@@ -327,6 +337,7 @@ input.query {
 .leaf {
   position: relative;
   display: flex;
+  margin-right: 4px;
   padding: 2px;
   align-items: center;
 
@@ -360,20 +371,6 @@ input.query {
     background-color: $hover-color;
   }
   
-  > button {
-    display: none;
-    margin-left: auto;
-    width: 18px;
-    height: 20px;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    border: 0;
-    transition: .4s;
-    font-size: 1.2em;
-    // background-color: transparent;
-  }
-  
   &:hover > button {
     display: flex;
   }
@@ -387,10 +384,11 @@ input.query {
 // Folders pane
 
 .folders {
+  height: 100%;
   margin-top: 2px;
   padding: 2px;
   padding-left: 0;
-  overflow: auto;
+  overflow-y: auto;
 
   .leaf-menu-button:focus + .leaf-menu {
     display: block;
@@ -424,7 +422,7 @@ input.query {
       position: absolute;
       width: 200%;
       height: 100%;
-      right: 0;
+      right: 4px;
     }
     
     &:hover {
@@ -435,8 +433,12 @@ input.query {
       > .button-wrapper {
         display: flex;
         margin-left: auto;
+        margin-right: 4px;
         pointer-events: all;
         z-index: 2;
+        > button {
+          display: flex;
+        }
       }
     }
 
@@ -543,23 +545,29 @@ input.query {
 
 // Scroll bar
 
-::-webkit-scrollbar {
+.scrollbar-area {
+  position: absolute;
   width: 8px;
+  height: 100%;
+  top: 0;
+  right: 0;
 }
 
-// .scrolling::-webkit-scrollbar:hover {
-//   width: 10px;
-// }
+.scrolling + .scrollbar-area {
+  // display: none;
+  pointer-events: none;
+}
+
+.folders:not(.scrolling)::-webkit-scrollbar,
+.leafs:not(.scrolling)::-webkit-scrollbar {
+  width: 3px;
+}
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, .2);
+  background-color: rgba(0, 0, 0, .5);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, .4);
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, .01);
-  border-left: 1px solid rgba(0, 0, 0, .1);
-}
+// ::-webkit-scrollbar-track {
+//   background: rgba(0, 0, 0, .01);
+//   border-left: 1px solid rgba(0, 0, 0, .1);
+// }
