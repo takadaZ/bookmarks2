@@ -98,16 +98,19 @@ button {
   animation-timing-function: ease-out;
 }
 
-.leafs-wrap {
-  grid-row-start: span 2;
-}
-
 .leafs-wrap,
 .folders-wrap {
   position: relative;
   overflow: hidden;
 }
 
+.leafs-wrap {
+  grid-row-start: span 2;
+}
+
+.folders-wrap {
+  padding-top: 4px;
+}
 
 // Leaf menu
 
@@ -116,6 +119,7 @@ button {
   display: none;
   z-index: 1;
   margin-left: auto;
+  margin-right: 6px;
   width: 18px;
   height: 20px;
   justify-content: center;
@@ -158,14 +162,18 @@ button[type='submit'] {
 }
 
 input.query {
+  display: inline-block;
   width: 100%;
+  padding: 6px;
+  padding-left: 28px;
+  padding-right: 24px;
   background: rgba(0, 0, 0, .1);
   border: 0;
   outline: none;
-  padding: 6px;
   font-size: 1.0em;
-  text-indent: 20px;
   border-radius: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .form-query .fa-times {
@@ -307,6 +315,10 @@ input.query {
     display: none;
   }
 
+  .folder.open {
+    padding-bottom: 4px;
+  }
+
   > .folder {
     padding: 0;
   }
@@ -330,6 +342,13 @@ input.query {
     animation: fade-in 0.15s ease-in-out;
   }
   
+  .searched-menu {
+    display: none;
+  }
+
+  .search-path > .leaf-menu > .searched-menu {
+    display: block;
+  }
 }
 
 // Bookmarks
@@ -337,7 +356,6 @@ input.query {
 .leaf {
   position: relative;
   display: flex;
-  margin-right: 4px;
   padding: 2px;
   align-items: center;
 
@@ -385,9 +403,7 @@ input.query {
 
 .folders {
   height: 100%;
-  margin-top: 2px;
-  padding: 2px;
-  padding-left: 0;
+  padding: 0 2px 0 0;
   overflow-y: auto;
 
   .leaf-menu-button:focus + .leaf-menu {
@@ -422,7 +438,7 @@ input.query {
       position: absolute;
       width: 200%;
       height: 100%;
-      right: 4px;
+      right: 0;
     }
     
     &:hover {
@@ -433,7 +449,7 @@ input.query {
       > .button-wrapper {
         display: flex;
         margin-left: auto;
-        margin-right: 4px;
+        margin-right: 0;
         pointer-events: all;
         z-index: 2;
         > button {
@@ -547,10 +563,11 @@ input.query {
 
 .scrollbar-area {
   position: absolute;
-  width: 8px;
+  width: 12px;
   height: 100%;
   top: 0;
   right: 0;
+  z-index: 2;
 }
 
 .scrolling + .scrollbar-area {

@@ -154,17 +154,18 @@ function setAnimationFolder(el: HTMLElement, className: string) {
 
 function setEventListners() {
   document.body.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('leaf-menu-button')) {
+    const $target = e.target as HTMLElement;
+    if ($target.classList.contains('leaf-menu-button')) {
       const $menu = $('.leaf-menu');
       $menu.style.top = '';
       $menu.style.left = '';
-      if (target.parentElement !== $menu.parentElement) {
-        target.parentElement?.insertBefore($menu, null);
+      $menu.style.right = '';
+      if ($target.parentElement !== $menu.parentElement) {
+        $target.parentElement?.insertBefore($menu, null);
       }
-      if (target.parentElement!.parentElement!.classList.contains('folders')) {
-        const rect = target.getBoundingClientRect();
+      if ($target.parentElement!.parentElement!.classList.contains('folders')) {
         const { width, height } = $menu.getBoundingClientRect();
+        const rect = $target.getBoundingClientRect();
         $menu.style.left = `${rect.left - width + rect.width}px`;
         if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
           $menu.style.top = `${rect.top - height}px`;
@@ -173,11 +174,14 @@ function setEventListners() {
         }
         return;
       }
-      target.classList.remove('menu-pos-top');
+      const [, marginRight] = /(\d+)px/.exec(getComputedStyle($target).marginRight) || [];
+      $menu.style.right = `${Number(marginRight) + 1}px`;
+      $target.classList.remove('menu-pos-top');
       const { top, height } = $menu.getBoundingClientRect();
-      target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
+      $target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
     }
   });
+
   const $scrollContainers = $$('.leafs, .folders');
   // eslint-disable-next-line no-undef
   let timerScrollbar: NodeJS.Timeout;
@@ -199,11 +203,10 @@ function setEventListners() {
       });
       const $target = (e.currentTarget as HTMLElement)!.previousElementSibling! as HTMLElement;
       clearTimeout(timerScrollbar);
-      timerScrollbar = setTimeout(() => {
-        $target.classList.add('scrolling');
-      }, 100);
+      timerScrollbar = setTimeout(() => $target.classList.add('scrolling'), 100);
     },
   });
+
   F.setEvents($$('.leaf-menu'), {
     click: async (e) => {
       const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement!;
@@ -268,12 +271,22 @@ function setEventListners() {
           }
           break;
         }
+        case 'show-in-folder': {
+          const id = $leaf.parentElement?.id;
+          const $target = $(`.folders ${F.cssid(id!)} > .marker > .title`);
+          $target.click();
+          $target.focus();
+          ($leaf.firstElementChild as HTMLAnchorElement).focus();
+          setAnimationClass($leaf, 'hilite');
+          break;
+        }
         default:
       }
       ($anchor.nextElementSibling as HTMLElement).blur();
     },
     mousedown: (e) => e.preventDefault(),
   });
+
   $('.folders').addEventListener('click', (e) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains('title')) {
@@ -317,6 +330,7 @@ function setEventListners() {
     }
     return false;
   });
+
   $('.leafs').addEventListener('click', (e) => {
     const target = e.target as HTMLDivElement;
     if (target.localName === 'a') {
@@ -326,6 +340,7 @@ function setEventListners() {
       folder.classList.toggle('path');
     }
   });
+
   $('.form-query').addEventListener('submit', (e) => {
     e.preventDefault();
     const target = $<HTMLInputElement>('.query');
@@ -358,20 +373,25 @@ function setEventListners() {
       });
     return false;
   });
+
   $('.query').addEventListener('input', () => $('.form-query [type="submit"]').click());
   $('.form-query .fa-times').addEventListener('click', clearQuery);
+
   $('.split-h').addEventListener('mousedown', (e) => {
     document.body.dataset.rightPane = String($('main > :last-child').offsetWidth + e.x);
     setMouseEventListener(resizeSplitHandler());
   });
+
   $('.resize-x').addEventListener('mousedown', (e) => {
     document.body.dataset.startX = String($('body').offsetWidth + e.screenX);
     setMouseEventListener(resizeWidthHandler);
   });
+
   $('.resize-y').addEventListener('mousedown', (e) => {
     document.body.dataset.startY = String($('body').offsetHeight - e.screenY);
     setMouseEventListener(resizeHeightHandler);
   });
+
   F.setEvents($$('.main-menu'), {
     click: async (e) => {
       switch ((e.target as HTMLElement).dataset.value) {
@@ -397,6 +417,7 @@ function setEventListners() {
     },
     mousedown: (e) => e.preventDefault(),
   });
+
   F.setEvents($$('.folder-menu'), {
     click: async (e) => {
       const $folder = F.getParentElement(e.target as HTMLElement, 4)!;
