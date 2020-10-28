@@ -146,10 +146,8 @@ button {
 // Search
 
 form {
-  // position: relative;
   display: flex;
   align-items: center;
-  // top: -4px;
 }
 
 button[type='submit'] {
@@ -188,10 +186,6 @@ input.query {
 }
 
 .menu-button {
-  // position: absolute;
-  // right: 2px;
-  // align-items: center;
-  // display: flex;
   position: relative;
   margin: 0 3px;
 
@@ -223,12 +217,7 @@ input.query {
 }
 
 .query:not([value=""]) {
-  background-color: #cce5ff;
-  
-  // ~ .menu-button {
-  //   display: none;
-  // }
-
+  background-color: #cce5ff;  
 }
 
 [role="menu"] {
@@ -467,10 +456,6 @@ input.query {
       display: none;
     }
 
-    // .folder-menu-button:not(:hover) .fa {
-    //   color: #999;
-    // }
-
     .folder-menu-button:focus + .folder-menu {
       display: block;
       position: fixed;
@@ -571,7 +556,6 @@ input.query {
 }
 
 .scrolling + .scrollbar-area {
-  // display: none;
   pointer-events: none;
 }
 
