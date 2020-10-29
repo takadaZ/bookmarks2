@@ -153,33 +153,61 @@ function setAnimationFolder(el: HTMLElement, className: string) {
 }
 
 function setEventListners() {
-  document.body.addEventListener('click', (e) => {
-    const $target = e.target as HTMLElement;
-    if ($target.classList.contains('leaf-menu-button')) {
-      const $menu = $('.leaf-menu');
-      $menu.style.top = '';
-      $menu.style.left = '';
-      $menu.style.right = '';
-      if ($target.parentElement !== $menu.parentElement) {
-        $target.parentElement?.insertBefore($menu, null);
-      }
-      if ($target.parentElement!.parentElement!.classList.contains('folders')) {
-        const { width, height } = $menu.getBoundingClientRect();
-        const rect = $target.getBoundingClientRect();
-        $menu.style.left = `${rect.left - width + rect.width}px`;
-        if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
-          $menu.style.top = `${rect.top - height}px`;
-        } else {
-          $menu.style.top = `${rect.top + rect.height}px`;
+  F.setEvents([document.body], {
+    click: (e) => {
+      const $target = e.target as HTMLElement;
+      if ($target.classList.contains('leaf-menu-button')) {
+        const $menu = $('.leaf-menu');
+        $menu.style.top = '';
+        $menu.style.left = '';
+        $menu.style.right = '';
+        if ($target.parentElement !== $menu.parentElement) {
+          $target.parentElement?.insertBefore($menu, null);
         }
-        return;
+        if ($target.parentElement!.parentElement!.classList.contains('folders')) {
+          const { width, height } = $menu.getBoundingClientRect();
+          const rect = $target.getBoundingClientRect();
+          $menu.style.left = `${rect.left - width + rect.width}px`;
+          if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
+            $menu.style.top = `${rect.top - height}px`;
+          } else {
+            $menu.style.top = `${rect.top + rect.height}px`;
+          }
+          return;
+        }
+        const [, marginRight] = /(\d+)px/.exec(getComputedStyle($target).marginRight) || [];
+        $menu.style.right = `${Number(marginRight) + 1}px`;
+        $target.classList.remove('menu-pos-top');
+        const { top, height } = $menu.getBoundingClientRect();
+        $target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
       }
-      const [, marginRight] = /(\d+)px/.exec(getComputedStyle($target).marginRight) || [];
-      $menu.style.right = `${Number(marginRight) + 1}px`;
-      $target.classList.remove('menu-pos-top');
-      const { top, height } = $menu.getBoundingClientRect();
-      $target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
-    }
+    },
+    dragstart: (e) => {
+      const draggable = F.maybePipe(
+        ($target: HTMLElement) => {
+          if ($target.classList.contains('leaf')) {
+            return $target;
+          }
+          if ($target.localName === 'a') {
+            return (e.target as HTMLElement).parentElement as HTMLElement;
+          }
+          return null;
+        },
+        (target) => target.cloneNode(true) as HTMLAnchorElement,
+        (clone) => $('.draggable-clone').appendChild(clone),
+      )(e.target as HTMLElement);
+      if (draggable != null) {
+        // Object.assign(draggable.style, {
+        //   backgroundColor: 'rgba(0, 123, 255, .5)', // #007bff
+        //   marginLeft: '20px',
+        // });
+        e.dataTransfer!.setDragImage(draggable, 10, 10);
+      }
+    },
+    dragend: () => {
+      // const $target = e.target as HTMLElement;
+      $('.draggable-clone').innerHTML = '';
+    },
   });
 
   const $scrollContainers = $$('.leafs, .folders');

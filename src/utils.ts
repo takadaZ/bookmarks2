@@ -273,6 +273,25 @@ export function pipe(fn: any, ...fns: Array<any>) {
   return (...values: any) => fns.reduce((prevValue, nextFn) => nextFn(prevValue), fn(...values));
 }
 
+export function maybePipe<T extends Array<any>, R1, R2, R3>(
+  fn1: (...a: T) => R1,
+  fn2: (a: Exclude<R1, null>) => R2,
+  fn3: (a: Exclude<R2, null>) => R3,
+): (...a: T) => R3 | null;
+
+export function maybePipe(fn: any, ...fns: Array<any>) {
+  return (...values: any) => {
+    let result = fn(...values);
+    for (let i = 0; i < fns.length; i += 1) {
+      if (result == null) {
+        return null;
+      }
+      result = fns[i](result);
+    }
+    return result;
+  };
+}
+
 export function pipeP<T, R1, R2>(
   fn1: (a: T) => R1,
   fn2: (a: R1) => R2,
@@ -354,9 +373,10 @@ export function setEvents<T extends HTMLElement>(
 
 export async function getCurrentTab() {
   return new Promise<chrome.tabs.Tab>((resolve) => {
-    chrome.windows.getLastFocused((win) => {
-      chrome.tabs.query({ active: true, windowId: win.id }, ([tab]) => resolve(tab));
-    });
+    chrome.tabs.query({
+      active: true,
+      windowId: chrome.windows.WINDOW_ID_CURRENT,
+    }, ([tab]) => resolve(tab));
   });
 }
 

@@ -19,8 +19,10 @@ export class BxLeaf extends HTMLDivElement implements LeafProps {
     super();
     Object.assign(this, props);
     this.className = 'leaf';
+    this.draggable = true;
     this.update();
     this.link = this.firstElementChild as HTMLAnchorElement;
+    this.link.draggable = true;
   }
   update() {
     this.dataset.parentId = String(this.parentId);
@@ -53,6 +55,7 @@ export class BxNode extends HTMLDivElement implements NodeProps {
     super();
     Object.assign(this, props);
     this.className = `folder ${this.state}`;
+    this.draggable = true;
     this.update();
   }
   update() {

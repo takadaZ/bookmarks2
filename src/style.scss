@@ -112,6 +112,28 @@ button {
   padding-top: 4px;
 }
 
+// for Draggable clone element
+
+.draggable-clone {
+  position: relative;
+  top: -1000px;
+
+  > .leaf {
+    width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    > a {
+      display: block;
+      width: 200px;
+      margin-left: 10px;
+      color: white !important;
+      background-color: rgba(0, 123, 255, .7);
+      border-radius: 3px;
+    }
+  }
+}
+
 // Leaf menu
 
 .leaf-menu-button,
@@ -269,6 +291,10 @@ input.query {
     background-color: rgba(0,0,0,0.08);
   }
 
+  .searched-menu {
+    display: none;
+  }
+  
 }
 
 [role="menuitem"] > i {
@@ -331,10 +357,6 @@ input.query {
     animation: fade-in 0.15s ease-in-out;
   }
   
-  .searched-menu {
-    display: none;
-  }
-
   .search-path > .leaf-menu > .searched-menu {
     display: block;
   }
