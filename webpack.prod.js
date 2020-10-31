@@ -20,16 +20,16 @@ module.exports = {
         use: 'ts-loader',
       },
       {
-        test: /\.css$/,
+        test: /\.s[ac]ss$/i,
         use: [
           'style-loader',
           {
             loader: 'css-loader',
             options: {
-              // オプションでCSS内のurl()メソッドの取り込みを禁止する
               url: false,
             },
           },
+          'sass-loader',
         ],
       },
     ],
@@ -47,6 +47,7 @@ module.exports = {
           globOptions: {
             ignore: [
               '**/*.ts',
+              '**/*.scss',
             ],
           },
         },

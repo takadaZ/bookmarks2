@@ -17,9 +17,9 @@ export function $$<T extends HTMLElement>(
   return [...parent.querySelectorAll(selector)] as Array<T>;
 }
 
-export type Map<T extends Array<any>, U, V> = U extends T
-  ? (f: (element: U[number], index: number, self: U) => V) => (array: T) => V[]
-  : (f: (element: T[number], index: number, self: T) => V) => (array: T) => V[]
+// export type Map<T extends Array<any>, U, V> = U extends T
+//   ? (f: (element: U[number], index: number, self: U) => V) => (array: T) => V[]
+//   : (f: (element: T[number], index: number, self: T) => V) => (array: T) => V[]
 
 // export const map = <T, U, V>((f) => (array) => array.map(f)) as Map<T, U, V>;
 
@@ -95,11 +95,23 @@ export function last<T extends Array<any>>(args: T) {
 }
 
 // test
-const x: [_a: string, _b: number, _c: string, _d: number, _e: Array<string>] = ['1', 2, '3', 4, ['5', '6']];
-head(x);
-tail(x);
-init(x);
-last(x);
+// const x: [
+//   _a: string,
+//   _b: number,
+//   _c: string,
+//   _d: number,
+//   _e: Array<string>,
+// ] = [
+//   '1',
+//   2,
+//   '3',
+//   4,
+//   ['5', '6'],
+// ];
+// head(x);
+// tail(x);
+// init(x);
+// last(x);
 
 export function curry<T1, T2, U>
   (f: (p1: T1, p2: T2) => U): (p1: T1) => (p2: T2) => U;
@@ -121,12 +133,6 @@ export function curry(f: (...args: Array<any>) => any) {
 export function swap<T, U, V>(f: (a: T) => (b: U) => V) {
   return (b: U) => (a: T) => f(a)(b) as V;
 }
-
-// tset
-function y(_a: number, _b: string, _c: boolean) {
-  return null;
-}
-swap(curry(curry(y))(3))(false)('aaa');
 
 export async function cbToPromise<T>(f: (cb: (arg: T) => any) => any) {
   return new Promise<T>((resolve) => f(resolve));
