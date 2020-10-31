@@ -203,17 +203,23 @@ input.query {
     border: 0;
     transition: .4s;
     font-size: 1.2em;
-  }
 
-  > button:focus {
-    pointer-events: none;
-  }
+    &:focus {
+      pointer-events: none;
+      + .main-menu {
+        display: block;
+        animation: fade-in 0.15s ease-in-out;
+      }
+    }
 
-  > button:focus + .main-menu {
-    display: block;
-    animation: fade-in 0.15s ease-in-out;
-  }
+    > .fa-ellipsis-v {
+      pointer-events: none;
+    }
 
+    &:active {
+      pointer-events: all;
+    }
+  }
 }
 
 .query[value=""] + .fa-times {

@@ -193,6 +193,9 @@ function setEventListners() {
   F.setEvents([document.body], {
     click: (e) => {
       const $target = e.target as HTMLElement;
+      if ($target.classList.contains('main-menu-button')) {
+        return;
+      }
       if ($target.classList.contains('leaf-menu-button')) {
         const $menu = $('.leaf-menu')!;
         $menu.style.top = '';
@@ -510,6 +513,11 @@ function setEventListners() {
 
   $('.query')!.addEventListener('input', () => $('.form-query [type="submit"]')!.click());
   $('.form-query .fa-times')!.addEventListener('click', clearQuery);
+
+  $('.main-menu-button')!.addEventListener('click', (e) => {
+    e.preventDefault();
+    return false;
+  });
 
   $('.split-h')!.addEventListener('mousedown', (e) => {
     document.body.dataset.rightPane = String($('main > :last-child')!.offsetWidth + e.x);
