@@ -233,17 +233,17 @@ function buildBookmarks(
 
 function makeHtmlBookmarks(state: State, dispatch: Dispatch) {
   const [root] = buildBookmarks('0', state.bookmarks, []);
-  const $leafs = $('#leafs');
+  const $leafs = $('#leafs')!;
   $leafs.innerHTML = '';
   $leafs.append(...root.children);
   const leafs = $leafs.innerHTML;
   const [rootFolder] = buildBookmarks('0', state.bookmarks, []);
-  const $folders = $('#folders');
+  const $folders = $('#folders')!;
   $folders.innerHTML = '';
-  $folders.append(...$(`:scope > ${F.cssid(1)}`, rootFolder).children);
+  $folders.append(...$(`:scope > ${F.cssid(1)}`, rootFolder)!.children);
   $folders.append(...$$(`:scope > .folder:not(${F.cssid(1)})`, rootFolder));
   $$('.leaf:not([data-parent-id="1"])', $folders).forEach((leaf) => leaf.remove());
-  $(':scope > .marker', $folders).remove();
+  $(':scope > .marker', $folders)!.remove();
   const folders = $folders.innerHTML;
   dispatch(bookmarksHtml.actions.created({ leafs, folders }));
 }
@@ -299,12 +299,12 @@ export const mapStateToResponse = {
         parentId: payload,
       });
       const { id } = await F.cbToPromise(creator);
-      const [html, exists] = await new Promise<[string, boolean]>((resolve) => {
+      const [html, exists] = await new Promise<[string | undefined, boolean]>((resolve) => {
         const test = !!document.getElementById(id);
         if (test) {
           return resolve(['', test]);
         }
-        return subscribe(() => resolve([$(F.cssid(id)).outerHTML, test]), ['html', 'created'], true);
+        return subscribe(() => resolve([$(F.cssid(id))?.outerHTML, test]), ['html', 'created'], true);
       });
       return { id, html, exists };
     },
@@ -327,8 +327,8 @@ export const mapStateToResponse = {
         subscribe(() => {
           const anchor = $(`#${CSS.escape(payload.id)} > a`);
           resolve({
-            title: anchor.getAttribute('title')!,
-            style: anchor.getAttribute('style')!,
+            title: anchor?.getAttribute('title')!,
+            style: anchor?.getAttribute('style')!,
           });
         }, ['html', 'created'], true);
         F.cbToPromise(F.curry(chrome.bookmarks.update)(payload.id, changes));
@@ -352,12 +352,12 @@ export const mapStateToResponse = {
       { payload: { parentId, title } }: PayloadAction<{ parentId: string, title:string }>,
     ) => {
       const { id } = await F.cbToPromise(F.curry(chrome.bookmarks.create)({ parentId, title }));
-      const [html, exists] = await new Promise<[string, boolean]>((resolve) => {
+      const [html, exists] = await new Promise<[string | undefined, boolean]>((resolve) => {
         const test = !!document.getElementById(id);
         if (test) {
           return resolve(['', test]);
         }
-        return subscribe(() => resolve([$(F.cssid(id)).outerHTML, test]), ['html', 'created'], true);
+        return subscribe(() => resolve([$(F.cssid(id))?.outerHTML, test]), ['html', 'created'], true);
       });
       return { id, html, exists };
     },
@@ -368,6 +368,38 @@ export const mapStateToResponse = {
         subscribe(() => resolve(true), ['html', 'created'], true);
       });
       return succeed;
+    },
+  [bx.CliMessageTypes.moveItem]:
+    async ({ state, subscribe }: ReduxHandlers, { payload }: PayloadAction<bx.PayloadMoveItem>) => {
+      const tree = state.bookmarks[payload.targetId];
+      const [parentId, index] = (() => {
+        if (payload.dropClass === 'drop-folder') {
+          return [payload.targetId, tree.childrenIds?.length] as const;
+        }
+        const { childrenIds } = state.bookmarks[tree.parentId!];
+        const findIndex = childrenIds?.findIndex((childId) => childId === payload.targetId);
+        if (findIndex == null || findIndex === -1) {
+          return ['', null] as const;
+        }
+        return [tree.parentId, findIndex + (payload.dropClass === 'drop-bottom' ? 1 : 0)] as const;
+      })();
+      if (parentId == null || index == null) {
+        return {
+          parentId: null,
+          index: null,
+        };
+      }
+      F.cbToPromise(F.curry(chrome.bookmarks.move)(payload.id, { parentId, index }));
+      const succeed = await new Promise<boolean>((resolve) => {
+        subscribe(() => resolve(true), ['html', 'created'], true);
+      });
+      if (succeed) {
+        return { parentId, index };
+      }
+      return {
+        parentId: null,
+        index: null,
+      };
     },
 };
 

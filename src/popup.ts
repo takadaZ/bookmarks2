@@ -1,3 +1,4 @@
+/* eslint-disable no-alert */
 import './style.scss';
 import { $, $$ } from './utils';
 import * as F from './utils';
@@ -11,12 +12,12 @@ function setClientState(clState: bx.IClientState) {
 }
 
 function repaleceHtml(html: bx.IHtml) {
-  $('.leafs').innerHTML = html.leafs;
-  $('.folders').innerHTML = html.folders;
+  $('.leafs')!.innerHTML = html.leafs;
+  $('.folders')!.innerHTML = html.folders;
 }
 
 function assignStyle(selector: string, style: Partial<CSSStyleDeclaration>) {
-  Object.assign($(selector).style, style);
+  Object.assign($(selector)?.style, style);
 }
 
 function setOptions(options: bx.IOptions) {
@@ -35,7 +36,7 @@ function setOptions(options: bx.IOptions) {
 }
 
 function init() {
-  $('.query').focus();
+  $('.query')!.focus();
 }
 
 (async () => {
@@ -95,11 +96,11 @@ function sendStateOpenedPath(foldersFolder: HTMLElement) {
 }
 
 function clearQuery() {
-  const $query = $<HTMLInputElement>('.query');
+  const $query = $<HTMLInputElement>('.query')!;
   $query.value = '';
   $query.setAttribute('value', '');
   $query.focus();
-  $('.form-query [type="submit"]').click();
+  $('.form-query [type="submit"]')!.click();
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -116,14 +117,14 @@ function setMouseEventListener(mouseMoveHandler: (e: MouseEvent) => any) {
       payload: {
         width: document.body.offsetWidth,
         height: document.body.offsetHeight,
-        rightWidth: $('main > :last-child').offsetWidth,
+        rightWidth: $('main > :last-child')!.offsetWidth,
       },
     });
   }, { once: true });
 }
 
 function resizeSplitHandler() {
-  const target = $('main');
+  const target = $('main')!;
   return (e: MouseEvent) => {
     const width = Number(document.body.dataset.rightPane) - e.x;
     target.style.gridTemplateColumns = `min-content 1fr min-content ${width}px`;
@@ -152,23 +153,59 @@ function setAnimationFolder(el: HTMLElement, className: string) {
   el.classList.add(className);
 }
 
+function getDropPlace(element: HTMLElement) {
+  const whichDrop = F.whichClass(bx.dropClasses, element);
+  return bx.dropClasses[whichDrop];
+}
+
+function checkDroppable(e: DragEvent) {
+  const $target = e.target as HTMLElement;
+  const dropClass = getDropPlace($target);
+  // false when not drop target
+  if (dropClass == null) {
+    return false;
+  }
+  const $dragSource = $('.drag-source')!;
+  const targetParent = $target.parentElement!;
+  // falses when same element
+  if (targetParent === $dragSource) {
+    return false;
+  }
+  switch (dropClass) {
+    case 'drop-bottom':
+      if (targetParent === $dragSource.previousElementSibling
+        || targetParent.parentElement === $dragSource.parentElement!.previousElementSibling) {
+        return false;
+      }
+      break;
+    case 'drop-top':
+      if (targetParent === $dragSource.nextElementSibling
+        || targetParent.parentElement === $dragSource.parentElement!.nextElementSibling) {
+        return false;
+      }
+      break;
+    default:
+  }
+  return true;
+}
+
 function setEventListners() {
   F.setEvents([document.body], {
     click: (e) => {
       const $target = e.target as HTMLElement;
       if ($target.classList.contains('leaf-menu-button')) {
-        const $menu = $('.leaf-menu');
+        const $menu = $('.leaf-menu')!;
         $menu.style.top = '';
         $menu.style.left = '';
         $menu.style.right = '';
         if ($target.parentElement !== $menu.parentElement) {
-          $target.parentElement?.insertBefore($menu, null);
+          $target.insertAdjacentElement('afterend', $menu);
         }
         if ($target.parentElement!.parentElement!.classList.contains('folders')) {
           const { width, height } = $menu.getBoundingClientRect();
           const rect = $target.getBoundingClientRect();
           $menu.style.left = `${rect.left - width + rect.width}px`;
-          if ((rect.top + rect.height + height) >= ($('.folders').offsetHeight - 4)) {
+          if ((rect.top + rect.height + height) >= ($('.folders')!.offsetHeight - 4)) {
             $menu.style.top = `${rect.top - height}px`;
           } else {
             $menu.style.top = `${rect.top + rect.height}px`;
@@ -179,34 +216,88 @@ function setEventListners() {
         $menu.style.right = `${Number(marginRight) + 1}px`;
         $target.classList.remove('menu-pos-top');
         const { top, height } = $menu.getBoundingClientRect();
-        $target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs').offsetHeight - 4));
+        $target.classList.toggle('menu-pos-top', (top + height) >= ($('.leafs')!.offsetHeight - 4));
+        return;
       }
+      $('.query')!.focus();
     },
     dragstart: (e) => {
-      const draggable = F.maybePipe(
-        ($target: HTMLElement) => {
-          if ($target.classList.contains('leaf')) {
-            return $target;
-          }
-          if ($target.localName === 'a') {
-            return (e.target as HTMLElement).parentElement as HTMLElement;
-          }
-          return null;
-        },
-        (target) => target.cloneNode(true) as HTMLAnchorElement,
-        (clone) => $('.draggable-clone').appendChild(clone),
-      )(e.target as HTMLElement);
-      if (draggable != null) {
-        // Object.assign(draggable.style, {
-        //   backgroundColor: 'rgba(0, 123, 255, .5)', // #007bff
-        //   marginLeft: '20px',
-        // });
+      const [$target, id] = ((target) => {
+        if (target.classList.contains('leaf')) {
+          return [target, target.id] as const;
+        }
+        if (target.classList.contains('marker')) {
+          return [target, target.parentElement!.id] as const;
+        }
+        if (target.localName === 'a') {
+          const $leaf = (target as HTMLElement).parentElement as HTMLElement;
+          return [$leaf, $leaf.id] as const;
+        }
+        return [null, ''] as const;
+      })(e.target as HTMLElement);
+      if ($target != null) {
+        const draggable = F.pipe(
+          (target) => target.cloneNode(true) as HTMLAnchorElement,
+          (clone) => $('.draggable-clone')!.appendChild(clone),
+        )($target);
         e.dataTransfer!.setDragImage(draggable, 10, 10);
+        const title = $('.title, a', $target)!.textContent || '';
+        e.dataTransfer!.setData('text/plain', title);
+        e.dataTransfer!.setData('application/bx-move', id);
+        $target.classList.add('drag-source');
+        $('main')!.classList.add('drag-start');
+      }
+    },
+    dragover: (e) => {
+      if (checkDroppable(e)) {
+        e.preventDefault();
+      }
+    },
+    dragenter: (e) => {
+      $('.drag-enter')?.classList.remove('drag-enter');
+      if (checkDroppable(e)) {
+        const $target = e.target as HTMLElement;
+        $target.classList.add('drag-enter');
       }
     },
     dragend: () => {
-      // const $target = e.target as HTMLElement;
-      $('.draggable-clone').innerHTML = '';
+      $('.drag-source')?.classList.remove('drag-source');
+      $('main')!.classList.remove('drag-start');
+      $('.draggable-clone')!.innerHTML = '';
+    },
+    drop: async (e) => {
+      const $target = e.target as HTMLElement;
+      const id = e.dataTransfer?.getData('application/bx-move')!;
+      const dropClass = getDropPlace($target);
+      const targetId = $target.parentElement!.id || $target.parentElement!.parentElement!.id;
+      const payload = await F.postMessage({
+        type: bx.CliMessageTypes.moveItem,
+        payload: {
+          id,
+          dropClass,
+          targetId,
+        },
+      });
+      if (payload.parentId == null || payload.index == null) {
+        alert('Operation failed with unknown error.');
+        return;
+      }
+      const $dragSource = $(F.cssid(id))!;
+      if ($dragSource.classList.contains('leaf')) {
+        if (payload.parentId === '1') {
+          const $foldersTarget = $(`.folders > div:nth-child(${payload.index})`)!;
+          if ($dragSource.parentElement!.id === '1') {
+            $foldersTarget.insertAdjacentElement('afterend', $(`.folders ${F.cssid(id)}`)!);
+          } else {
+            $foldersTarget.insertAdjacentElement('afterend', $dragSource.cloneNode(true) as HTMLElement);
+          }
+        } else if ($dragSource.parentElement!.id === '1') {
+          $(`.folders ${F.cssid(id)}`)!.remove();
+        }
+        $(`.leafs ${F.cssid(payload.parentId)} > div:nth-child(${payload.index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
+      } else {
+        //
+      }
     },
   });
 
@@ -292,7 +383,7 @@ function setEventListners() {
             payload: $leaf!.id,
           });
           if (succeed) {
-            document.body.appendChild($('.leaf-menu'));
+            document.body.appendChild($('.leaf-menu')!);
             $leaf.addEventListener('animationend', () => $leaf.remove(), { once: true });
             $leaf.classList.remove('hilite');
             setAnimationClass($leaf, 'remove-hilite');
@@ -301,7 +392,7 @@ function setEventListners() {
         }
         case 'show-in-folder': {
           const id = $leaf.parentElement?.id;
-          const $target = $(`.folders ${F.cssid(id!)} > .marker > .title`);
+          const $target = $(`.folders ${F.cssid(id!)} > .marker > .title`)!;
           $target.click();
           $target.focus();
           ($leaf.firstElementChild as HTMLAnchorElement).focus();
@@ -315,51 +406,66 @@ function setEventListners() {
     mousedown: (e) => e.preventDefault(),
   });
 
-  $('.folders').addEventListener('click', (e) => {
+  $('.folders')!.addEventListener('click', (e) => {
     const target = e.target as HTMLDivElement;
-    if (target.classList.contains('title')) {
-      clearQuery();
-      const foldersFolder = target.parentElement?.parentElement!;
-      const folders = [foldersFolder, $(`.leafs ${F.cssid(foldersFolder.id)}`)];
-      const isOpen = foldersFolder.classList.contains('open');
-      if (isOpen) {
-        folders.forEach((el) => el.classList.add('path'));
-        return false;
+    const targetClasses = [
+      'anchor',
+      'marker',
+      'title',
+      'folder-menu-button',
+      'fa-angle-right',
+    ] as const;
+    const whichClass = F.whichClass(targetClasses, target);
+    const targetClass = targetClasses[whichClass] as typeof targetClasses[number];
+    switch (targetClass) {
+      case 'anchor':
+        openBookmark(e.target!);
+        break;
+      case 'marker':
+        $('.title', target)!.click();
+        break;
+      case 'fa-angle-right':
+        onClickAngle(e);
+        break;
+      case 'title': {
+        clearQuery();
+        const foldersFolder = target.parentElement?.parentElement!;
+        const folders = [foldersFolder, $(`.leafs ${F.cssid(foldersFolder.id)}`)];
+        const isOpen = foldersFolder.classList.contains('open');
+        if (isOpen) {
+          folders.forEach((el) => el?.classList.add('path'));
+          return false;
+        }
+        $$('.open').forEach((el) => el.classList.remove('open'));
+        folders.forEach((el) => el?.classList.add('open'));
+        sendStateOpenedPath(foldersFolder);
+        $$('.hilite').map((el) => el.classList.remove('hilite'));
+        break;
       }
-      $$('.open').forEach((el) => el.classList.remove('open'));
-      folders.forEach((el) => el.classList.add('open'));
-      sendStateOpenedPath(foldersFolder);
-      $$('.hilite').map((el) => el.classList.remove('hilite'));
-    } else if (target.localName === 'a') {
-      openBookmark(e.target!);
-    } else if (target.classList.contains('fa-angle-right')) {
-      onClickAngle(e);
-    } else if (target.classList.contains('folder')) {
-      $$('.open').forEach((el) => el.classList.remove('open'));
-    } else if (target.classList.contains('marker')) {
-      $('.title', target).click();
-    } else if (target.classList.contains('button-wrapper')) {
-      e.stopImmediatePropagation();
-    } else if (target.classList.contains('folder-menu-button')) {
-      const $menu = $('.folder-menu');
-      $menu.style.top = '';
-      $menu.style.left = '';
-      if (target.parentElement !== $menu.parentElement) {
-        target.parentElement?.insertBefore($menu, null);
+      case 'folder-menu-button': {
+        const $menu = $('.folder-menu')!;
+        $menu.style.top = '';
+        $menu.style.left = '';
+        if (target.parentElement !== $menu.parentElement) {
+          target.parentElement?.insertBefore($menu, null);
+        }
+        const rect = target.getBoundingClientRect();
+        const { width, height } = $menu.getBoundingClientRect();
+        $menu.style.left = `${rect.left - width + rect.width}px`;
+        if ((rect.top + rect.height + height) >= (document.body.offsetHeight + 4)) {
+          $menu.style.top = `${rect.top - height}px`;
+        } else {
+          $menu.style.top = `${rect.top + rect.height}px`;
+        }
+        e.stopImmediatePropagation();
+        break;
       }
-      const rect = target.getBoundingClientRect();
-      const { width, height } = $menu.getBoundingClientRect();
-      $menu.style.left = `${rect.left - width + rect.width}px`;
-      if ((rect.top + rect.height + height) >= (document.body.offsetHeight + 4)) {
-        $menu.style.top = `${rect.top - height}px`;
-      } else {
-        $menu.style.top = `${rect.top + rect.height}px`;
-      }
+      default:
     }
     return false;
   });
 
-  $('.leafs').addEventListener('click', (e) => {
+  $('.leafs')!.addEventListener('click', (e) => {
     const target = e.target as HTMLDivElement;
     if (target.localName === 'a') {
       openBookmark(e.target!);
@@ -369,9 +475,9 @@ function setEventListners() {
     }
   });
 
-  $('.form-query').addEventListener('submit', (e) => {
+  $('.form-query')!.addEventListener('submit', (e) => {
     e.preventDefault();
-    const target = $<HTMLInputElement>('.query');
+    const target = $<HTMLInputElement>('.query')!;
     const value = target.value.trim();
     target.setAttribute('value', value);
     const re = new RegExp(value, 'i');
@@ -402,21 +508,21 @@ function setEventListners() {
     return false;
   });
 
-  $('.query').addEventListener('input', () => $('.form-query [type="submit"]').click());
-  $('.form-query .fa-times').addEventListener('click', clearQuery);
+  $('.query')!.addEventListener('input', () => $('.form-query [type="submit"]')!.click());
+  $('.form-query .fa-times')!.addEventListener('click', clearQuery);
 
-  $('.split-h').addEventListener('mousedown', (e) => {
-    document.body.dataset.rightPane = String($('main > :last-child').offsetWidth + e.x);
+  $('.split-h')!.addEventListener('mousedown', (e) => {
+    document.body.dataset.rightPane = String($('main > :last-child')!.offsetWidth + e.x);
     setMouseEventListener(resizeSplitHandler());
   });
 
-  $('.resize-x').addEventListener('mousedown', (e) => {
-    document.body.dataset.startX = String($('body').offsetWidth + e.screenX);
+  $('.resize-x')!.addEventListener('mousedown', (e) => {
+    document.body.dataset.startX = String(document.body.offsetWidth + e.screenX);
     setMouseEventListener(resizeWidthHandler);
   });
 
-  $('.resize-y').addEventListener('mousedown', (e) => {
-    document.body.dataset.startY = String($('body').offsetHeight - e.screenY);
+  $('.resize-y')!.addEventListener('mousedown', (e) => {
+    document.body.dataset.startY = String(document.body.offsetHeight - e.screenY);
     setMouseEventListener(resizeHeightHandler);
   });
 
@@ -433,11 +539,15 @@ function setEventListners() {
             alert('This bookmark already exists in this folder.');
             break;
           }
+          if (html == null) {
+            alert('This bookmark could not be added with unkown error.');
+            break;
+          }
           const $targetFolder = $(`.folders ${F.cssid(2)}`);
-          $targetFolder.insertAdjacentHTML('beforebegin', html);
+          $targetFolder?.insertAdjacentHTML('beforebegin', html);
           const $target = $(`.leafs ${F.cssid(id)}`) || $(`.folders ${F.cssid(id)}`);
-          ($target.firstElementChild as HTMLAnchorElement).focus();
-          setAnimationClass($target, 'hilite');
+          ($target!.firstElementChild as HTMLAnchorElement).focus();
+          setAnimationClass($target!, 'hilite');
           break;
         }
         default:
@@ -456,20 +566,23 @@ function setEventListners() {
             payload: $folder.id || '1',
           });
           if (exists) {
-            // eslint-disable-next-line no-alert
             alert('This bookmark already exists in this folder.');
             break;
           }
-          $('.title', $folder).click();
+          if (html == null) {
+            alert('This bookmark could not be added with unkown error.');
+            break;
+          }
+          $('.title', $folder)!.click();
           const $targetFolder = $(`.leafs ${F.cssid($folder.id)}`) || $(`.folders ${F.cssid($folder.id)}`);
-          $targetFolder.insertAdjacentHTML('beforeend', html);
+          $targetFolder!.insertAdjacentHTML('beforeend', html);
           const $target = $(`.leafs ${F.cssid(id)}`) || $(`.folders ${F.cssid(id)}`);
-          ($target.firstElementChild as HTMLAnchorElement).focus();
-          setAnimationClass($target, 'hilite');
+          ($target!.firstElementChild as HTMLAnchorElement).focus();
+          setAnimationClass($target!, 'hilite');
           break;
         }
         case 'edit': {
-          const $title = $('.title > span', $folder);
+          const $title = $('.title > span', $folder)!;
           // eslint-disable-next-line no-alert
           const title = prompt('Edit folder name', $title.textContent as string);
           if (title == null) {
@@ -502,14 +615,17 @@ function setEventListners() {
             },
           });
           if (exists) {
-            // eslint-disable-next-line no-alert
             alert('The same name folder already exists.');
+            break;
+          }
+          if (html == null) {
+            alert('The folder could not be added with unkown error.');
             break;
           }
           $$(F.cssid($folder.id)).forEach(($targetFolder) => {
             $targetFolder.insertAdjacentHTML('beforeend', html);
           });
-          const $target = $(`.folders ${F.cssid(id)} > .marker > .title`);
+          const $target = $(`.folders ${F.cssid(id)} > .marker > .title`)!;
           $target.click();
           setAnimationFolder($target.parentElement!, 'hilite');
           $folder.dataset.children = String($folder.children.length - 1);
@@ -521,13 +637,13 @@ function setEventListners() {
             payload: $folder!.id,
           });
           if (succeed) {
-            document.body.appendChild($('.folder-menu'));
-            const $marker = $('.marker', $folder);
+            document.body.appendChild($('.folder-menu')!);
+            const $marker = $('.marker', $folder)!;
             $marker.addEventListener('animationend', () => {
               const $parent = $folder.parentElement!;
               $folder.remove();
               $parent.dataset.children = String($parent.children.length - 1);
-              $('.title', $parent).click();
+              $('.title', $parent)!.click();
             }, { once: true });
             $marker.classList.remove('hilite');
             setAnimationFolder($marker, 'remove-hilite');

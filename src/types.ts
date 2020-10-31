@@ -49,6 +49,7 @@ export const CliMessageTypes = {
   editFolder: 'cl-edit-folder',
   removeFolder: 'cl-remove-folder',
   getUrl: 'cl-get-url',
+  moveItem: 'cl-move-item',
 } as const;
 
 export type RequestCallback<T> = (
@@ -82,4 +83,18 @@ export type EditBookmarkTypes = {
   editType: keyof typeof EditBookmarkType;
   value: string;
   id: string;
+}
+
+export const dropClasses = [
+  'drop-top',
+  'drop-bottom',
+  'drop-folder',
+] as const;
+
+export type DropClasses = typeof dropClasses[number];
+
+export type PayloadMoveItem = {
+  id: string;
+  targetId: string;
+  dropClass: DropClasses;
 }

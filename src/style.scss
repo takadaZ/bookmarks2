@@ -1,5 +1,9 @@
-// $hover-color: rgb(232, 240, 254);
-$hover-color: rgba(0,0,0,.05);
+$hover-color: rgba(0, 0, 0, .05);
+$drag-source-bgcolr: rgb(232, 240, 254);
+$hilite-bgcolor: #feefc3;
+$folder-open-bgcolor: #1da1f2;
+$draggable-bgcolor: rgba(0, 123, 255, .7);
+$drop-border: rgba(0, 123, 255);
 
 @import 'glyphs';
 
@@ -20,7 +24,7 @@ $hover-color: rgba(0,0,0,.05);
 
 @keyframes hilite-fade-out {
   from {
-    background-color: #feefc3;
+    background-color: $hilite-bgcolor;
     color: initial;
   }
   to { background-color: transparent; }
@@ -28,7 +32,7 @@ $hover-color: rgba(0,0,0,.05);
 
 @keyframes hilite-fade-in {
   from { background-color: transparent; }
-  to { background-color: #feefc3; }
+  to { background-color: $hilite-bgcolor; }
 }
 
 // body/other
@@ -110,28 +114,6 @@ button {
 
 .folders-wrap {
   padding-top: 4px;
-}
-
-// for Draggable clone element
-
-.draggable-clone {
-  position: relative;
-  top: -1000px;
-
-  > .leaf {
-    width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    > a {
-      display: block;
-      width: 200px;
-      margin-left: 10px;
-      color: white !important;
-      background-color: rgba(0, 123, 255, .7);
-      border-radius: 3px;
-    }
-  }
 }
 
 // Leaf menu
@@ -367,7 +349,7 @@ input.query {
 .leaf {
   position: relative;
   display: flex;
-  padding: 2px;
+  margin: 2px;
   align-items: center;
 
   &.hilite {
@@ -376,8 +358,7 @@ input.query {
   }
 
   a {
-    padding: 2px;
-    margin: 0 2px;
+    padding: 3px;
     padding-left: 20px;
     white-space: nowrap;
     overflow: hidden;
@@ -431,7 +412,7 @@ input.query {
 
     > .title {
       color: white;
-      background: #80bdff;
+      background: $folder-open-bgcolor;
       border-radius: 3px;
 
       &::before {
@@ -594,3 +575,109 @@ input.query {
 //   background: rgba(0, 0, 0, .01);
 //   border-left: 1px solid rgba(0, 0, 0, .1);
 // }
+
+// Drag & Drop
+
+.drag-start {
+  .drag-source {
+    // opacity: 0.5;
+    background-color: $drag-source-bgcolr;
+    > a {
+      color: #222;
+      text-decoration: none;
+      z-index: 2;
+    }
+  }
+  :not(.drag-source) > a {
+    pointer-events: none;
+  }
+  .leaf {
+    > .drop-top,
+    > .drop-bottom {
+      position: absolute;
+      z-index: 1;
+      width: calc(100% - 5px);
+    }
+    > .drop-top {
+      top: -2px;
+      height: calc(50% + 2px);
+      &.drag-enter {
+        border-top: 2px dotted $drop-border;
+      }
+    }
+    .drop-bottom {
+      top: 50%;
+      height: 50%;
+      &.drag-enter {
+        border-bottom: 2px dotted $drop-border;
+      }
+    }
+  }
+  .marker {
+    > .drop-top,
+    > .drop-bottom,
+    > .drop-folder {
+      position: absolute;
+      z-index: 1;
+      width: calc(100% - 3px);
+    }
+    > .drop-top {
+      top: -2px;
+      height: calc(20% + 2px);
+      &.drag-enter {
+        border-top: 2px dotted $drop-border;
+      }
+    }
+    .drop-bottom {
+      top: 80%;
+      height: 20%;
+      &.drag-enter {
+        border-bottom: 2px dotted $drop-border;
+      }
+    }
+    > .drop-folder {
+      top: 20%;
+      height: 60%;
+      // &.drag-enter {
+      //   border-top: 2px dotted $drop-border;
+      // }
+    }
+  }
+  .folder.path:not([data-children="0"]) > .marker > .drop-bottom {
+    left: 14px;
+    width: calc(100% - 17px);
+  }
+}
+
+// draggable clone
+
+.draggable-clone {
+  position: relative;
+  top: -1000px;
+
+  > .leaf,
+  > .marker {
+    min-width: 50px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    > .fa-angle-right {
+      display: none;
+    }
+    > a,
+    > .title {
+      display: inline-block;
+      min-width: 50px;
+      max-width: 200px;
+      margin-left: 12px;
+      padding-right: 4px;
+      color: white !important;
+      background-color: $draggable-bgcolor;
+      border-radius: 3px;
+    }
+    > a {
+      padding-left: 22px;
+      background-position: 3px center;
+    }
+  }
+}

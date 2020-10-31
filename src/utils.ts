@@ -7,7 +7,7 @@ export function $<T extends HTMLElement>(
   selector: string,
   parent: HTMLElement | DocumentFragment | Document = document,
 ) {
-  return parent.querySelector(selector) as T;
+  return parent.querySelector(selector) as T | null;
 }
 
 export function $$<T extends HTMLElement>(
@@ -399,4 +399,8 @@ export async function postMessage<T extends keyof bx.MapStateToResponse>(
 
 export function cssid(id: string | number) {
   return `#${CSS.escape(id as string)}`;
+}
+
+export function whichClass(classNames: readonly string[], element: HTMLElement) {
+  return classNames.findIndex((className) => element.classList.contains(className));
 }
