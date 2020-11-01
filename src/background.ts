@@ -55,7 +55,7 @@ const sliceOptions = createSlice({
 export interface IBookmark extends Pick<chrome.bookmarks.BookmarkTreeNode, 'id' | 'url'>{
   content: string,
   parentId?: string;
-  childrenIds?: string[];
+  childIds?: string[];
 }
 
 interface IBookmarks {
@@ -176,12 +176,12 @@ function flattenBookmarksTree(bookmarksTree: Bookmarks[]): IBookmarks {
   return bookmarksTree.reduce((acc, {
     id, content, url, parentId, children,
   }) => {
-    const childrenIds = children?.map((child) => child.id);
+    const childIds = children?.map((child) => child.id);
     const thisChildren = children ? flattenBookmarksTree(children) : {};
     return {
       ...acc,
       [id]: {
-        content, url, parentId, childrenIds,
+        content, url, parentId, childIds,
       },
       ...thisChildren,
     };
@@ -222,7 +222,7 @@ function buildBookmarks(
 ): BookmarkElements {
   const node = nodes[id];
   if (node.url == null) {
-    const children = node.childrenIds?.flatMap(
+    const children = node.childIds?.flatMap(
       (childId) => buildBookmarks(childId, nodes, elements),
     );
     return [...elements, new BxNode1({ ...node, id, nodes: children || [] })];
@@ -370,18 +370,21 @@ export const mapStateToResponse = {
       return succeed;
     },
   [bx.CliMessageTypes.moveItem]:
-    async ({ state, subscribe }: ReduxHandlers, { payload }: PayloadAction<bx.PayloadMoveItem>) => {
-      const tree = state.bookmarks[payload.targetId];
+    async (
+      { state, subscribe }: ReduxHandlers,
+      { payload: { id, targetId, dropClass } }: PayloadAction<bx.PayloadMoveItem>,
+    ) => {
+      const tree = state.bookmarks[targetId];
       const [parentId, index] = (() => {
-        if (payload.dropClass === 'drop-folder') {
-          return [payload.targetId, tree.childrenIds?.length] as const;
+        if (dropClass === 'drop-folder') {
+          return [targetId, tree.childIds?.length] as const;
         }
-        const { childrenIds } = state.bookmarks[tree.parentId!];
-        const findIndex = childrenIds?.findIndex((childId) => childId === payload.targetId);
+        const { childIds } = state.bookmarks[tree.parentId!];
+        const findIndex = childIds?.findIndex((childId) => childId === targetId);
         if (findIndex == null || findIndex === -1) {
           return ['', null] as const;
         }
-        return [tree.parentId, findIndex + (payload.dropClass === 'drop-bottom' ? 1 : 0)] as const;
+        return [tree.parentId, findIndex + (dropClass === 'drop-bottom' ? 1 : 0)] as const;
       })();
       if (parentId == null || index == null) {
         return {
@@ -389,9 +392,9 @@ export const mapStateToResponse = {
           index: null,
         };
       }
-      F.cbToPromise(F.curry(chrome.bookmarks.move)(payload.id, { parentId, index }));
       const succeed = await new Promise<boolean>((resolve) => {
         subscribe(() => resolve(true), ['html', 'created'], true);
+        F.cbToPromise(F.curry(chrome.bookmarks.move)(id, { parentId, index }));
       });
       if (succeed) {
         return { parentId, index };
@@ -419,13 +422,13 @@ async function onClientRequest(
 
 async function buildFolderState(state: State, folderId: string) {
   const [node] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(folderId));
-  const childrenIds = node.children?.map(({ id }) => id);
+  const childIds = node.children?.map(({ id }) => id);
   const currentState = state.bookmarks[folderId];
   return {
     [folderId]: {
       parentId: node.parentId,
       content: currentState.content,
-      childrenIds,
+      childIds,
     },
   };
 }
