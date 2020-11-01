@@ -348,6 +348,12 @@ input.query {
   .search-path > .leaf-menu > .searched-menu {
     display: block;
   }
+
+  .search-path .leaf,
+  .search-path .anchor,
+  .search-path .marker {
+    -webkit-user-drag: none;
+  }
 }
 
 // Bookmarks
