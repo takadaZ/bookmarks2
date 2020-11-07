@@ -55,7 +55,7 @@ function setOptions(options: IOptions) {
 }
 
 function init() {
-  $('.query')!.focus();
+  ($('.folders .open') as any)?.scrollIntoViewIfNeeded();
 }
 
 (async () => {
@@ -226,6 +226,41 @@ async function addBookmark(folderId = '1') {
   const $target = $(`.leafs ${cssid(id)}`) || $(`.folders ${cssid(id)}`);
   ($target!.firstElementChild as HTMLAnchorElement).focus();
   setAnimationClass($target!, 'hilite');
+}
+
+async function addFolder(parentId = '1') {
+  const title = prompt('Create folder name');
+  if (title == null) {
+    return;
+  }
+  const { id, html, exists } = await postMessage({
+    type: CliMessageTypes.addFolder,
+    payload: {
+      title,
+      parentId,
+    },
+  });
+  if (exists) {
+    alert('The same name folder already exists.');
+    return;
+  }
+  if (html == null) {
+    alert('The folder could not be added with unkown error.');
+    return;
+  }
+  const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
+  if (parentId === '1') {
+    $('.folders')!.insertAdjacentHTML('afterbegin', html);
+    $(`.leafs ${cssid(1)}`)!.insertAdjacentHTML('afterbegin', html);
+  } else {
+    $$(cssid(parentId)).forEach(($targetFolder) => {
+      $targetFolder.insertAdjacentHTML('beforeend', html);
+      // eslint-disable-next-line no-param-reassign
+      $targetFolder.dataset.children = String($targetFolder.children.length - 1);
+    });
+    $target.click();
+  }
+  setAnimationFolder($target.parentElement!, 'hilite');
 }
 
 function setEventListners() {
@@ -584,6 +619,9 @@ function setEventListners() {
           addBookmark();
           break;
         }
+        case 'add-folder':
+          addFolder();
+          break;
         default:
       }
     },
@@ -619,33 +657,34 @@ function setEventListners() {
           break;
         }
         case 'add-folder': {
-          // eslint-disable-next-line no-alert
-          const title = prompt('Create folder name');
-          if (title == null) {
-            break;
-          }
-          const { id, html, exists } = await postMessage({
-            type: CliMessageTypes.addFolder,
-            payload: {
-              title,
-              parentId: $folder.id || '1',
-            },
-          });
-          if (exists) {
-            alert('The same name folder already exists.');
-            break;
-          }
-          if (html == null) {
-            alert('The folder could not be added with unkown error.');
-            break;
-          }
-          $$(cssid($folder.id)).forEach(($targetFolder) => {
-            $targetFolder.insertAdjacentHTML('beforeend', html);
-          });
-          const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
-          $target.click();
-          setAnimationFolder($target.parentElement!, 'hilite');
-          $folder.dataset.children = String($folder.children.length - 1);
+          addFolder($folder.id);
+          // // eslint-disable-next-line no-alert
+          // const title = prompt('Create folder name');
+          // if (title == null) {
+          //   break;
+          // }
+          // const { id, html, exists } = await postMessage({
+          //   type: CliMessageTypes.addFolder,
+          //   payload: {
+          //     title,
+          //     parentId: $folder.id || '1',
+          //   },
+          // });
+          // if (exists) {
+          //   alert('The same name folder already exists.');
+          //   break;
+          // }
+          // if (html == null) {
+          //   alert('The folder could not be added with unkown error.');
+          //   break;
+          // }
+          // $$(cssid($folder.id)).forEach(($targetFolder) => {
+          //   $targetFolder.insertAdjacentHTML('beforeend', html);
+          // });
+          // const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
+          // $target.click();
+          // setAnimationFolder($target.parentElement!, 'hilite');
+          // $folder.dataset.children = String($folder.children.length - 1);
           break;
         }
         case 'remove': {
