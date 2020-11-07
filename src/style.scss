@@ -4,6 +4,7 @@ $hilite-bgcolor: #feefc3;
 $folder-open-bgcolor: #1da1f2;
 $draggable-bgcolor: rgba(0, 123, 255, .7);
 $drop-border: rgba(0, 123, 255);
+$star-color: #1da1f2;
 
 @import 'glyphs';
 
@@ -180,7 +181,7 @@ input.query {
 
 .form-query .fa-times {
   position: absolute;
-  right: 32px;
+  right: 56px;
   cursor: pointer;
   display: inherit;
 }
@@ -192,33 +193,42 @@ input.query {
 .menu-button {
   position: relative;
   margin: 0 3px;
+}
 
-  > button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 18px;
-    height: 20px;
-    cursor: pointer;
-    border: 0;
-    transition: .4s;
-    font-size: 1.2em;
+.bookmark-button {
+  margin-left: 5px;
+}
 
-    &:focus {
-      pointer-events: none;
-      + .main-menu {
-        display: block;
-        animation: fade-in 0.15s ease-in-out;
-      }
+.bookmark-button:hover > .fa-star-o {
+  color: $star-color;
+}
+
+.main-menu-button,
+.bookmark-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 18px;
+  height: 20px;
+  cursor: pointer;
+  border: 0;
+  transition: .4s;
+  font-size: 1.2em;
+
+  &:focus {
+    pointer-events: none;
+    + .main-menu {
+      display: block;
+      animation: fade-in 0.15s ease-in-out;
     }
+  }
 
-    > .fa-ellipsis-v {
-      pointer-events: none;
-    }
+  > .fa-ellipsis-v {
+    pointer-events: none;
+  }
 
-    &:active {
-      pointer-events: all;
-    }
+  &:active {
+    pointer-events: all;
   }
 }
 
@@ -288,6 +298,12 @@ input.query {
 [role="menuitem"] > i {
   width: 2.5em;
   text-align: center;
+}
+
+[role=menuitem] > .fa-star-o {
+  font-size: 1.2em;
+  width: 2em;
+  margin-top: -2px;
 }
 
 // Leafs pane

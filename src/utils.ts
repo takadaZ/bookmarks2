@@ -407,6 +407,6 @@ export function cssid(id: string | number) {
   return `#${CSS.escape(id as string)}`;
 }
 
-export function whichClass(classNames: readonly string[], element: HTMLElement) {
-  return classNames.findIndex((className) => element.classList.contains(className));
+export function whichClass<T extends ReadonlyArray<string>>(classNames: T, element: HTMLElement) {
+  return classNames.find((name) => element.classList.contains(name)) as T[number] | undefined;
 }

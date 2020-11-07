@@ -1,17 +1,36 @@
 /* eslint-disable no-alert */
 import './style.scss';
-import { $, $$ } from './utils';
-import * as F from './utils';
-import * as bx from './types';
+import {
+  IClientState,
+  IHtml,
+  IOptions,
+  CliMessageTypes,
+  OpenBookmarkType,
+  EditBookmarkType,
+  dropClasses,
+} from './types';
+import {
+  $,
+  $$,
+  cssid,
+  postMessage,
+  cbToPromise,
+  swap,
+  curry,
+  setEvents,
+  pipe,
+  whichClass,
+  getParentElement,
+} from './utils';
 
-function setClientState(clState: bx.IClientState) {
-  clState.paths?.forEach((id) => $(`.folders ${F.cssid(id)}`)?.classList.add('path'));
+function setClientState(clState: IClientState) {
+  clState.paths?.forEach((id) => $(`.folders ${cssid(id)}`)?.classList.add('path'));
   if (clState.open) {
-    $$(F.cssid(clState.open))?.forEach((el) => el.classList.add('open'));
+    $$(cssid(clState.open))?.forEach((el) => el.classList.add('open'));
   }
 }
 
-function repaleceHtml(html: bx.IHtml) {
+function repaleceHtml(html: IHtml) {
   $('.leafs')!.innerHTML = html.leafs;
   $('.folders')!.innerHTML = html.folders;
 }
@@ -20,7 +39,7 @@ function assignStyle(selector: string, style: Partial<CSSStyleDeclaration>) {
   Object.assign($(selector)?.style, style);
 }
 
-function setOptions(options: bx.IOptions) {
+function setOptions(options: IOptions) {
   assignStyle('body', {
     width: `${options.width}px`,
     height: `${options.height}px`,
@@ -40,10 +59,10 @@ function init() {
 }
 
 (async () => {
-  const { options, html, clState } = await F.postMessage({ type: bx.CliMessageTypes.initialize });
+  const { options, html, clState } = await postMessage({ type: CliMessageTypes.initialize });
 
   if (document.readyState === 'loading') {
-    await F.cbToPromise(F.swap(F.curry(F.curry(document.addEventListener))('DOMContentLoaded'))(false));
+    await cbToPromise(swap(curry(curry(document.addEventListener))('DOMContentLoaded'))(false));
   }
   setOptions(options);
   repaleceHtml(html);
@@ -55,11 +74,11 @@ function init() {
 
 function openBookmark(
   target: EventTarget | HTMLElement,
-  openType: keyof typeof bx.OpenBookmarkType = bx.OpenBookmarkType.tab,
+  openType: keyof typeof OpenBookmarkType = OpenBookmarkType.tab,
 ) {
   const { id } = (target as HTMLAnchorElement).parentElement!;
-  F.postMessage({
-    type: bx.CliMessageTypes.openBookmark,
+  postMessage({
+    type: CliMessageTypes.openBookmark,
     payload: {
       id,
       openType,
@@ -86,8 +105,8 @@ function sendStateOpenedPath(foldersFolder: HTMLElement) {
     folder = folder.parentElement!;
   }
   // Send client state
-  F.postMessage({
-    type: bx.CliMessageTypes.saveState,
+  postMessage({
+    type: CliMessageTypes.saveState,
     payload: {
       paths,
       open: foldersFolder.id,
@@ -112,8 +131,8 @@ function setMouseEventListener(mouseMoveHandler: (e: MouseEvent) => any) {
   document.addEventListener('mousemove', mouseMoveHandlerWrapper, false);
   document.addEventListener('mouseup', () => {
     document.removeEventListener('mousemove', mouseMoveHandlerWrapper);
-    F.postMessage({
-      type: bx.CliMessageTypes.saveOptions,
+    postMessage({
+      type: CliMessageTypes.saveOptions,
       payload: {
         width: document.body.offsetWidth,
         height: document.body.offsetHeight,
@@ -153,14 +172,9 @@ function setAnimationFolder(el: HTMLElement, className: string) {
   el.classList.add(className);
 }
 
-function getDropPlace(element: HTMLElement) {
-  const whichDrop = F.whichClass(bx.dropClasses, element);
-  return bx.dropClasses[whichDrop];
-}
-
 function checkDroppable(e: DragEvent) {
   const $target = e.target as HTMLElement;
-  const dropClass = getDropPlace($target);
+  const dropClass = whichClass(dropClasses, $target);
   // false when not drop target
   if (dropClass == null) {
     return false;
@@ -189,8 +203,33 @@ function checkDroppable(e: DragEvent) {
   return true;
 }
 
+async function addBookmark(folderId = '1') {
+  const { id, html, exists } = await postMessage({
+    type: CliMessageTypes.addBookmark,
+    payload: folderId,
+  });
+  if (exists) {
+    alert('This bookmark already exists in this folder.');
+    return;
+  }
+  if (html == null) {
+    alert('This bookmark could not be added with unkown error.');
+    return;
+  }
+  if (folderId === '1') {
+    $('.folders')!.insertAdjacentHTML('afterbegin', html);
+  } else {
+    $(`.folders ${cssid(folderId)} .title`)!.click();
+    const $targetFolder = $(`.leafs ${cssid(folderId)}`) || $(`.folders ${cssid(folderId)}`);
+    $targetFolder!.insertAdjacentHTML('beforeend', html);
+  }
+  const $target = $(`.leafs ${cssid(id)}`) || $(`.folders ${cssid(id)}`);
+  ($target!.firstElementChild as HTMLAnchorElement).focus();
+  setAnimationClass($target!, 'hilite');
+}
+
 function setEventListners() {
-  F.setEvents([document.body], {
+  setEvents([document.body], {
     click: (e) => {
       const $target = e.target as HTMLElement;
       if ($target.classList.contains('main-menu-button')) {
@@ -239,7 +278,7 @@ function setEventListners() {
         return [null, ''] as const;
       })(e.target as HTMLElement);
       if ($target != null) {
-        const draggable = F.pipe(
+        const draggable = pipe(
           (target) => target.cloneNode(true) as HTMLAnchorElement,
           (clone) => $('.draggable-clone')!.appendChild(clone),
         )($target);
@@ -271,10 +310,10 @@ function setEventListners() {
     drop: async (e) => {
       const $target = e.target as HTMLElement;
       const id = e.dataTransfer?.getData('application/bx-move')!;
-      const dropClass = getDropPlace($target);
+      const dropClass = whichClass(dropClasses, $target)!;
       const targetId = $target.parentElement!.id || $target.parentElement!.parentElement!.id;
-      const payload = await F.postMessage({
-        type: bx.CliMessageTypes.moveItem,
+      const payload = await postMessage({
+        type: CliMessageTypes.moveItem,
         payload: {
           id,
           dropClass,
@@ -285,19 +324,19 @@ function setEventListners() {
         alert('Operation failed with unknown error.');
         return;
       }
-      const $dragSource = $(F.cssid(id))!;
+      const $dragSource = $(cssid(id))!;
       if ($dragSource.classList.contains('leaf')) {
         if (payload.parentId === '1') {
           const $foldersTarget = $(`.folders > div:nth-child(${payload.index})`)!;
           if ($dragSource.parentElement!.id === '1') {
-            $foldersTarget.insertAdjacentElement('afterend', $(`.folders ${F.cssid(id)}`)!);
+            $foldersTarget.insertAdjacentElement('afterend', $(`.folders ${cssid(id)}`)!);
           } else {
             $foldersTarget.insertAdjacentElement('afterend', $dragSource.cloneNode(true) as HTMLElement);
           }
         } else if ($dragSource.parentElement!.id === '1') {
-          $(`.folders ${F.cssid(id)}`)!.remove();
+          $(`.folders ${cssid(id)}`)!.remove();
         }
-        $(`.leafs ${F.cssid(payload.parentId)} > div:nth-child(${payload.index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
+        $(`.leafs ${cssid(payload.parentId)} > div:nth-child(${payload.index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
       } else {
         //
       }
@@ -307,7 +346,7 @@ function setEventListners() {
   const $scrollContainers = $$('.leafs, .folders');
   // eslint-disable-next-line no-undef
   let timerScrollbar: NodeJS.Timeout;
-  F.setEvents($$('.scrollbar-area'), {
+  setEvents($$('.scrollbar-area'), {
     mouseenter: (e) => {
       function endScrolling(e2: MouseEvent) {
         if (!(e2.relatedTarget as HTMLElement)?.classList.contains('scrollbar-area')) {
@@ -319,7 +358,7 @@ function setEventListners() {
           });
         }
       }
-      F.setEvents($scrollContainers, {
+      setEvents($scrollContainers, {
         mouseover: endScrolling,
         mouseleave: endScrolling,
       });
@@ -329,16 +368,16 @@ function setEventListners() {
     },
   });
 
-  F.setEvents($$('.leaf-menu'), {
+  setEvents($$('.leaf-menu'), {
     click: async (e) => {
       const $leaf = (e.target as HTMLElement).parentElement!.previousElementSibling!.parentElement!;
       const $anchor = $leaf!.firstElementChild as HTMLAnchorElement;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'open-new-window':
-          openBookmark($anchor, bx.OpenBookmarkType.window);
+          openBookmark($anchor, OpenBookmarkType.window);
           break;
         case 'open-incognito':
-          openBookmark($anchor, bx.OpenBookmarkType.incognito);
+          openBookmark($anchor, OpenBookmarkType.incognito);
           break;
         case 'edit-title': {
           const title = $anchor.textContent;
@@ -347,11 +386,11 @@ function setEventListners() {
           if (value == null) {
             break;
           }
-          const ret = await F.postMessage({
-            type: bx.CliMessageTypes.editBookmark,
+          const ret = await postMessage({
+            type: CliMessageTypes.editBookmark,
             payload: {
               value,
-              editType: bx.EditBookmarkType.title,
+              editType: EditBookmarkType.title,
               id: $leaf!.id,
             },
           });
@@ -361,17 +400,17 @@ function setEventListners() {
           break;
         }
         case 'edit-url': {
-          const url = await F.postMessage({ type: bx.CliMessageTypes.getUrl, payload: $leaf!.id });
+          const url = await postMessage({ type: CliMessageTypes.getUrl, payload: $leaf!.id });
           // eslint-disable-next-line no-alert
           const value = prompt('Edit url', url!);
           if (value == null) {
             break;
           }
-          const { title, style } = await F.postMessage({
-            type: bx.CliMessageTypes.editBookmark,
+          const { title, style } = await postMessage({
+            type: CliMessageTypes.editBookmark,
             payload: {
               value,
-              editType: bx.EditBookmarkType.url,
+              editType: EditBookmarkType.url,
               id: $leaf!.id,
             },
           });
@@ -381,8 +420,8 @@ function setEventListners() {
           break;
         }
         case 'remove': {
-          const succeed = await F.postMessage({
-            type: bx.CliMessageTypes.removeBookmark,
+          const succeed = await postMessage({
+            type: CliMessageTypes.removeBookmark,
             payload: $leaf!.id,
           });
           if (succeed) {
@@ -395,7 +434,7 @@ function setEventListners() {
         }
         case 'show-in-folder': {
           const id = $leaf.parentElement?.id;
-          const $target = $(`.folders ${F.cssid(id!)} > .marker > .title`)!;
+          const $target = $(`.folders ${cssid(id!)} > .marker > .title`)!;
           $target.click();
           $target.focus();
           ($leaf.firstElementChild as HTMLAnchorElement).focus();
@@ -418,8 +457,7 @@ function setEventListners() {
       'folder-menu-button',
       'fa-angle-right',
     ] as const;
-    const whichClass = F.whichClass(targetClasses, target);
-    const targetClass = targetClasses[whichClass] as typeof targetClasses[number];
+    const targetClass = whichClass(targetClasses, target);
     switch (targetClass) {
       case 'anchor':
         openBookmark(e.target!);
@@ -433,7 +471,7 @@ function setEventListners() {
       case 'title': {
         clearQuery();
         const foldersFolder = target.parentElement?.parentElement!;
-        const folders = [foldersFolder, $(`.leafs ${F.cssid(foldersFolder.id)}`)];
+        const folders = [foldersFolder, $(`.leafs ${cssid(foldersFolder.id)}`)];
         const isOpen = foldersFolder.classList.contains('open');
         if (isOpen) {
           folders.forEach((el) => el?.classList.add('path'));
@@ -514,6 +552,11 @@ function setEventListners() {
   $('.query')!.addEventListener('input', () => $('.form-query [type="submit"]')!.click());
   $('.form-query .fa-times')!.addEventListener('click', clearQuery);
 
+  $('.bookmark-button')!.addEventListener('click', () => {
+    const id = $('.open')?.id;
+    addBookmark(id || '1');
+  });
+
   $('.main-menu-button')!.addEventListener('click', (e) => {
     e.preventDefault();
     return false;
@@ -534,28 +577,11 @@ function setEventListners() {
     setMouseEventListener(resizeHeightHandler);
   });
 
-  F.setEvents($$('.main-menu'), {
+  setEvents($$('.main-menu'), {
     click: async (e) => {
       switch ((e.target as HTMLElement).dataset.value) {
         case 'add-bookmark': {
-          const { id, html, exists } = await F.postMessage({
-            type: bx.CliMessageTypes.addBookmark,
-            payload: '1',
-          });
-          if (exists) {
-            // eslint-disable-next-line no-alert
-            alert('This bookmark already exists in this folder.');
-            break;
-          }
-          if (html == null) {
-            alert('This bookmark could not be added with unkown error.');
-            break;
-          }
-          const $targetFolder = $(`.folders ${F.cssid(2)}`);
-          $targetFolder?.insertAdjacentHTML('beforebegin', html);
-          const $target = $(`.leafs ${F.cssid(id)}`) || $(`.folders ${F.cssid(id)}`);
-          ($target!.firstElementChild as HTMLAnchorElement).focus();
-          setAnimationClass($target!, 'hilite');
+          addBookmark();
           break;
         }
         default:
@@ -564,29 +590,12 @@ function setEventListners() {
     mousedown: (e) => e.preventDefault(),
   });
 
-  F.setEvents($$('.folder-menu'), {
+  setEvents($$('.folder-menu'), {
     click: async (e) => {
-      const $folder = F.getParentElement(e.target as HTMLElement, 4)!;
+      const $folder = getParentElement(e.target as HTMLElement, 4)!;
       switch ((e.target as HTMLElement).dataset.value) {
         case 'add-bookmark': {
-          const { id, html, exists } = await F.postMessage({
-            type: bx.CliMessageTypes.addBookmark,
-            payload: $folder.id || '1',
-          });
-          if (exists) {
-            alert('This bookmark already exists in this folder.');
-            break;
-          }
-          if (html == null) {
-            alert('This bookmark could not be added with unkown error.');
-            break;
-          }
-          $('.title', $folder)!.click();
-          const $targetFolder = $(`.leafs ${F.cssid($folder.id)}`) || $(`.folders ${F.cssid($folder.id)}`);
-          $targetFolder!.insertAdjacentHTML('beforeend', html);
-          const $target = $(`.leafs ${F.cssid(id)}`) || $(`.folders ${F.cssid(id)}`);
-          ($target!.firstElementChild as HTMLAnchorElement).focus();
-          setAnimationClass($target!, 'hilite');
+          addBookmark($folder.id);
           break;
         }
         case 'edit': {
@@ -596,8 +605,8 @@ function setEventListners() {
           if (title == null) {
             break;
           }
-          const succeed = await F.postMessage({
-            type: bx.CliMessageTypes.editFolder,
+          const succeed = await postMessage({
+            type: CliMessageTypes.editFolder,
             payload: {
               title,
               id: $folder.id,
@@ -615,8 +624,8 @@ function setEventListners() {
           if (title == null) {
             break;
           }
-          const { id, html, exists } = await F.postMessage({
-            type: bx.CliMessageTypes.addFolder,
+          const { id, html, exists } = await postMessage({
+            type: CliMessageTypes.addFolder,
             payload: {
               title,
               parentId: $folder.id || '1',
@@ -630,18 +639,18 @@ function setEventListners() {
             alert('The folder could not be added with unkown error.');
             break;
           }
-          $$(F.cssid($folder.id)).forEach(($targetFolder) => {
+          $$(cssid($folder.id)).forEach(($targetFolder) => {
             $targetFolder.insertAdjacentHTML('beforeend', html);
           });
-          const $target = $(`.folders ${F.cssid(id)} > .marker > .title`)!;
+          const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
           $target.click();
           setAnimationFolder($target.parentElement!, 'hilite');
           $folder.dataset.children = String($folder.children.length - 1);
           break;
         }
         case 'remove': {
-          const succeed = await F.postMessage({
-            type: bx.CliMessageTypes.removeFolder,
+          const succeed = await postMessage({
+            type: CliMessageTypes.removeFolder,
             payload: $folder!.id,
           });
           if (succeed) {
