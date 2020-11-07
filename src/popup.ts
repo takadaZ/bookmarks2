@@ -299,18 +299,19 @@ function setEventListners() {
       $('.query')!.focus();
     },
     dragstart: (e) => {
-      const [$target, id] = ((target) => {
-        if (target.classList.contains('leaf')) {
-          return [target, target.id] as const;
+      const [targetClass, $target, id] = ((target) => {
+        const className = whichClass(['anchor', 'leaf', 'marker'] as const, target);
+        if (className === 'leaf') {
+          return ['drag-start-leaf', target, target.id] as const;
         }
-        if (target.classList.contains('marker')) {
-          return [target, target.parentElement!.id] as const;
+        if (className === 'marker') {
+          return ['drag-start-folder', target, target.parentElement!.id] as const;
         }
-        if (target.localName === 'a') {
+        if (className === 'anchor') {
           const $leaf = (target as HTMLElement).parentElement as HTMLElement;
-          return [$leaf, $leaf.id] as const;
+          return ['drag-start-leaf', $leaf, $leaf.id] as const;
         }
-        return [null, ''] as const;
+        return ['', null, ''] as const;
       })(e.target as HTMLElement);
       if ($target != null) {
         const draggable = pipe(
@@ -322,7 +323,7 @@ function setEventListners() {
         e.dataTransfer!.setData('text/plain', title);
         e.dataTransfer!.setData('application/bx-move', id);
         $target.classList.add('drag-source');
-        $('main')!.classList.add('drag-start');
+        $('main')!.classList.add(targetClass);
       }
     },
     dragover: (e) => {
@@ -339,7 +340,8 @@ function setEventListners() {
     },
     dragend: () => {
       $('.drag-source')?.classList.remove('drag-source');
-      $('main')!.classList.remove('drag-start');
+      $('main')!.classList.remove('drag-start-leaf');
+      $('main')!.classList.remove('drag-start-folder');
       $('.draggable-clone')!.innerHTML = '';
     },
     drop: async (e) => {
@@ -349,11 +351,7 @@ function setEventListners() {
       const targetId = $target.parentElement!.id || $target.parentElement!.parentElement!.id;
       const payload = await postMessage({
         type: CliMessageTypes.moveItem,
-        payload: {
-          id,
-          dropClass,
-          targetId,
-        },
+        payload: { id, dropClass, targetId },
       });
       if (payload.parentId == null || payload.index == null) {
         alert('Operation failed with unknown error.');
@@ -362,11 +360,11 @@ function setEventListners() {
       const $dragSource = $(cssid(id))!;
       if ($dragSource.classList.contains('leaf')) {
         if (payload.parentId === '1') {
-          const $foldersTarget = $(`.folders > div:nth-child(${payload.index})`)!;
+          const $foldersTarget = $(`.folders > div:nth-child(${payload.index + 1})`)!;
           if ($dragSource.parentElement!.id === '1') {
-            $foldersTarget.insertAdjacentElement('afterend', $(`.folders ${cssid(id)}`)!);
+            $foldersTarget.insertAdjacentElement('beforebegin', $(`.folders ${cssid(id)}`)!);
           } else {
-            $foldersTarget.insertAdjacentElement('afterend', $dragSource.cloneNode(true) as HTMLElement);
+            $foldersTarget.insertAdjacentElement('beforebegin', $dragSource.cloneNode(true) as HTMLElement);
           }
         } else if ($dragSource.parentElement!.id === '1') {
           $(`.folders ${cssid(id)}`)!.remove();
@@ -658,33 +656,6 @@ function setEventListners() {
         }
         case 'add-folder': {
           addFolder($folder.id);
-          // // eslint-disable-next-line no-alert
-          // const title = prompt('Create folder name');
-          // if (title == null) {
-          //   break;
-          // }
-          // const { id, html, exists } = await postMessage({
-          //   type: CliMessageTypes.addFolder,
-          //   payload: {
-          //     title,
-          //     parentId: $folder.id || '1',
-          //   },
-          // });
-          // if (exists) {
-          //   alert('The same name folder already exists.');
-          //   break;
-          // }
-          // if (html == null) {
-          //   alert('The folder could not be added with unkown error.');
-          //   break;
-          // }
-          // $$(cssid($folder.id)).forEach(($targetFolder) => {
-          //   $targetFolder.insertAdjacentHTML('beforeend', html);
-          // });
-          // const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
-          // $target.click();
-          // setAnimationFolder($target.parentElement!, 'hilite');
-          // $folder.dataset.children = String($folder.children.length - 1);
           break;
         }
         case 'remove': {

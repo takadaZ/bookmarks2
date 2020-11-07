@@ -617,14 +617,16 @@ input.query {
 
 // Drag & Drop
 
-.drag-start {
+.drag-start-leaf {
   .drag-source {
-    // opacity: 0.5;
     background-color: $drag-source-bgcolr;
     > a {
       color: #222;
       text-decoration: none;
-      z-index: 2;
+      z-index: 3;
+    }
+    + .leaf > .drop-top {
+      z-index: 0;
     }
   }
   :not(.drag-source) > a {
@@ -634,17 +636,22 @@ input.query {
     > .drop-top,
     > .drop-bottom {
       position: absolute;
-      z-index: 1;
       width: calc(100% - 5px);
     }
     > .drop-top {
-      top: -2px;
-      height: calc(50% + 2px);
-      &.drag-enter {
+      z-index: 2;
+      top: calc(-50% - 2px);
+      height: calc(100% + 2px);
+      &.drag-enter::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 100%;
         border-top: 2px dotted $drop-border;
       }
     }
-    .drop-bottom {
+    > .drop-bottom {
+      z-index: 1;
       top: 50%;
       height: 50%;
       &.drag-enter {
@@ -659,7 +666,10 @@ input.query {
       position: absolute;
       z-index: 1;
       width: calc(100% - 3px);
+      height: 100%;
     }
+  }
+  .folders > .folder > .marker {
     > .drop-top {
       top: -2px;
       height: calc(20% + 2px);
@@ -667,7 +677,7 @@ input.query {
         border-top: 2px dotted $drop-border;
       }
     }
-    .drop-bottom {
+    > .drop-bottom {
       top: 80%;
       height: 20%;
       &.drag-enter {
@@ -682,10 +692,10 @@ input.query {
       // }
     }
   }
-  .folder.path:not([data-children="0"]) > .marker > .drop-bottom {
-    left: 14px;
-    width: calc(100% - 17px);
-  }
+  // .folder.path:not([data-children="0"]) > .marker > .drop-bottom {
+  //   left: 14px;
+  //   width: calc(100% - 17px);
+  // }
 }
 
 // draggable clone
