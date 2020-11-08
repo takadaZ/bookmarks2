@@ -696,6 +696,17 @@ input.query {
   //   left: 14px;
   //   width: calc(100% - 17px);
   // }
+  .folders > #\32 .folder > .marker,
+  .folders > #\33 .folder > .marker {
+    > .drop-top,
+    > .drop-bottom {
+      width: 0;
+      height: 0;
+    }
+    > .drop-folder {
+      height: 100%;
+    }
+  }
 }
 
 // draggable clone

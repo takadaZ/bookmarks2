@@ -79,10 +79,7 @@ function openBookmark(
   const { id } = (target as HTMLAnchorElement).parentElement!;
   postMessage({
     type: CliMessageTypes.openBookmark,
-    payload: {
-      id,
-      openType,
-    },
+    payload: { id, openType },
   });
 }
 
@@ -219,7 +216,10 @@ async function addBookmark(folderId = '1') {
   if (folderId === '1') {
     $('.folders')!.insertAdjacentHTML('afterbegin', html);
   } else {
-    $(`.folders ${cssid(folderId)} .title`)!.click();
+    if (folderId !== $('.open')?.id) {
+      $$('.open').map((el) => el.classList.remove('open'));
+      $$(cssid(folderId)).map((el) => el.classList.add('open'));
+    }
     const $targetFolder = $(`.leafs ${cssid(folderId)}`) || $(`.folders ${cssid(folderId)}`);
     $targetFolder!.insertAdjacentHTML('beforeend', html);
   }
@@ -248,7 +248,6 @@ async function addFolder(parentId = '1') {
     alert('The folder could not be added with unkown error.');
     return;
   }
-  const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
   if (parentId === '1') {
     $('.folders')!.insertAdjacentHTML('afterbegin', html);
     $(`.leafs ${cssid(1)}`)!.insertAdjacentHTML('afterbegin', html);
@@ -257,9 +256,14 @@ async function addFolder(parentId = '1') {
       $targetFolder.insertAdjacentHTML('beforeend', html);
       // eslint-disable-next-line no-param-reassign
       $targetFolder.dataset.children = String($targetFolder.children.length - 1);
+      const $title = $(':scope > .marker > .title', $targetFolder);
+      if ($title) {
+        $title.click();
+        ($targetFolder as any).scrollIntoViewIfNeeded();
+      }
     });
-    $target.click();
   }
+  const $target = $(`.folders ${cssid(id)} > .marker > .title`)!;
   setAnimationFolder($target.parentElement!, 'hilite');
 }
 
