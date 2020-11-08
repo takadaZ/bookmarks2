@@ -390,22 +390,6 @@ function setEventListners() {
           $(`.leafs ${cssid(nextFolderId)}`)!.insertAdjacentElement('beforebegin', $targetLeaf);
           $(`.folders ${cssid(nextFolderId)}`)!.insertAdjacentElement('beforebegin', $targetFolder);
         }
-        // const $targetBefore = $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 1})`);
-        // if ($targetBefore?.classList.contains('folder')) {
-        //   $targetBefore!.insertAdjacentElement('afterend', $targetLeaf);
-        //   const $targetBeforeFolders = $(`.folders ${cssid($targetBefore!.id)}`);
-        //   $targetBeforeFolders!.insertAdjacentElement('afterend', $targetFolder);
-        // } else {
-        //   const $targetAfter = $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 2})`);
-        //   if ($targetAfter?.classList.contains('folder')) {
-        //     $targetAfter!.insertAdjacentElement('beforebegin', $targetLeaf);
-        //     const $targetAfterFolders = $(`.folders ${cssid($targetAfter!.id)}`);
-        //     $targetAfterFolders!.insertAdjacentElement('beforebegin', $targetFolder);
-        //   } else {
-        //     $(`.leafs ${cssid(parentId)}`)?.append($targetLeaf);
-        //     $(`.folders ${cssid(parentId)}`)?.append($targetFolder);
-        //   }
-        // }
         if (parentId !== currentParentId) {
           const children = Number($targetFolder.parentElement.dataset.children) + 1;
           $targetFolder.parentElement.dataset.children = String(children);
