@@ -70,13 +70,13 @@ export class BxNode extends HTMLDivElement implements NodeProps {
   template() {
     return `
       <div class="marker" draggable="true">
+        <div class="drop-folder"></div>
         <i class="fa fa-angle-right"></i>
         <div class="title" tabindex="2"><span>${this.content}</span></div>
         <div class="button-wrapper">
           <button class="folder-menu-button"><i class="fa fa-ellipsis-v"></i></button>
         </div>
         <div class="drop-top"></div>
-        <div class="drop-folder"></div>
         <div class="drop-bottom"></div>
       </div>
     `;

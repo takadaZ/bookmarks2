@@ -1,5 +1,8 @@
 $hover-color: rgba(0, 0, 0, .05);
-$drag-source-bgcolr: rgb(232, 240, 254);
+$drag-source-bgcolor0: rgb(232, 240, 254);
+$drag-source-bgcolor: #cce5ff;
+$drop-folder-bgcolor0: #d1ecf1;
+$drop-folder-bgcolor: #cce5ff;
 $hilite-bgcolor: #feefc3;
 $folder-open-bgcolor: #1da1f2;
 $draggable-bgcolor: rgba(0, 123, 255, .7);
@@ -618,6 +621,7 @@ input.query {
 // Drag & Drop
 
 .drop-top.drag-enter::before,
+.drop-folder.drag-enter::before,
 .drop-bottom.drag-enter::before {
   content: '';
   position: absolute;
@@ -637,8 +641,11 @@ input.query {
 }
 
 .drag-start-leaf {
+  .title {
+    pointer-events: none;
+  }
   .drag-source {
-    background-color: $drag-source-bgcolr;
+    background-color: $drag-source-bgcolor;
     > a {
       color: #222;
       text-decoration: none;
@@ -673,11 +680,11 @@ input.query {
     > .drop-bottom {
       z-index: 1;
       top: 50%;
-      height: 50%;
+      height: calc(100% - 3px);
       &.drag-enter::before {
-        top: 100%;
+        top: 50%;
         width: 100%;
-        border-bottom: 2px dotted $drop-border;
+        border-top: 2px dotted $drop-border;
       }
     }
     > .drop-top.drag-enter::after,
@@ -685,16 +692,13 @@ input.query {
       top: calc(50% - 2px);
       left: -1px;
     }
-    > .drop-bottom.drag-enter::after {
-      top: calc(50% + 4px);
-    }
   }
   .folders {
     .drop-top.drag-enter::after,
     .drop-bottom.drag-enter::after {
       left: 0;
     }
-    .leaf + .folder > .marker > .drop-top {
+    > .leaf + .folder > .marker > .drop-top {
       top: calc(-50% - 2px);
       height: 70%;
       &.drag-enter::before {
@@ -704,7 +708,7 @@ input.query {
         top: calc(50% + 2px);
       }
     }
-    .folder + .leaf > .drop-top {
+    > .folder + .leaf > .drop-top {
       top: calc(-20% - 2px);
       height: 70%;
       &.drag-enter::before {
@@ -714,21 +718,26 @@ input.query {
         top: calc(50% - 5px);
       }
     }
+    .marker > .drop-folder {
+      position: absolute;
+      right: 0;
+      width: 200%;
+      height: 100%;
+      &.drag-enter {
+        background-color: $drop-folder-bgcolor;
+      }
+    }
   }
-  .marker {
+  .folders > .folder > .marker {
     > .drop-top,
     > .drop-bottom,
     > .drop-folder {
       position: absolute;
-      z-index: 1;
       left: -2px;
       width: calc(100% - 3px);
-      height: 100%;
     }
-  }
-  .folders > .folder > .marker {
     > .drop-top {
-      z-index: 2;
+      z-index: 3;
       top: calc(-20% - 2px);
       height: 40%;
       &.drag-enter::before {
@@ -741,7 +750,7 @@ input.query {
       }
     }
     > .drop-bottom {
-      z-index: 1;
+      z-index: 2;
       top: 80%;
       height: 20%;
       &.drag-enter {
@@ -750,10 +759,6 @@ input.query {
       &.drag-enter::after {
         top: 2px;
       }
-    }
-    > .drop-folder {
-      top: 20%;
-      height: 60%;
     }
   }
   .folders > #\32 .folder > .marker,

@@ -157,7 +157,7 @@ function resizeHeightHandler(e: MouseEvent) {
   document.body.style.height = `${height}px`;
 }
 
-function setAnimationClass(el: HTMLElement, className: string) {
+function setAnimationClass(el: HTMLElement, className: 'hilite' | 'remove-hilite') {
   el.classList.remove(className);
   // eslint-disable-next-line no-void
   void el.offsetWidth;
@@ -318,6 +318,7 @@ function setEventListners() {
         return ['', null, ''] as const;
       })(e.target as HTMLElement);
       if ($target != null) {
+        $target.classList.remove('hilite');
         const draggable = pipe(
           (target) => target.cloneNode(true) as HTMLAnchorElement,
           (clone) => $('.draggable-clone')!.appendChild(clone),
@@ -374,6 +375,7 @@ function setEventListners() {
           $(`.folders ${cssid(id)}`)!.remove();
         }
         $(`.leafs ${cssid(payload.parentId)} > div:nth-child(${payload.index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
+        setAnimationClass($dragSource, 'hilite');
       } else {
         //
       }
