@@ -293,10 +293,12 @@ export const mapStateToResponse = {
   [bx.CliMessageTypes.addBookmark]:
     async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
       const { title, url } = await F.getCurrentTab();
+      const index = (payload === '1') ? 0 : undefined;
       const creator = F.curry(chrome.bookmarks.create)({
         title,
         url,
         parentId: payload,
+        index,
       });
       const { id } = await F.cbToPromise(creator);
       const [html, exists] = await new Promise<[string | undefined, boolean]>((resolve) => {
@@ -351,7 +353,12 @@ export const mapStateToResponse = {
       { subscribe }: ReduxHandlers,
       { payload: { parentId, title } }: PayloadAction<{ parentId: string, title:string }>,
     ) => {
-      const { id } = await F.cbToPromise(F.curry(chrome.bookmarks.create)({ parentId, title }));
+      const index = (parentId === '1') ? 0 : undefined;
+      const { id } = await F.cbToPromise(F.curry(chrome.bookmarks.create)({
+        parentId,
+        title,
+        index,
+      }));
       const [html, exists] = await new Promise<[string | undefined, boolean]>((resolve) => {
         const test = !!document.getElementById(id);
         if (test) {
@@ -377,7 +384,7 @@ export const mapStateToResponse = {
       const tree = state.bookmarks[targetId];
       const [parentId, index] = (() => {
         if (dropClass === 'drop-folder') {
-          return [targetId, tree.childIds?.length] as const;
+          return [targetId, tree.childIds?.length || 0] as const;
         }
         const { childIds } = state.bookmarks[tree.parentId!];
         const findIndex = childIds?.findIndex((childId) => childId === targetId);
@@ -392,12 +399,18 @@ export const mapStateToResponse = {
           index: null,
         };
       }
-      const succeed = await new Promise<boolean>((resolve) => {
-        subscribe(() => resolve(true), ['html', 'created'], true);
+      const lastState = await new Promise<State>((resolve) => {
+        subscribe((state2: State) => resolve(state2), ['html', 'created'], true);
         F.cbToPromise(F.curry(chrome.bookmarks.move)(id, { parentId, index }));
       });
-      if (succeed) {
-        return { parentId, index };
+      if (lastState) {
+        const { childIds } = lastState.bookmarks[parentId];
+        const findIndex = childIds?.findIndex((childId) => childId === id);
+        const nextChildren = childIds?.slice(findIndex! + 1);
+        const nextFolderId = nextChildren?.find((childId) => (
+          !lastState.bookmarks[childId].url
+        ));
+        return { parentId, index, nextFolderId };
       }
       return {
         parentId: null,

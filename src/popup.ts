@@ -354,18 +354,18 @@ function setEventListners() {
       const id = e.dataTransfer?.getData('application/bx-move')!;
       const dropClass = whichClass(dropClasses, $target)!;
       const targetId = $target.parentElement!.id || $target.parentElement!.parentElement!.id;
-      const payload = await postMessage({
+      const { parentId, index, nextFolderId } = await postMessage({
         type: CliMessageTypes.moveItem,
         payload: { id, dropClass, targetId },
       });
-      if (payload.parentId == null || payload.index == null) {
+      if (parentId == null || index == null) {
         alert('Operation failed with unknown error.');
         return;
       }
       const $dragSource = $(cssid(id))!;
       if ($dragSource.classList.contains('leaf')) {
-        if (payload.parentId === '1') {
-          const $foldersTarget = $(`.folders > div:nth-child(${payload.index + 1})`)!;
+        if (parentId === '1') {
+          const $foldersTarget = $(`.folders > div:nth-child(${index + 1})`)!;
           if ($dragSource.parentElement!.id === '1') {
             $foldersTarget.insertAdjacentElement('beforebegin', $(`.folders ${cssid(id)}`)!);
           } else {
@@ -374,10 +374,43 @@ function setEventListners() {
         } else if ($dragSource.parentElement!.id === '1') {
           $(`.folders ${cssid(id)}`)!.remove();
         }
-        $(`.leafs ${cssid(payload.parentId)} > div:nth-child(${payload.index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
+        $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
         setAnimationClass($dragSource, 'hilite');
       } else {
-        //
+        const [$targetLeaf, $targetFolder] = $$(cssid(id));
+        const currentParentId = $dragSource.parentElement!.id;
+        if (parentId !== currentParentId) {
+          const children = Number($targetFolder.parentElement.dataset.children) - 1;
+          $targetFolder.parentElement.dataset.children = String(children);
+        }
+        if (nextFolderId == null) {
+          $(`.leafs ${cssid(parentId)}`)?.append($targetLeaf);
+          $(`.folders ${cssid(parentId)}`)?.append($targetFolder);
+        } else {
+          $(`.leafs ${cssid(nextFolderId)}`)!.insertAdjacentElement('beforebegin', $targetLeaf);
+          $(`.folders ${cssid(nextFolderId)}`)!.insertAdjacentElement('beforebegin', $targetFolder);
+        }
+        // const $targetBefore = $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 1})`);
+        // if ($targetBefore?.classList.contains('folder')) {
+        //   $targetBefore!.insertAdjacentElement('afterend', $targetLeaf);
+        //   const $targetBeforeFolders = $(`.folders ${cssid($targetBefore!.id)}`);
+        //   $targetBeforeFolders!.insertAdjacentElement('afterend', $targetFolder);
+        // } else {
+        //   const $targetAfter = $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 2})`);
+        //   if ($targetAfter?.classList.contains('folder')) {
+        //     $targetAfter!.insertAdjacentElement('beforebegin', $targetLeaf);
+        //     const $targetAfterFolders = $(`.folders ${cssid($targetAfter!.id)}`);
+        //     $targetAfterFolders!.insertAdjacentElement('beforebegin', $targetFolder);
+        //   } else {
+        //     $(`.leafs ${cssid(parentId)}`)?.append($targetLeaf);
+        //     $(`.folders ${cssid(parentId)}`)?.append($targetFolder);
+        //   }
+        // }
+        if (parentId !== currentParentId) {
+          const children = Number($targetFolder.parentElement.dataset.children) + 1;
+          $targetFolder.parentElement.dataset.children = String(children);
+        }
+        setAnimationClass($(':scope > .marker', $targetFolder)!, 'hilite');
       }
     },
   });
