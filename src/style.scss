@@ -617,6 +617,25 @@ input.query {
 
 // Drag & Drop
 
+.drop-top.drag-enter::before,
+.drop-bottom.drag-enter::before {
+  content: '';
+  position: absolute;
+}
+
+.drag-start-leaf .leaf,
+.drag-start-leaf .folders > .folder > .marker {
+  > .drop-top.drag-enter::after,
+  > .drop-bottom.drag-enter::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    border-left: 4px solid $drop-border;
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+  }
+}
+
 .drag-start-leaf {
   .drag-source {
     background-color: $drag-source-bgcolr;
@@ -625,8 +644,11 @@ input.query {
       text-decoration: none;
       z-index: 3;
     }
-    + .leaf > .drop-top {
+    + .leaf > .drop-top,
+    + .folder > .marker > .drop-top {
       z-index: 0;
+      width: 0;
+      height: 0;
     }
   }
   :not(.drag-source) > a {
@@ -643,8 +665,6 @@ input.query {
       top: calc(-50% - 2px);
       height: calc(100% + 2px);
       &.drag-enter::before {
-        content: "";
-        position: absolute;
         top: 50%;
         width: 100%;
         border-top: 2px dotted $drop-border;
@@ -654,8 +674,44 @@ input.query {
       z-index: 1;
       top: 50%;
       height: 50%;
-      &.drag-enter {
+      &.drag-enter::before {
+        top: 100%;
+        width: 100%;
         border-bottom: 2px dotted $drop-border;
+      }
+    }
+    > .drop-top.drag-enter::after,
+    > .drop-bottom.drag-enter::after {
+      top: calc(50% - 2px);
+      left: -1px;
+    }
+    > .drop-bottom.drag-enter::after {
+      top: calc(50% + 4px);
+    }
+  }
+  .folders {
+    .drop-top.drag-enter::after,
+    .drop-bottom.drag-enter::after {
+      left: 0;
+    }
+    .leaf + .folder > .marker > .drop-top {
+      top: calc(-50% - 2px);
+      height: 70%;
+      &.drag-enter::before {
+        top: calc(50% + 4px);
+      }
+      &.drag-enter::after {
+        top: calc(50% + 2px);
+      }
+    }
+    .folder + .leaf > .drop-top {
+      top: calc(-20% - 2px);
+      height: 70%;
+      &.drag-enter::before {
+        top: calc(20% + 2px);
+      }
+      &.drag-enter::after {
+        top: calc(50% - 5px);
       }
     }
   }
@@ -665,37 +721,41 @@ input.query {
     > .drop-folder {
       position: absolute;
       z-index: 1;
+      left: -2px;
       width: calc(100% - 3px);
       height: 100%;
     }
   }
   .folders > .folder > .marker {
     > .drop-top {
-      top: -2px;
-      height: calc(20% + 2px);
-      &.drag-enter {
+      z-index: 2;
+      top: calc(-20% - 2px);
+      height: 40%;
+      &.drag-enter::before {
+        top: 50%;
+        width: 100%;
         border-top: 2px dotted $drop-border;
+      }
+      &.drag-enter::after {
+        top: calc(50% - 2px);
       }
     }
     > .drop-bottom {
+      z-index: 1;
       top: 80%;
       height: 20%;
       &.drag-enter {
         border-bottom: 2px dotted $drop-border;
       }
+      &.drag-enter::after {
+        top: 2px;
+      }
     }
     > .drop-folder {
       top: 20%;
       height: 60%;
-      // &.drag-enter {
-      //   border-top: 2px dotted $drop-border;
-      // }
     }
   }
-  // .folder.path:not([data-children="0"]) > .marker > .drop-bottom {
-  //   left: 14px;
-  //   width: calc(100% - 17px);
-  // }
   .folders > #\32 .folder > .marker,
   .folders > #\33 .folder > .marker {
     > .drop-top,
