@@ -403,6 +403,9 @@ export const mapStateToResponse = {
         subscribe((state2: State) => resolve(state2), ['html', 'created'], true);
         F.cbToPromise(F.curry(chrome.bookmarks.move)(id, { parentId, index }));
       });
+      if (parentId === '1' || !!state.bookmarks[id].url) {
+        return { parentId, index };
+      }
       if (lastState) {
         const { childIds } = lastState.bookmarks[parentId];
         const findIndex = childIds?.findIndex((childId) => childId === id);

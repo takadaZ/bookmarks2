@@ -366,16 +366,16 @@ function setEventListners() {
       if ($dragSource.classList.contains('leaf')) {
         if (parentId === '1') {
           const $foldersTarget = $(`.folders > div:nth-child(${index + 1})`)!;
-          if ($dragSource.parentElement!.id === '1') {
-            $foldersTarget.insertAdjacentElement('beforebegin', $(`.folders ${cssid(id)}`)!);
-          } else {
-            $foldersTarget.insertAdjacentElement('beforebegin', $dragSource.cloneNode(true) as HTMLElement);
-          }
+          const $leaf = ($dragSource.parentElement!.id === '1') ? $(`.folders ${cssid(id)}`)! : $dragSource.cloneNode(true);
+          setAnimationClass($('.folders')!.insertBefore($leaf, $foldersTarget) as HTMLElement, 'hilite');
         } else if ($dragSource.parentElement!.id === '1') {
           $(`.folders ${cssid(id)}`)!.remove();
         }
-        $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 1})`)?.insertAdjacentElement('afterend', $dragSource);
-        setAnimationClass($dragSource, 'hilite');
+        $(`.leafs ${cssid(parentId)}`)!.insertBefore($dragSource, $(`.leafs ${cssid(parentId)} > div:nth-child(${index + 2})`));
+        if (parentId !== '1') {
+          setAnimationClass($dragSource, 'hilite');
+          ($dragSource as any).scrollIntoViewIfNeeded();
+        }
       } else {
         const [$targetLeaf, $targetFolder] = $$(cssid(id));
         const currentParentId = $dragSource.parentElement!.id;
@@ -383,12 +383,15 @@ function setEventListners() {
           const children = Number($targetFolder.parentElement.dataset.children) - 1;
           $targetFolder.parentElement.dataset.children = String(children);
         }
-        if (nextFolderId == null) {
-          $(`.leafs ${cssid(parentId)}`)?.append($targetLeaf);
-          $(`.folders ${cssid(parentId)}`)?.append($targetFolder);
+        if (parentId === '1') {
+          $(`.leafs ${cssid(1)}`)!.insertBefore($dragSource, $(`.leafs ${cssid(1)} > div:nth-child(${index + 2})`));
+          $('.folders')!.insertBefore($targetFolder, $(`.folders > div:nth-child(${index + 1})`));
+        } else if (nextFolderId == null) {
+          $(`.leafs ${cssid(parentId)}`)!.append($targetLeaf);
+          $(`.folders ${cssid(parentId)}`)!.append($targetFolder);
         } else {
-          $(`.leafs ${cssid(nextFolderId)}`)!.insertAdjacentElement('beforebegin', $targetLeaf);
-          $(`.folders ${cssid(nextFolderId)}`)!.insertAdjacentElement('beforebegin', $targetFolder);
+          $(`.leafs ${cssid(parentId)}`)!.insertBefore($targetLeaf, $(`.leafs ${cssid(nextFolderId)}`));
+          $(`.folders ${cssid(parentId)}`)!.insertBefore($targetFolder, $(`.folders ${cssid(nextFolderId)}`));
         }
         if (parentId !== currentParentId) {
           const children = Number($targetFolder.parentElement.dataset.children) + 1;
