@@ -1,5 +1,6 @@
 /* eslint-disable import/first */
-export { createSlice, PayloadAction } from '@reduxjs/toolkit';
+export { createSlice } from '@reduxjs/toolkit';
+export type { PayloadAction } from '@reduxjs/toolkit';
 
 import {
   configureStore,

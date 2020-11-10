@@ -7,11 +7,11 @@ import {
   MapStateToResponse,
 } from './background';
 
-export {
+export type {
   PayloadAction,
-} from '@reduxjs/toolkit';
+} from './redux-provider';
 
-export {
+export type {
   MapStateToResponse,
 } from './background';
 
