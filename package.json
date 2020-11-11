@@ -5,7 +5,8 @@
   "scripts": {
     "gulp": "gulp",
     "dev": "webpack --mode=development",
-    "build": "webpack --config webpack.prod.js"
+    "build": "webpack --config webpack.prod.js",
+    "server": "node ./rbuild/server.js"
   },
   "keywords": [],
   "author": "",
