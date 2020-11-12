@@ -4,13 +4,17 @@
 const http = require('http');
 
 (async () => {
-  function request(hostname, port, path) {
+  function request(host, port, command) {
+    const agent = new http.Agent({ keepAlive: true });
+    // options.agent = keepAliveAgent;
+    const url = new URL(`http://${host}:${port}/${command}`);
     return new Promise((resolve, reject) => {
-      const req = http.request({
-        hostname,
-        port,
-        path,
-        method: 'POST',
+      const req = http.request(url, {
+        agent,
+        // host,
+        // port,
+        // path,
+        // method: 'GET',
       }, (res) => {
         res.resume();
         res.on('data', (chunk) => {
@@ -32,7 +36,7 @@ const http = require('http');
   const portNumber = Number(port);
 
   if (host != null && Number.isInteger(portNumber)) {
-    const result = await request(host, portNumber, '/build').catch(console.error.bind(console));
+    const result = await request(host, portNumber, 'build').catch(console.error.bind(console));
     if (result !== 'ok') {
       return false;
     }
