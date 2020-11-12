@@ -27,6 +27,7 @@
     "eslint-plugin-import": "^2.22.0",
     "gulp": "^4.0.2",
     "gulp-hashsum": "^1.2.0",
+    "request": "^2.88.2",
     "sass": "^1.27.0",
     "sass-loader": "^10.0.4",
     "style-loader": "^1.2.1",

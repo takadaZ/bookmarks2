@@ -1,42 +1,47 @@
 /* eslint-disable prefer-promise-reject-errors */
 /* eslint-disable no-console */
 // eslint-disable-next-line import/no-extraneous-dependencies
-const http = require('http');
+const request = require('request');
 
 (async () => {
-  function request(host, port, command) {
-    const agent = new http.Agent({ keepAlive: true });
+  function req(host, port, command) {
+    // const agent = new http.Agent({ keepAlive: true });
     // options.agent = keepAliveAgent;
     const url = new URL(`http://${host}:${port}/${command}`);
+    // const path = `/${command}`;
     return new Promise((resolve, reject) => {
-      const req = http.request(url, {
-        agent,
+      request(url, {
         // host,
         // port,
         // path,
-        // method: 'GET',
-      }, (res) => {
-        res.resume();
-        res.on('data', (chunk) => {
-          resolve(chunk);
-        });
-        res.on('end', () => {
-          if (!res.complete) {
-            reject('The connection was terminated while the message was still being sent');
-          }
-        });
+        // agent,
+        method: 'POST',
+      }, (err, res, body) => {
+        if (body === 'ok') {
+          resolve(body);
+        }
+        reject(res.statusCode);
+        // res.resume();
+        // res.on('data', (chunk) => {
+        //   resolve(chunk);
+        // });
+        // res.on('end', () => {
+        //   if (!res.complete) {
+        //     reject('The connection was terminated while the message was still being sent');
+        //   }
+        // });
       });
-      req.on('error', (e) => {
-        reject(`problem with request: ${e.message}`);
-      });
+      // req.on('error', (e) => {
+      //   reject(`problem with request: ${e.message}`);
+      // });
     });
   }
 
-  const [,, host, port] = process.argv;
+  const [,, host, port, command] = process.argv;
   const portNumber = Number(port);
 
   if (host != null && Number.isInteger(portNumber)) {
-    const result = await request(host, portNumber, 'build').catch(console.error.bind(console));
+    const result = await req(host, portNumber, command).catch(console.error.bind(console));
     if (result !== 'ok') {
       return false;
     }
