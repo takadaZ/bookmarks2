@@ -4,10 +4,10 @@
 const http = require('http');
 
 (async () => {
-  function request(host, port, path) {
+  function request(hostname, port, path) {
     return new Promise((resolve, reject) => {
       const req = http.request({
-        host,
+        hostname,
         port,
         path,
         method: 'POST',

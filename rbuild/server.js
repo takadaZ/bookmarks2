@@ -54,7 +54,7 @@ function startServer() {
 const [,, port] = process.argv;
 const portNumber = Number(port);
 
-if (Number.isInteger(portNumber) && portNumber >= 80 && portNumber <= 65536) {
+if (Number.isInteger(portNumber) && portNumber >= 80 && portNumber <= 65535) {
   const server = startServer();
   server.listen(port);
 }
