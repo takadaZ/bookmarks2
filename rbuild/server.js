@@ -3,6 +3,7 @@
 const { src, dest } = require('gulp');
 const webpackStream = require('webpack-stream');
 const hashsum = require('gulp-hashsum');
+const fs = require('fs');
 const http = require('http');
 const webpackConfig = require('../webpack.config.js');
 
@@ -19,8 +20,9 @@ function webpack() {
 function outputChecksum() {
   return src(['dist/**/*.*'])
     .pipe(hashsum({
-      dest: './rbuild/hashsum',
+      dest: './hashsum',
       filename: 'hashsum.json',
+      // stream: true,
       json: true,
     }));
 }
@@ -50,12 +52,37 @@ function startServer() {
   return http.createServer(async (req, res) => {
     // console.log(req.url);
     switch (req.url) {
-      case '/build':
+      case '/build': {
         await rbuild();
-        res.setHeader('Content-Type', 'text/html');
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('ok');
+        const [err, buf] = await new Promise((resolve) => {
+          fs.readFile('./hashsum/hashsum.json', (err, buf) => resolve([err, buf]));
+        });
+        if (err) {
+          res.writeHead(200, { 'Content-Type': 'text/plane' });
+          res.end(err);
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(buf);
+        // .on('end', () => {
+        //   res.writeHead(200, { 'Content-Type': 'application/json' });
+        //   res.end();
+        // })
+        // .on('error', (error) => {
+        //   res.writeHead(200, { 'Content-Type': 'text/plane' });
+        //   res.end(error);
+        // })
+        // res.write('{ "test": "AAA" }');
+        // hashStream.pipe(res);
+        // .on('data', (chunk) => res.write(chunk));
+        // hashStream.on('data', (chunk) => console.log(chunk));
+
+        // res.write(hash);
+        // res.setHeader('Content-Type', 'text/html');
+        // res.writeHead(200, { 'Content-Type': 'application/json' });
+        // res.end(hash);
         break;
+      }
       default:
         console.error(req.url);
     }
@@ -74,4 +101,4 @@ exports.cp = cp;
 exports.webpack = webpack;
 exports.startServer = startServer;
 exports.build = build;
-exports.rbuild = rbuild;
+// exports.rbuild = rbuild;
