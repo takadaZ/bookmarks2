@@ -12,23 +12,27 @@ function req(host, port, command) {
   });
 }
 
-(async () => {
-  const [,, host, port, command] = process.argv;
-  const portNumber = Number(port);
+function start() {
+  return async () => {
+    const [,, host, port, command] = process.argv;
+    const portNumber = Number(port);
 
-  if (host != null && Number.isInteger(portNumber)) {
-    const res = await req(host, portNumber, command);
-    if (!res.ok) {
-      console.log(res.status, res.statusText);
-      return false;
-    }
-    switch (command) {
-      case 'build': {
-        const hashsum = await res.json();
-        console.log(hashsum);
-        break;
+    if (host != null && Number.isInteger(portNumber)) {
+      const res = await req(host, portNumber, command);
+      if (!res.ok) {
+        console.log(res.status, res.statusText);
+        return;
       }
-      default:
+      switch (command) {
+        case 'build': {
+          const hashsum = await res.json();
+          console.log(hashsum);
+          break;
+        }
+        default:
+      }
     }
-  }
-})();
+  };
+}
+
+start()();
