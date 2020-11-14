@@ -26,6 +26,7 @@
     "eslint-import-resolver-webpack": "^0.12.2",
     "eslint-plugin-import": "^2.22.0",
     "gulp": "^4.0.2",
+    "gulp-filter": "^6.0.0",
     "gulp-hashsum": "^1.2.0",
     "node-fetch": "^2.6.1",
     "sass": "^1.27.0",
