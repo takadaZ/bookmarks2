@@ -6,7 +6,8 @@
     "gulp": "gulp",
     "dev": "webpack --mode=development",
     "build": "webpack --config webpack.prod.js",
-    "server": "node ./rbuild/server.js"
+    "server": "node ./rbuild/server.js",
+    "rbuild": "node ./rbuild/client.js"
   },
   "keywords": [],
   "author": "",

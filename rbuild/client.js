@@ -20,7 +20,8 @@ function start() {
     if (host != null && Number.isInteger(portNumber)) {
       const res = await req(host, portNumber, command);
       if (!res.ok) {
-        console.log(res.status, res.statusText);
+        const message = await res.text();
+        console.log(res.status, message);
         return;
       }
       switch (command) {
