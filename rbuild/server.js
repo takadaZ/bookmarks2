@@ -3,9 +3,7 @@
 const { src, dest } = require('gulp');
 const webpackStream = require('webpack-stream');
 const hashsum = require('gulp-hashsum');
-const filter = require('gulp-filter');
 const fs = require('fs');
-// const stream = require('stream');
 const http = require('http');
 const webpackConfig = require('../webpack.config.js');
 
@@ -29,8 +27,12 @@ function webpack() {
 //     }));
 // }
 
-function pipeToP(pipeF) {
-  return new Promise((resolve) => pipeF().on('end', resolve));
+function pipeToP(stream) {
+  return new Promise((resolve, reject) => (
+    stream(reject)
+      .on('error', reject)
+      .on('end', resolve)
+  ));
 }
 
 // function series(f1, ...fns) {
@@ -43,70 +45,40 @@ function parallel(...fns) {
 
 const build = parallel(cp, webpack);
 
-function rbuild() {
+function rbuild(reject) {
   return webpackStream(webpackConfig)
+    .on('error', function err(error) {
+      this.emit('end');
+      reject(error);
+    })
     .pipe(src(['src/**/*.*', '!src/**/*.ts']))
     .pipe(dest('dist'))
     .pipe(hashsum({
       dest: './hashsum',
       filename: 'hashsum.json',
-      stream: true,
+      // stream: true,
       json: true,
-    }))
-    .pipe(filter('**/hashsum.json'));
-  // return series(
-  //   build,
-  //   () => pipeToP(outputChecksum),
-  // );
+    }));
 }
-
-// const buftrans = new stream.Transform({
-//   transform(chunk, encoding, callback) {
-//     callback(null, chunk);
-//   },
-// });
 
 function startServer() {
   return http.createServer(async (req, res) => {
     // console.log(req.url);
     switch (req.url) {
       case '/build': {
-        // await pipeToP(rbuild);
+        const err = await pipeToP(rbuild).catch((reason) => reason);
         // const [err, buf] = await new Promise((resolve) => {
         //   fs.readFile('./hashsum/hashsum.json', (err, buf) => resolve([err, buf]));
         // });
-        // if (err) {
-        //   res.writeHead(200, { 'Content-Type': 'text/plane' });
-        //   res.end(err);
-        //   return;
-        // }
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'text/plane' });
+          res.end(err.message);
+          return;
+        }
         // res.writeHead(200, { 'Content-Type': 'application/json' });
         // res.end(buf);
-        const chunks = [];
-        rbuild()
-          // eslint-disable-next-line no-return-assign
-          .on('data', (chunk) => chunks.push(chunk))
-        // buftrans.on('data', (chunk) => res.write(chunk));
-          .on('end', () => {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            console.log(JSON.stringify(chunks));
-            const result = Buffer.concat(chunks);
-            // res.end(JSON.stringify(chunks));
-            res.end(result);
-          })
-          .on('error', () => {
-            res.writeHead(200, { 'Content-Type': 'text/plane' });
-            res.end('{ "test": "AAA" }');
-          });
-        // res.write('{ "test": "AAA" }');
-        // hashStream.pipe(res);
-        // .on('data', (chunk) => chunks.push(chunk));
-        // hashStream.on('data', (chunk) => console.log(chunk));
-
-        // res.write(hash);
-        // res.setHeader('Content-Type', 'text/html');
-        // res.writeHead(200, { 'Content-Type': 'application/json' });
-        // res.end(hash);
+        const hashsumJson = fs.createReadStream('./hashsum/hashsum.json', { encoding: 'utf-8' });
+        hashsumJson.pipe(res);
         break;
       }
       default:
