@@ -1,14 +1,31 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable prefer-promise-reject-errors */
 /* eslint-disable no-console */
 // eslint-disable-next-line import/no-extraneous-dependencies
 const fetch = require('node-fetch');
+const { src } = require('gulp');
+const hashsum = require('gulp-hashsum');
+const fs = require('fs');
+const { pipeToP } = require('./server');
 
-function req(host, port, command) {
+function outputHashsum() {
+  return src('dist/**/*.*')
+    .pipe(hashsum({
+      dest: './hashsum',
+      filename: 'hashsum.json',
+      // stream: true,
+      json: true,
+    }));
+}
+
+function req(host, port, command, body) {
   // const agent = new http.Agent({ keepAlive: true });
   const url = new URL(`http://${host}:${port}/${command}`);
   return fetch(url, {
     // agent,
     method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -18,7 +35,16 @@ function start() {
     const portNumber = Number(port);
 
     if (host != null && Number.isInteger(portNumber)) {
-      const res = await req(host, portNumber, command);
+      await pipeToP(outputHashsum);
+      const localHashsum = await new Promise((resolve, reject) => {
+        fs.readFile('./hashsum/hashsum.json', (err, buf) => {
+          if (err) {
+            reject(err.message);
+          }
+          resolve(buf);
+        });
+      });
+      const res = await req(host, portNumber, command, { hashsum: localHashsum });
       if (!res.ok) {
         const message = await res.text();
         console.log(res.status, message);
@@ -26,8 +52,8 @@ function start() {
       }
       switch (command) {
         case 'build': {
-          const hashsum = await res.json();
-          console.log(hashsum);
+          const json = await res.json();
+          console.log(json);
           break;
         }
         default:
