@@ -24,7 +24,7 @@ function req(host, port, command, body) {
   return fetch(url, {
     // agent,
     method: 'POST',
-    body: JSON.stringify(body),
+    body,
     headers: { 'Content-Type': 'application/json' },
   });
 }
@@ -44,7 +44,7 @@ function start() {
           resolve(buf);
         });
       });
-      const res = await req(host, portNumber, command, { hashsum: localHashsum });
+      const res = await req(host, portNumber, command, localHashsum);
       if (!res.ok) {
         const message = await res.text();
         console.log(res.status, message);
