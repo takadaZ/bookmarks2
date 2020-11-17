@@ -27,9 +27,9 @@ function webpack() {
 //     }));
 // }
 
-function pipeToP(stream) {
+function pipeToP(pipeF) {
   return new Promise((resolve, reject) => (
-    stream(reject)
+    pipeF(reject)
       .on('error', reject)
       .on('end', resolve)
   ));
@@ -53,6 +53,7 @@ function rbuild(reject) {
     })
     .pipe(src(['src/**/*.*', '!src/**/*.ts']))
     .pipe(dest('dist'))
+    .pipe(src('dist/**/*.bundle.js'))
     .pipe(hashsum({
       dest: './hashsum',
       filename: 'hashsum.json',
@@ -68,30 +69,28 @@ function respError(res, message) {
 
 function startServer() {
   return http.createServer(async (req, res) => {
-    // console.log(req.url);
     switch (req.url) {
       case '/build': {
         const errBuild = await pipeToP(rbuild).catch((reason) => reason);
         if (errBuild) {
           return respError(res, errBuild.message);
         }
-        const [errHash, remoteHash] = await new Promise((resolve) => {
+        const [errHash, buff] = await new Promise((resolve) => {
           fs.readFile('./hashsum/hashsum.json', (err, buf) => resolve([err, buf]));
         });
         if (errHash) {
           return respError(res, errHash.message);
         }
+        const remoteHash = JSON.parse(buff);
         let body = '';
         // eslint-disable-next-line no-return-assign
-        await pipeToP(req.on('data', (chunk) => body += chunk));
+        await pipeToP(() => req.on('data', (chunk) => body += chunk));
         const localHash = JSON.parse(body);
-        const entries = Object.entries(localHash);
-        const removes = entries.filter(([key]) => !remoteHash[key]);
-        const updates = entries.filter(([key, value]) => remoteHash[key] !== value);
+        const removes = Object.keys(localHash).filter((key) => !remoteHash[key]);
+        const updates = Object.entries(remoteHash)
+          .filter(([key, value]) => localHash[key] !== value);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ updates, removes }));
-        // const hashsumJson = fs.createReadStream('./hashsum/hashsum.json', { encoding: 'utf-8' });
-        // hashsumJson.pipe(res);
         break;
       }
       default:
@@ -113,5 +112,4 @@ exports.cp = cp;
 exports.webpack = webpack;
 exports.startServer = startServer;
 exports.build = build;
-// exports.rbuild = rbuild;
 exports.pipeToP = pipeToP;
