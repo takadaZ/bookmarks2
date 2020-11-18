@@ -52,7 +52,7 @@ async function start() {
     }
     switch (command) {
       case 'build': {
-        // await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
+        await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
         console.log('done!');
         // eslint-disable-next-line no-underscore-dangle
         console.log(process._getActiveHandles());
