@@ -5,6 +5,7 @@
 const fetch = require('node-fetch');
 const { src } = require('gulp');
 const hashsum = require('gulp-hashsum');
+const unzipper = require('unzipper');
 const fs = require('fs');
 const { pipeToP } = require('./server');
 
@@ -29,37 +30,39 @@ function req(host, port, command, body) {
   });
 }
 
-function start() {
-  return async () => {
-    const [,, host, port, command] = process.argv;
-    const portNumber = Number(port);
+async function start() {
+  const [,, host, port, command] = process.argv;
+  const portNumber = Number(port);
 
-    if (host != null && Number.isInteger(portNumber)) {
-      await pipeToP(outputHashsum);
-      const localHashsum = await new Promise((resolve, reject) => {
-        fs.readFile('./hashsum/hashsum.json', (err, buf) => {
-          if (err) {
-            reject(err.message);
-          }
-          resolve(buf);
-        });
-      });
-      const res = await req(host, portNumber, command, localHashsum);
-      if (!res.ok) {
-        const message = await res.text();
-        console.log(res.status, message);
-        return;
-      }
-      switch (command) {
-        case 'build': {
-          const json = await res.json();
-          console.log(json);
-          break;
+  if (host != null && Number.isInteger(portNumber)) {
+    await pipeToP(outputHashsum);
+    const localHashsum = await new Promise((resolve, reject) => {
+      fs.readFile('./hashsum/hashsum.json', (err, buf) => {
+        if (err) {
+          reject(err.message);
         }
-        default:
-      }
+        resolve(buf);
+      });
+    });
+    const res = await req(host, portNumber, command, localHashsum);
+    if (!res.ok) {
+      const message = await res.text();
+      console.log(res.status, message);
+      return;
     }
-  };
+    switch (command) {
+      case 'build': {
+        // await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
+        console.log('done!');
+        // eslint-disable-next-line no-underscore-dangle
+        console.log(process._getActiveHandles());
+        // eslint-disable-next-line no-underscore-dangle
+        console.log(process._getActiveRequests());
+        break;
+      }
+      default:
+    }
+  }
 }
 
-start()();
+start();
