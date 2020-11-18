@@ -19,6 +19,7 @@
     "@types/webpack-stream": "^3.2.11",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
+    "archiver": "^5.0.2",
     "copy-webpack-plugin": "^6.1.0",
     "css-loader": "^4.2.2",
     "esbuild": "^0.8.1",
