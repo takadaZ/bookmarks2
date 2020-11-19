@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-console */
 const { src, dest } = require('gulp');
@@ -7,10 +8,6 @@ const archiver = require('archiver');
 const fs = require('fs');
 const http = require('http');
 const webpackConfig = require('../webpack.config.js');
-
-const archive = archiver('zip', {
-  zlib: { level: 9 }, // Sets the compression level.
-});
 
 function pipeP(...fns) {
   return (a) => fns.reduce((promise, f) => promise.then(f), Promise.resolve(a));
@@ -99,6 +96,20 @@ function sorting(req) {
   };
 }
 
+function sendResponse(res) {
+  return ([, updates]) => {
+    const archive = archiver('zip', {
+      zlib: { level: 1 }, // Sets the compression level.
+    });
+    updates.forEach((filePath) => archive.file(filePath));
+    archive.finalize();
+    archive
+      .on('warning', (err) => { throw err; })
+      .on('error', (err) => { throw err; })
+      .pipe(res);
+  };
+}
+
 function startServer() {
   return http.createServer(async (req, res) => {
     switch (req.url) {
@@ -106,17 +117,17 @@ function startServer() {
         pipeP(
           build,
           sorting(req),
-          ([, updates]) => {
-            updates.forEach((filePath) => {
-              archive.file(filePath);
-            });
-            archive.pipe(res).on('end', () => res.end());
-            // res.writeHead(200, { 'Content-Type': 'application/json' });
-          },
+          sendResponse(res),
         )().catch((message) => {
           res.writeHead(500, { 'Content-Type': 'text/plane' });
           res.end(message);
         });
+        break;
+      }
+      case '/browsing': {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        const html = fs.createReadStream('./rbuild.html', { encoding: 'utf-8' });
+        html.pipe(res);
         break;
       }
       default:
