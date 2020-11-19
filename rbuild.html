@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test</title>
+</head>
+<body>
+  <button type="button">Build</button>
+  <div class="result"></div>
+  <script>
+    document.body.firstElementChild.addEventListener('click', () => {
+      fetch('/build', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: '{}',
+      })
+      .then(data => console.log(data));
+    });
+  </script>
+</body>
+</html>
