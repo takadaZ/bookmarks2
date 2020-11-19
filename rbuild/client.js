@@ -54,10 +54,11 @@ async function start() {
       case 'build': {
         await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
         console.log('done!');
-        // eslint-disable-next-line no-underscore-dangle
-        console.log(process._getActiveHandles());
-        // eslint-disable-next-line no-underscore-dangle
-        console.log(process._getActiveRequests());
+        break;
+      }
+      case 'test': {
+        const html = await res.text();
+        console.log(html);
         break;
       }
       default:
