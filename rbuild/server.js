@@ -13,26 +13,6 @@ function pipeP(...fns) {
   return (a) => fns.reduce((promise, f) => promise.then(f), Promise.resolve(a));
 }
 
-// function cp() {
-//   return src(['src/**/*.*', '!src/**/*.ts'])
-//     .pipe(dest('dist'));
-// }
-
-// function webpack() {
-//   return webpackStream(webpackConfig)
-//     .pipe(dest('dist'));
-// }
-
-// function outputChecksum() {
-//   return src(['dist/**/*.*'])
-//     .pipe(hashsum({
-//       dest: './hashsum',
-//       filename: 'hashsum.json',
-//       stream: true,
-//       json: true,
-//     }));
-// }
-
 function pipeToP(pipeF) {
   return new Promise((resolve, reject) => (
     pipeF(reject)
@@ -40,16 +20,6 @@ function pipeToP(pipeF) {
       .on('end', resolve)
   ));
 }
-
-// function series(f1, ...fns) {
-//   return fns.reduce((acc, f) => acc.then(f), f1());
-// }
-
-// function parallel(...fns) {
-//   return () => Promise.all(fns.map(pipeToP));
-// }
-
-// const build = parallel(cp, webpack);
 
 function webpack(reject) {
   return webpackStream(webpackConfig)
@@ -68,46 +38,45 @@ function webpack(reject) {
     }));
 }
 
-async function build() {
+async function build(localHash) {
   const errBuild = await pipeToP(webpack).catch((reason) => reason);
   if (errBuild) {
     throw errBuild.message;
   }
-  const [errHash, buff] = await new Promise((resolve) => {
+  const [errHash, remoteHash] = await new Promise((resolve) => {
     fs.readFile('./hashsum.json', (err, buf) => resolve([err, buf]));
   });
   if (errHash) {
     throw errHash.message;
   }
-  return JSON.parse(buff);
+  return [
+    JSON.parse(remoteHash),
+    JSON.parse(localHash),
+  ];
 }
 
-function sorting(req) {
-  return async (remoteHash) => {
-    let body = '';
-    // eslint-disable-next-line no-return-assign
-    await pipeToP(() => req.on('data', (chunk) => body += chunk));
-    const localHash = JSON.parse(body);
-    const removes = Object.keys(localHash).filter((key) => !remoteHash[key]);
-    const updates = Object.entries(remoteHash)
-      .filter(([key, value]) => localHash[key] !== value)
-      .map(([key]) => key);
-    return [removes, updates];
-  };
+function sorting([remoteHash, localHash]) {
+  const removes = Object.keys(localHash).filter((key) => !remoteHash[key]);
+  const updates = Object.entries(remoteHash)
+    .filter(([key, value]) => localHash[key] !== value)
+    .map(([key]) => key);
+  return [removes, updates];
 }
 
-function sendResponse(res) {
-  return ([, updates]) => {
-    const archive = archiver('zip', {
-      zlib: { level: 1 }, // Sets the compression level.
-    });
-    updates.forEach((filePath) => archive.file(filePath));
-    archive.finalize();
-    archive
-      .on('warning', (err) => { throw err; })
-      .on('error', (err) => { throw err; })
-      .pipe(res);
-  };
+function archive([, updates]) {
+  const zip = archiver('zip', {
+    zlib: { level: 1 }, // Sets the compression level.
+  });
+  updates.forEach((filePath) => zip.file(filePath));
+  zip.finalize();
+  return zip;
+}
+
+async function getTextFromStream(strm) {
+  let text = '';
+  // eslint-disable-next-line no-return-assign
+  await pipeToP(() => strm.on('data', (chunk) => text += chunk));
+  return text;
 }
 
 function startServer() {
@@ -115,10 +84,15 @@ function startServer() {
     switch (req.url) {
       case '/build': {
         pipeP(
+          getTextFromStream,
           build,
-          sorting(req),
-          sendResponse(res),
-        )().catch((message) => {
+          sorting,
+          archive,
+          (zipped) => zipped
+            .on('warning', (err) => { throw err; })
+            .on('error', (err) => { throw err; })
+            .pipe(res),
+        )(req).catch((message) => {
           res.writeHead(500, { 'Content-Type': 'text/plane' });
           res.end(message);
         });
@@ -145,8 +119,4 @@ if (Number.isInteger(portNumber) && portNumber >= 80 && portNumber <= 65535) {
   server.listen(portNumber);
 }
 
-// exports.cp = cp;
-// exports.webpack = webpack;
-// exports.startServer = startServer;
-// exports.build = build;
 exports.pipeToP = pipeToP;
