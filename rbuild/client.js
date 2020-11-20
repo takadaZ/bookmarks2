@@ -12,7 +12,7 @@ const { pipeToP } = require('./server');
 function outputHashsum() {
   return src('dist/**/*.*')
     .pipe(hashsum({
-      dest: './hashsum',
+      dest: './',
       filename: 'hashsum.json',
       // stream: true,
       json: true,
@@ -37,7 +37,7 @@ async function start() {
   if (host != null && Number.isInteger(portNumber)) {
     await pipeToP(outputHashsum);
     const localHashsum = await new Promise((resolve, reject) => {
-      fs.readFile('./hashsum/hashsum.json', (err, buf) => {
+      fs.readFile('./hashsum.json', (err, buf) => {
         if (err) {
           reject(err.message);
         }
