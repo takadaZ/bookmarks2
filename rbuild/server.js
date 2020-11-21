@@ -154,8 +154,8 @@ function startServer() {
         break;
       }
       case '/browsing': {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
         const html = fs.createReadStream('./rbuild.html', { encoding: 'utf-8' });
+        res.writeHead(200, { 'Content-Type': 'text/html' });
         html.pipe(res);
         break;
       }
