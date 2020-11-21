@@ -2,21 +2,33 @@
 /* eslint-disable prefer-promise-reject-errors */
 /* eslint-disable no-console */
 // eslint-disable-next-line import/no-extraneous-dependencies
+// const fs = require('fs');
+
 const fetch = require('node-fetch');
 const { src } = require('gulp');
 const hashsum = require('gulp-hashsum');
 const unzipper = require('unzipper');
-const fs = require('fs');
-const { pipeToP } = require('./server');
+const filter = require('gulp-filter');
+// const through2 = require('through2');
 
-function outputHashsum() {
+const { pipeToP, gulpThrough } = require('./server');
+// const { resolve } = require('path');
+
+function makeHashsum() {
   return src('dist/**/*.*')
     .pipe(hashsum({
       dest: './',
       filename: 'hashsum.json',
-      // stream: true,
+      stream: true,
       json: true,
-    }));
+    }))
+    .pipe(filter('**/hashsum.json'));
+}
+
+async function getHashsum(gulpStream) {
+  return new Promise((resolve) => (
+    gulpStream.pipe(gulpThrough((vinyl) => resolve(vinyl.contents)))
+  ));
 }
 
 function req(host, port, command, body) {
@@ -35,15 +47,16 @@ async function start() {
   const portNumber = Number(port);
 
   if (host != null && Number.isInteger(portNumber)) {
-    await pipeToP(outputHashsum);
-    const localHashsum = await new Promise((resolve, reject) => {
-      fs.readFile('./hashsum.json', (err, buf) => {
-        if (err) {
-          reject(err.message);
-        }
-        resolve(buf);
-      });
-    });
+    const hashsumStream = makeHashsum();
+    const localHashsum = await getHashsum(hashsumStream);
+    // const localHashsum = await new Promise((resolve, reject) => {
+    //   fs.readFile('./hashsum.json', (err, buf) => {
+    //     if (err) {
+    //       reject(err.message);
+    //     }
+    //     resolve(buf);
+    //   });
+    // });
     const res = await req(host, portNumber, command, localHashsum);
     if (!res.ok) {
       const message = await res.text();
@@ -51,11 +64,12 @@ async function start() {
       return;
     }
     switch (command) {
-      case 'build': {
+      case 'build':
+        res.body.pipe(unzipper.Parse())
+          .on('entry', (entry) => console.log(entry.path));
         await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
         console.log('done!');
         break;
-      }
       case 'test': {
         const html = await res.text();
         console.log(html);
@@ -66,4 +80,6 @@ async function start() {
   }
 }
 
-start();
+(async () => {
+  await start();
+})();
