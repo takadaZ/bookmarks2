@@ -7,14 +7,12 @@ const http = require('http');
 const { src, dest } = require('gulp');
 const sass = require('gulp-sass');
 sass.compiler = require('node-sass');
-const webpackStream = require('webpack-stream');
+const webpack = require('webpack-stream');
 const hashsum = require('gulp-hashsum');
 const archiver = require('archiver');
 const filter = require('gulp-filter');
 const through2 = require('through2');
 const Vinyl = require('vinyl');
-
-const webpackConfig = require('../webpack.config.js');
 
 function pipeP(...fns) {
   return (a) => fns.reduce((promise, f) => promise.then(f), Promise.resolve(a));
@@ -32,8 +30,10 @@ function pipeToP(pipeF) {
 
 exports.pipeToP = pipeToP;
 
+const webpackConfig = require('../webpack.config.js');
+
 function build() {
-  return webpackStream(webpackConfig)
+  return webpack(webpackConfig)
     .on('error', function err(error) {
       this.emit('end');
       throw error;
@@ -43,8 +43,8 @@ function build() {
     .pipe(dest('dist'));
 }
 
-function getHashsum(gulpStraem) {
-  return gulpStraem
+function getHashsum(gulpStream) {
+  return gulpStream
     .pipe(src('dist/**/*.bundle.js'))
     .pipe(hashsum({
       dest: './',
@@ -84,16 +84,16 @@ function addGulpContents(name, contents) {
 }
 
 function addRequestStream(request) {
-  return (gulpStraem) => (
-    gulpStraem.pipe(addGulpContents('local-hashsum.json', request))
+  return (gulpStream) => (
+    gulpStream.pipe(addGulpContents('local-hashsum.json', request))
   );
 }
 
-async function combineHashsums(gulpStraem) {
-  const hashsums = {};
+async function combineHashsums(gulpStream) {
   return new Promise((resolve) => {
+    const hashsums = {};
     // eslint-disable-next-line prefer-arrow-callback
-    gulpStraem.pipe(through2.obj(
+    gulpStream.pipe(through2.obj(
       gulpThrough(async (vinyl) => {
         const jsonString = await (async () => {
           if (vinyl.isStream()) {
@@ -112,7 +112,7 @@ async function combineHashsums(gulpStraem) {
   });
 }
 
-function sorting(hashsums) {
+function compareHashsums(hashsums) {
   const localHash = hashsums['local-hashsum.json'];
   const remoteHash = hashsums['remote-hashsum.json'];
   const removes = Object.keys(localHash).filter((key) => !remoteHash[key]);
@@ -120,10 +120,10 @@ function sorting(hashsums) {
     .filter(([key, value]) => localHash[key] !== value)
     .map(([key]) => key);
   console.info({ updates, removes });
-  return [removes, updates];
+  return [updates, removes];
 }
 
-function archive([, updates]) {
+function archive([updates]) {
   const zip = archiver('zip', {
     zlib: { level: 1 }, // Sets the compression level.
   });
@@ -141,7 +141,7 @@ function startServer() {
           getHashsum,
           addRequestStream(req),
           combineHashsums,
-          sorting,
+          compareHashsums,
           archive,
           (zipped) => zipped
             .on('warning', (err) => { throw err; })

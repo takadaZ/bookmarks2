@@ -1,6 +1,6 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import/no-unresolved */
 const CopyPlugin = require('copy-webpack-plugin');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
 
 module.exports = {
