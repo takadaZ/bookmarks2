@@ -29,15 +29,17 @@ function getHashsum(gulpStream) {
   ));
 }
 
-function req(host, port, command, body) {
-  // const agent = new http.Agent({ keepAlive: true });
-  const url = new URL(`http://${host}:${port}/${command}`);
-  return fetch(url, {
-    // agent,
-    method: 'POST',
-    body,
-    headers: { 'Content-Type': 'application/json' },
-  });
+function req(host, port, command) {
+  return (body) => {
+    // const agent = new http.Agent({ keepAlive: true });
+    const url = new URL(`http://${host}:${port}/${command}`);
+    return fetch(url, {
+      // agent,
+      method: 'POST',
+      body,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
 }
 
 async function start() {
@@ -45,8 +47,11 @@ async function start() {
   const portNumber = Number(port);
 
   if (host != null && Number.isInteger(portNumber)) {
-    const localHashsum = await pipeP(makeHashsum, getHashsum)(src('dist/**/*.*'));
-    const res = await req(host, portNumber, command, localHashsum);
+    const res = await pipeP(
+      makeHashsum,
+      getHashsum,
+      req(host, portNumber, command),
+    )(src('dist/**/*.*'));
     if (!res.ok) {
       const message = await res.text();
       console.log(res.status, message);
