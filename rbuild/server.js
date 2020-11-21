@@ -20,6 +20,8 @@ function pipeP(...fns) {
   return (a) => fns.reduce((promise, f) => promise.then(f), Promise.resolve(a));
 }
 
+exports.pipeP = pipeP;
+
 function pipeToP(pipeF) {
   return new Promise((resolve, reject) => (
     pipeF(reject)
@@ -27,6 +29,8 @@ function pipeToP(pipeF) {
       .on('end', resolve)
   ));
 }
+
+exports.pipeToP = pipeToP;
 
 function build(reject) {
   return webpackStream(webpackConfig)
@@ -65,6 +69,8 @@ function gulpThrough(option = () => {}) {
     done();
   };
 }
+
+exports.gulpThrough = gulpThrough;
 
 function addGulpContents(name, contents) {
   return through2.obj(gulpThrough(), function endStream(done) {
@@ -167,5 +173,3 @@ if (Number.isInteger(portNumber) && portNumber >= 80 && portNumber <= 65535) {
   const server = startServer();
   server.listen(portNumber);
 }
-
-exports.pipeToP = pipeToP;

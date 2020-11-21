@@ -2,20 +2,18 @@
 /* eslint-disable prefer-promise-reject-errors */
 /* eslint-disable no-console */
 // eslint-disable-next-line import/no-extraneous-dependencies
-// const fs = require('fs');
 
 const fetch = require('node-fetch');
 const { src } = require('gulp');
 const hashsum = require('gulp-hashsum');
 const unzipper = require('unzipper');
 const filter = require('gulp-filter');
-// const through2 = require('through2');
+const through2 = require('through2');
 
-const { pipeToP, gulpThrough } = require('./server');
-// const { resolve } = require('path');
+const { pipeToP, pipeP, gulpThrough } = require('./server');
 
-function makeHashsum() {
-  return src('dist/**/*.*')
+function makeHashsum(gulpStream) {
+  return gulpStream
     .pipe(hashsum({
       dest: './',
       filename: 'hashsum.json',
@@ -25,9 +23,9 @@ function makeHashsum() {
     .pipe(filter('**/hashsum.json'));
 }
 
-async function getHashsum(gulpStream) {
+function getHashsum(gulpStream) {
   return new Promise((resolve) => (
-    gulpStream.pipe(gulpThrough((vinyl) => resolve(vinyl.contents)))
+    gulpStream.pipe(through2.obj(gulpThrough((vinyl) => resolve(vinyl.contents))))
   ));
 }
 
@@ -47,16 +45,7 @@ async function start() {
   const portNumber = Number(port);
 
   if (host != null && Number.isInteger(portNumber)) {
-    const hashsumStream = makeHashsum();
-    const localHashsum = await getHashsum(hashsumStream);
-    // const localHashsum = await new Promise((resolve, reject) => {
-    //   fs.readFile('./hashsum.json', (err, buf) => {
-    //     if (err) {
-    //       reject(err.message);
-    //     }
-    //     resolve(buf);
-    //   });
-    // });
+    const localHashsum = await pipeP(makeHashsum, getHashsum)(src('dist/**/*.*'));
     const res = await req(host, portNumber, command, localHashsum);
     if (!res.ok) {
       const message = await res.text();
@@ -80,6 +69,4 @@ async function start() {
   }
 }
 
-(async () => {
-  await start();
-})();
+start();
