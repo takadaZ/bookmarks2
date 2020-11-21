@@ -32,11 +32,11 @@ function pipeToP(pipeF) {
 
 exports.pipeToP = pipeToP;
 
-function build(reject) {
+function build() {
   return webpackStream(webpackConfig)
     .on('error', function err(error) {
       this.emit('end');
-      reject(error);
+      throw error;
     })
     .pipe(src('src/style.scss').pipe(sass().on('error', sass.logError)))
     .pipe(src(['src/**/*.*', '!src/**/*.ts', '!src/**/*.scss']))
@@ -62,10 +62,10 @@ async function getTextFromStream(strm) {
   return text;
 }
 
-function gulpThrough(option = () => {}) {
+function gulpThrough(alter = async (vinyl) => vinyl) {
   return async function through(vinyl, _, done) {
-    await option(vinyl);
-    this.push(vinyl);
+    const altedVinyl = await alter(vinyl);
+    this.push(altedVinyl);
     done();
   };
 }
