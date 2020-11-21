@@ -6,7 +6,7 @@ $drop-folder-bgcolor: #cce5ff;
 $hilite-bgcolor: #feefc3;
 $folder-open-bgcolor: #1da1f2;
 $draggable-bgcolor: rgba(0, 123, 255, .7);
-$drop-border: rgba(0, 123, 255);
+$drop-border: rgb(0, 123, 255);
 $star-color: #1da1f2;
 
 @import 'glyphs';
@@ -215,7 +215,7 @@ input.query {
   height: 20px;
   cursor: pointer;
   border: 0;
-  transition: .4s;
+  transition: background-color .4s;
   font-size: 1.2em;
 
   &:focus {
