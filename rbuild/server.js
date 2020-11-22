@@ -103,6 +103,7 @@ async function combineHashsums(gulpStream) {
           return vinyl.contents;
         })();
         hashsums[vinyl.relative] = JSON.parse(jsonString);
+        return vinyl;
       }),
       (done) => {
         resolve(hashsums);
