@@ -59,8 +59,10 @@ async function start() {
     }
     switch (command) {
       case 'build':
-        res.body.pipe(unzipper.Parse())
-          .on('entry', (entry) => console.log(entry.path));
+        // await pipeToP(() => (
+        //   res.body.pipe(unzipper.Parse())
+        //     .on('entry', (entry) => console.log(entry.path))
+        // ));
         await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
         console.log('done!');
         break;
@@ -74,4 +76,6 @@ async function start() {
   }
 }
 
-start();
+(async () => {
+  await start();
+})();
