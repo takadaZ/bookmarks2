@@ -1,19 +1,17 @@
 /* eslint-disable import/no-unresolved */
 const { src, dest } = require('gulp');
 const webpackStream = require('webpack-stream');
+const sass = require('gulp-sass');
+sass.compiler = require('node-sass');
 const webpackConfig = require('./webpack.config.js');
 const { pipeToP } = require('./rbuild/server');
-
-// function series(f1, ...fns) {
-//   return fns.reduce((acc, f) => acc.then(f), f1());
-// }
 
 function parallel(...fns) {
   return () => Promise.all(fns.map(pipeToP));
 }
 
 function cp() {
-  return src(['src/**/*.*', '!src/**/*.ts'])
+  return src(['src/**/*.*', '!src/**/*.ts', '!src/**/*.scss'])
     .pipe(dest('dist'));
 }
 
@@ -22,7 +20,13 @@ function webpack() {
     .pipe(dest('dist'));
 }
 
-const build = parallel(cp, webpack);
+function scss() {
+  return src('src/style.scss')
+    .pipe(sass().on('error', sass.logError))
+    .pipe(dest('dist'));
+}
+
+const build = parallel(cp, webpack, scss);
 
 exports.cp = cp;
 exports.webpack = webpack;
