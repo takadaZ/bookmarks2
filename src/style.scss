@@ -486,6 +486,13 @@ input.query {
     > .fa-angle-right,
     > .title {
       z-index: 1;
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
     }
 
     > .button-wrapper {
