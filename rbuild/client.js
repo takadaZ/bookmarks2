@@ -51,7 +51,7 @@ async function start() {
       makeHashsum,
       getHashsum,
       req(host, portNumber, command),
-    )(src('dist/**/*.*'));
+    )(src(['dist/**/*.*', 'src/**/*.*']));
     if (!res.ok) {
       const message = await res.text();
       console.log(res.status, message);
