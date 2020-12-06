@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
-// const CopyPlugin = require('copy-webpack-plugin');
+
 const path = require('path');
 
 const MODE = 'development';
@@ -30,45 +30,10 @@ module.exports = {
           },
         ],
       },
-      // {
-      //   test: /\.s[ac]ss$/i,
-      //   use: [
-      //     // Creates `style` nodes from JS strings
-      //     'style-loader',
-      //     // Translates CSS into CommonJS
-      //     {
-      //       loader: 'css-loader',
-      //       options: {
-      //         // オプションでCSS内のurl()メソッドの取り込みを禁止する
-      //         url: false,
-      //         sourceMap: enabledSourceMap,
-      //       },
-      //     },
-      //     // Compiles Sass to CSS
-      //     'sass-loader',
-      //   ],
-      // },
     ],
   },
   resolve: {
     extensions: ['.ts'],
   },
-  // plugins: [
-  //   new CopyPlugin({
-  //     patterns: [
-  //       {
-  //         from: '**/*',
-  //         to: './',
-  //         context: 'src',
-  //         globOptions: {
-  //           ignore: [
-  //             '**/*.ts',
-  //             '**/*.scss',
-  //           ],
-  //         },
-  //       },
-  //     ],
-  //   }),
-  // ],
   cache: true,
 };

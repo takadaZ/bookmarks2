@@ -45,7 +45,7 @@ function build() {
 
 function getHashsum(gulpStream) {
   return gulpStream
-    .pipe(src('dist/**/*.bundle.js'))
+    .pipe(src(['dist/**/*.bundle.js', 'src/**/*']))
     .pipe(hashsum({
       dest: './',
       filename: 'remote-hashsum.json',
