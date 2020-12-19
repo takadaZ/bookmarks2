@@ -1,7 +1,6 @@
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-alert */
 
-// import './style.scss';
 import {
   IClientState,
   IHtml,

@@ -59,12 +59,14 @@ async function start() {
     }
     switch (command) {
       case 'build':
-        // await pipeToP(() => (
-        //   res.body.pipe(unzipper.Parse())
-        //     .on('entry', (entry) => console.log(entry.path))
-        // ));
-        await pipeToP(() => res.body.pipe(unzipper.Extract({ path: './' })));
-        console.log('done!');
+        res.body
+          .on('finish', () => {
+            const updates = ['updates', 'removes'].reduce((acc, key) => {
+              return { ...acc, [key]: res.headers.get(key).split(',').filter((el) => el) };
+            }, {});
+            console.info(updates);
+          })
+          .pipe(unzipper.Extract({ path: './' }));
         break;
       case 'test': {
         const html = await res.text();
