@@ -124,13 +124,13 @@ function compareHashsums(hashsums) {
   return [updates, removes];
 }
 
-function archive([updates]) {
+function archive([updates, removes]) {
   const zip = archiver('zip', {
     zlib: { level: 1 }, // Sets the compression level.
   });
   updates.forEach((filePath) => zip.file(filePath));
   zip.finalize();
-  return zip;
+  return [zip, updates, removes];
 }
 
 function startServer() {
@@ -144,10 +144,14 @@ function startServer() {
           combineHashsums,
           compareHashsums,
           archive,
-          (zipped) => zipped
-            .on('warning', (err) => { throw err; })
-            .on('error', (err) => { throw err; })
-            .pipe(res),
+          ([zipped, updates, removes]) => {
+            res.setHeader('updates', updates.join(','));
+            res.setHeader('removes', removes.join(','));
+            zipped
+              .on('warning', (err) => { throw err; })
+              .on('error', (err) => { throw err; })
+              .pipe(res);
+          },
         )().catch((err) => {
           res.writeHead(500, { 'Content-Type': 'text/plane' });
           res.end(err.message);
@@ -173,4 +177,5 @@ const portNumber = Number(port);
 if (Number.isInteger(portNumber) && portNumber >= 80 && portNumber <= 65535) {
   const server = startServer();
   server.listen(portNumber);
+  console.info(`Listen: ${portNumber}`);
 }
