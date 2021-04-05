@@ -115,19 +115,14 @@ export function last<T extends Array<any>>(args: T) {
 
 export function curry<T1, T2, U>
   (f: (p1: T1, p2: T2) => U): (p1: T1) => (p2: T2) => U;
-export function curry<T1, T2, T3, U>
-  (f: (p1: T1, p2: T2, p3: T3) => U): (p1: T1, p2: T2) => (p3: T3) => U;
-export function curry<T1, T2, T3, T4, U>
-  (f: (p1: T1, p2: T2, p3: T3, p4: T4) => U): (p1: T1, p2: T2, p3: T3) => (p4: T4) => U;
-export function curry<T1, T2, T3, T4, T5, U>
-  (f: (p1: T1, p2: T2, p3: T3, p4: T4, p5: T5) => U):
-    (p1: T1, p2: T2, p3: T3, p4: T4) => (p5: T5) => U;
-export function curry<T1, T2, T3, T4, T5, T6 extends Array<any>, U>
-  (f: (p1: T1, p2: T2, p3: T3, p4: T4, p5: T5, ..._tail: T6) => U):
-    (p1: T1, p2: T2, p3: T3, p4: T4, p5: T5, ...p6: Array<any>) => (_last: Last<T6>) => U;
+export function curry(f: (p1: any, p2: any) => any) {
+  return (p1: any) => (p2: any) => f(p1, p2);
+}
 
-export function curry(f: (...args: Array<any>) => any) {
-  return (..._init: Array<any>) => (lastArg: any) => f(...[..._init, lastArg]);
+export function curry2<T1, T2, T3, U>
+  (f: (p1: T1, p2: T2, p3: T3) => U): (p1: T1, p2: T2) => (p3: T3) => U;
+export function curry2(f: (p1: any, p2: any, p3: any) => any) {
+  return (p1: any, p2: any) => (p3: any) => f(p1, p2, p3);
 }
 
 export function swap<T, U, V>(f: (a: T) => (b: U) => V) {

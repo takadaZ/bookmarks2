@@ -334,7 +334,7 @@ export const mapStateToResponse = {
             style: anchor?.getAttribute('style')!,
           });
         }, ['html', 'created'], true);
-        F.cbToPromise(F.curry(chrome.bookmarks.update)(payload.id, changes));
+        F.cbToPromise(F.curry2(chrome.bookmarks.update)(payload.id, changes));
       });
       return succeed;
     },
@@ -343,7 +343,7 @@ export const mapStateToResponse = {
       { subscribe }: ReduxHandlers,
       { payload: { id, title } }: PayloadAction<{ id: string, title:string }>,
     ) => {
-      F.cbToPromise(F.curry(chrome.bookmarks.update)(id, { title }));
+      F.cbToPromise(F.curry2(chrome.bookmarks.update)(id, { title }));
       const succeed = await new Promise<boolean>((resolve) => {
         subscribe(() => resolve(true), ['html', 'created'], true);
       });
@@ -402,7 +402,7 @@ export const mapStateToResponse = {
       }
       const lastState = await new Promise<State>((resolve) => {
         subscribe((state2: State) => resolve(state2), ['html', 'created'], true);
-        F.cbToPromise(F.curry(chrome.bookmarks.move)(id, { parentId, index }));
+        F.cbToPromise(F.curry2(chrome.bookmarks.move)(id, { parentId, index }));
       });
       if (parentId === '1' || !!state.bookmarks[id].url) {
         return { parentId, index };
