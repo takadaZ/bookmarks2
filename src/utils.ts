@@ -113,28 +113,25 @@ export function last<T extends Array<any>>(args: T) {
 // init(x);
 // last(x);
 
-export function curry<T1, T2, U>
-  (f: (p1: T1, p2: T2) => U): (p1: T1) => (p2: T2) => U;
-export function curry(f: (p1: any, p2: any) => any) {
-  return (p1: any) => (p2: any) => f(p1, p2);
+export function curry<T1, T2, T3, T4, T5, U>
+  (f: (p1: T1, ...p2: [T2, T3?, T4?, T5?]) => U): (p1: T1) => (...p2: [T2, T3?, T4?, T5?]) => U;
+export function curry(f: (p1: any, ...p2: [any, any?, any?, any?]) => any) {
+  return (p1: any) => (...p2: [any, any?, any?, any?]) => f(p1, ...p2);
 }
 
-export function curry2<T1, T2, T3, U>
-  (f: (p1: T1, p2: T2, p3: T3) => U): (p1: T1, p2: T2) => (p3: T3) => U;
-export function curry2(f: (p1: any, p2: any, p3: any) => any) {
-  return (p1: any, p2: any) => (p3: any) => f(p1, p2, p3);
+export function curry3<T1, T2, T3, T4, T5, U>
+  (f: (p1: T1, p2: T2, ...p3: [T3, T4?, T5?]) => U):
+    (p1: T1) => (p2: T2) => (...p3: [T3, T4?, T5?]) => U;
+export function curry3(f: (p1: any, p2: any, ...p3: [any, any?, any?]) => any) {
+  return (p1: any) => (p2: any) => (...p3: [any, any?, any?]) => f(p1, p2, ...p3);
 }
 
-export function swap<T, U, V>(f: (a: T) => (b: U) => V) {
-  return (b: U) => (a: T) => f(a)(b) as V;
+export function swap<T, U, V>(f: (a: T, b: U) => V) {
+  return (b: U, a: T) => f(a, b) as V;
 }
 
-export async function cbToPromise<T>(f: (cb: (arg: T) => any) => any) {
+export async function cbToResolve<T, U>(f: (cb: (value: T | PromiseLike<T>) => void) => U) {
   return new Promise<T>((resolve) => f(resolve));
-}
-
-export async function cbArgsToPromise<T extends Array<any>>(f: (cb: (...args: T) => any) => any) {
-  return new Promise<T>((resolve) => f((...args) => resolve(args)));
 }
 
 const getClassName = Object.prototype.toString.call.bind(Object.prototype.toString);
@@ -395,7 +392,7 @@ const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime) as
 export async function postMessage<T extends keyof bx.MapStateToResponse>(
   msg: { type: T } & Partial<bx.PayloadAction<bx.MessageStateMapObject<bx.MapStateToResponse>[T]>>,
 ): Promise<ReturnType<bx.MapStateToResponse[T]>> {
-  return cbToPromise(curry(sendMessage)(msg));
+  return cbToResolve(curry(sendMessage)(msg));
 }
 
 export function cssid(id: string | number) {

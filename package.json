@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "gulp": "gulp",
-    "dev": "webpack --mode=development",
+    "dev": "webpack --mode=development -w",
     "build": "webpack --config webpack.prod.js",
     "server": "node ./rbuild/server.js",
     "rbuild": "node ./rbuild/client.js"

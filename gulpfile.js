@@ -29,5 +29,6 @@ function scss() {
 const build = parallel(cp, webpack, scss);
 
 exports.cp = cp;
+exports.scss = scss;
 exports.webpack = webpack;
 exports.default = build;

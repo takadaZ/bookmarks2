@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import {
   createSlice,
   PayloadAction,
@@ -301,7 +300,7 @@ export const mapStateToResponse = {
         parentId: payload,
         index,
       });
-      const { id } = await F.cbToPromise(creator);
+      const { id } = await F.cbToResolve(creator);
       const [html, exists] = await new Promise<[string | undefined, boolean]>((resolve) => {
         const test = !!document.getElementById(id);
         if (test) {
@@ -313,7 +312,7 @@ export const mapStateToResponse = {
     },
   [bx.CliMessageTypes.removeBookmark]:
     async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
-      F.cbToPromise(F.curry(chrome.bookmarks.remove)(payload));
+      F.cbToResolve(F.curry(chrome.bookmarks.remove)(payload));
       const succeed = await new Promise<boolean>((resolve) => {
         subscribe(() => resolve(true), ['html', 'created'], true);
       });
@@ -334,7 +333,7 @@ export const mapStateToResponse = {
             style: anchor?.getAttribute('style')!,
           });
         }, ['html', 'created'], true);
-        F.cbToPromise(F.curry2(chrome.bookmarks.update)(payload.id, changes));
+        F.cbToResolve(F.curry3(chrome.bookmarks.update)(payload.id)(changes));
       });
       return succeed;
     },
@@ -343,7 +342,7 @@ export const mapStateToResponse = {
       { subscribe }: ReduxHandlers,
       { payload: { id, title } }: PayloadAction<{ id: string, title:string }>,
     ) => {
-      F.cbToPromise(F.curry2(chrome.bookmarks.update)(id, { title }));
+      F.cbToResolve(F.curry3(chrome.bookmarks.update)(id)({ title }));
       const succeed = await new Promise<boolean>((resolve) => {
         subscribe(() => resolve(true), ['html', 'created'], true);
       });
@@ -355,7 +354,7 @@ export const mapStateToResponse = {
       { payload: { parentId, title } }: PayloadAction<{ parentId: string, title:string }>,
     ) => {
       const index = (parentId === '1') ? 0 : undefined;
-      const { id } = await F.cbToPromise(F.curry(chrome.bookmarks.create)({
+      const { id } = await F.cbToResolve(F.curry(chrome.bookmarks.create)({
         parentId,
         title,
         index,
@@ -371,7 +370,7 @@ export const mapStateToResponse = {
     },
   [bx.CliMessageTypes.removeFolder]:
     async ({ subscribe }: ReduxHandlers, { payload }: PayloadAction<string>) => {
-      F.cbToPromise(F.curry(chrome.bookmarks.removeTree)(payload));
+      F.cbToResolve(F.curry(chrome.bookmarks.removeTree)(payload));
       const succeed = await new Promise<boolean>((resolve) => {
         subscribe(() => resolve(true), ['html', 'created'], true);
       });
@@ -402,7 +401,7 @@ export const mapStateToResponse = {
       }
       const lastState = await new Promise<State>((resolve) => {
         subscribe((state2: State) => resolve(state2), ['html', 'created'], true);
-        F.cbToPromise(F.curry2(chrome.bookmarks.move)(id, { parentId, index }));
+        F.cbToResolve(F.curry3(chrome.bookmarks.move)(id)({ parentId, index }));
       });
       if (parentId === '1' || !!state.bookmarks[id].url) {
         return { parentId, index };
@@ -438,7 +437,7 @@ async function onClientRequest(
 }
 
 async function buildFolderState(state: State, folderId: string) {
-  const [node] = await F.cbToPromise(F.curry(chrome.bookmarks.getSubTree)(folderId));
+  const [node] = await F.cbToResolve(F.curry(chrome.bookmarks.getSubTree)(folderId));
   const childIds = node.children?.map(({ id }) => id);
   const currentState = state.bookmarks[folderId];
   return {
@@ -516,7 +515,7 @@ export async function connect(
   subscribe(webRequestListener(listener), ['options', 'update']);
   await getSavedOptions(dispatch, bx.initialOptions);
   // listener(saveOptions);
-  getBookmarksTree(dispatch)(F.cbToPromise(chrome.bookmarks.getTree));
+  getBookmarksTree(dispatch)(F.cbToResolve(chrome.bookmarks.getTree));
   subscribe(makeHtmlBookmarks, ['bookmarks', 'update']);
   chrome.bookmarks.onCreated.addListener(listener(onCreatedBookmark));
   chrome.bookmarks.onRemoved.addListener(listener(onRemovedBookmark));

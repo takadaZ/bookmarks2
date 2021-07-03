@@ -1,6 +1,4 @@
-/* eslint-disable import/no-unresolved */
-/* eslint-disable no-alert */
-
+/* eslint-disable no-console */
 import {
   IClientState,
   IHtml,
@@ -15,7 +13,7 @@ import {
   $$,
   cssid,
   postMessage,
-  cbToPromise,
+  cbToResolve,
   swap,
   curry,
   setEvents,
@@ -63,7 +61,7 @@ function init() {
   const { options, html, clState } = await postMessage({ type: CliMessageTypes.initialize });
 
   if (document.readyState === 'loading') {
-    await cbToPromise(swap(curry(curry(document.addEventListener))('DOMContentLoaded'))(false));
+    await cbToResolve(curry(swap(curry(document.addEventListener)('DOMContentLoaded')))(false));
   }
   setOptions(options);
   repaleceHtml(html);
@@ -171,9 +169,11 @@ function setAnimationFolder(el: HTMLElement, className: string) {
 }
 
 function checkDroppable(e: DragEvent) {
+  console.log(e);
   const $target = e.target as HTMLElement;
   const dropClass = whichClass(dropClasses, $target);
   // false when not drop target
+  console.log(dropClass);
   if (dropClass == null) {
     return false;
   }

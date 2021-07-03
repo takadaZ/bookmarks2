@@ -36,4 +36,7 @@ module.exports = {
     extensions: ['.ts'],
   },
   cache: true,
+  watchOptions: {
+    poll: true,
+  },
 };
